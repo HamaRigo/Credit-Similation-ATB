@@ -16,4 +16,6 @@ public class OcrDTO {
     private String resultatsReconnaissance;
     private boolean fraude;
     private String numeroCompte; // Representing the Compte entity ID or number
+    private String image; // Storing image data as a Base64 encoded string
+
 }

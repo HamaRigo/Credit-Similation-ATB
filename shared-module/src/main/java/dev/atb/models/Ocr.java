@@ -24,6 +24,9 @@ public class Ocr {
 
     private boolean fraude;
 
+    @Lob
+    private String image; // Storing image data as a Base64 encoded string
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "numero_compte_id")
     private Compte numeroCompte;
