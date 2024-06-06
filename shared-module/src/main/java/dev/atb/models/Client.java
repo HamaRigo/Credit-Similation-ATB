@@ -28,4 +28,11 @@ public class Client {
 
 
 
+    public Compte getCompte() {
+        return compte;
+    }
+
+    public void setCompte(Compte compte) {
+        this.compte = compte;
+    }
 }
