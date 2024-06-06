@@ -19,4 +19,12 @@ public class CreditDTO {
     private String statut;
     private String numeroCompte; // Assuming Compte has a String field to represent it
     private CreditModelDTO modeldecredit; // Assuming CreditModelDTO has been created to represent Credit_model
+
+    public CreditModelDTO getModeldecredit() {
+        return modeldecredit;
+    }
+
+    public void setModeldecredit(CreditModelDTO modeldecredit) {
+        this.modeldecredit = modeldecredit;
+    }
 }

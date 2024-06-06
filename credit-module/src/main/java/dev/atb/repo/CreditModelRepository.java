@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories
 
-public interface ModeleDeCreditRepository extends JpaRepository<Credit_model, Long> {
+public interface CreditModelRepository extends JpaRepository<Credit_model, Long> {
 }

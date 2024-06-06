@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableDiscoveryClient
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "dev.atb")
+@EnableJpaRepositories(basePackages = "dev.atb.repo")
 @EntityScan(basePackages = "dev.atb.models")
 public class CreditApplication {
     public static void main(String[] args) {SpringApplication.run(CreditApplication.class, args);}
