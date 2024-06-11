@@ -1,16 +1,15 @@
 package dev.atb.compte.services;
 
 
-import dev.atb.client.repo.ClientRepository;
-import dev.atb.compte.dto.CompteDTO;
+import dev.atb.dto.CompteDTO;
 import dev.atb.models.Compte;
 import dev.atb.models.Client;
 import dev.atb.models.Ocr;
 import dev.atb.models.Credit;
-import dev.atb.compte.repo.CompteRepository;
- // Ensure the correct package is imported
-import dev.atb.repo.CreditRepository;
 
+import dev.atb.repo.ClientRepository;
+import dev.atb.repo.CompteRepository;
+import dev.atb.repo.CreditRepository;
 import dev.atb.repo.OcrRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,7 @@ public class CompteService {
         if (compte.getOcrs() != null) {
             Set<String> ocrs = new HashSet<>();
             for (Ocr ocr : compte.getOcrs()) {
-                Long id = ocr.getId();
+                Long id = Long.valueOf(ocr.getId());
                 ocrs.add(String.valueOf(id));
             }
             dto.setOcrs(ocrs);

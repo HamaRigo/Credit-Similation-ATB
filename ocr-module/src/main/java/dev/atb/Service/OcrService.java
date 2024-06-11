@@ -1,15 +1,15 @@
 package dev.atb.Service;
 
 
-import dev.atb.compte.repo.CompteRepository;
 import dev.atb.dto.OcrDTO;
 import dev.atb.models.Ocr;
-import dev.atb.repo.OcrRepository;
 import dev.atb.models.Compte;
+import dev.atb.repo.CompteRepository;
+import dev.atb.repo.OcrRepository;
 import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.bytedeco.tesseract.Tesseract;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,7 +44,7 @@ public class OcrService {
 
     public OcrDTO performOcr(MultipartFile imageFile) {
         try {
-            ITesseract tesseract = new Tesseract();
+            ITesseract tesseract = (ITesseract) new Tesseract();
             tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
 
             BufferedImage bufferedImage = ImageIO.read(imageFile.getInputStream());
@@ -74,12 +73,13 @@ public class OcrService {
 
     public OcrDTO convertToDTO(Ocr ocr) {
         OcrDTO dto = new OcrDTO();
-        BeanUtils.copyProperties(ocr, dto);
+        BeanUtils.copyProperties(ocr, dto, "numeroCompte"); // Exclude conflicting property
         if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
+            dto.setNumeroCompte(String.valueOf(ocr.getNumeroCompte()));
         }
         return dto;
     }
+
 
     private Ocr convertToEntity(OcrDTO dto) {
         Ocr ocr = new Ocr();
@@ -103,7 +103,7 @@ public class OcrService {
 
     public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
         try {
-            ITesseract tesseract = new Tesseract();
+            ITesseract tesseract = (ITesseract) new Tesseract();
             tesseract.setDatapath("/path/to/tessdata");
 
             BufferedImage bufferedImage = ImageIO.read(file.getInputStream());

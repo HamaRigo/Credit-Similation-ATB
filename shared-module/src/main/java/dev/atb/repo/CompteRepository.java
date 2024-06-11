@@ -1,4 +1,4 @@
-package dev.atb.compte.repo;
+package dev.atb.repo;
 
 import dev.atb.models.Compte;
 import org.springframework.data.jpa.repository.JpaRepository;

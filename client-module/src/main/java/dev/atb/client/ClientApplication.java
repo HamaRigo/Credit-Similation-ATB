@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableDiscoveryClient
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "dev.atb.client.repo")
-@ComponentScan("dev.atb.client.repo")
+@EnableJpaRepositories(basePackages = "dev.atb.repo")
+@ComponentScan("dev.atb.repo")
 @EntityScan(basePackages = "dev.atb.models")
 
 public class ClientApplication {

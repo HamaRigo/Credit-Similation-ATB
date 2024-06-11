@@ -4,9 +4,9 @@ import dev.atb.dto.CreditDTO;
 import dev.atb.dto.CreditModelDTO;
 import dev.atb.models.Credit;
 import dev.atb.models.Credit_model;
+
 import dev.atb.repo.CreditModelRepository;
 import dev.atb.repo.CreditRepository;
-
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

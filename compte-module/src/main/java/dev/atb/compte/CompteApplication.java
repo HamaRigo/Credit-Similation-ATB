@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {
-        "dev.atb.client.repo",
-        "dev.atb.compte.repo",
+        "dev.atb.repo",
+        "dev.atb.repo",
         "dev.atb.repo"
 })
 @EntityScan(basePackages = "dev.atb.models")

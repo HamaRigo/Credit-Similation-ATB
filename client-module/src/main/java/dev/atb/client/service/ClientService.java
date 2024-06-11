@@ -1,8 +1,8 @@
 package dev.atb.client.service;
 
-import dev.atb.client.dto.ClientDTO;
-import dev.atb.client.repo.ClientRepository;
+import dev.atb.dto.ClientDTO;
 import dev.atb.models.Client;
+import dev.atb.repo.ClientRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

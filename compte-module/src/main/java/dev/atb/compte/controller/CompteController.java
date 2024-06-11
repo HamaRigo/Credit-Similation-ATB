@@ -1,7 +1,7 @@
 package dev.atb.compte.controller;
 
-import dev.atb.compte.dto.CompteDTO;
 import dev.atb.compte.services.CompteService;
+import dev.atb.dto.CompteDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

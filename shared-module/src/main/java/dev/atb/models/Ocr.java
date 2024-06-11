@@ -2,16 +2,11 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
-
-@Getter
-@Setter
+@Table(name = "ocr")
 public class Ocr {
-
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -32,14 +27,17 @@ public class Ocr {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "numeroCompte")
     private Compte numeroCompte; // Changed to Compte
-
-    // Getters and setters
-
-    public String getImage() {
-        return image;
+    public Compte getNumeroCompte() {
+        return numeroCompte;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public void setNumeroCompte(Compte numeroCompte) {
+        this.numeroCompte = numeroCompte;
+    }
+
+    public void setTypeDocument(String typeDocument) {
+    }
+
+    public void setResultatsReconnaissance(String resultatsReconnaissance) {
     }
 }

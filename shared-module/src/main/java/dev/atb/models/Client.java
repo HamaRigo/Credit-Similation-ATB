@@ -31,9 +31,6 @@ public class Client {
 
     // Getters and setters
 
-    public String getCin() {
-        return cin;
-    }
 
     public void setCin(String cin) {
         this.cin = cin;

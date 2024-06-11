@@ -1,4 +1,4 @@
-package dev.atb.client.repo;
+package dev.atb.repo;
 
 import dev.atb.models.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
