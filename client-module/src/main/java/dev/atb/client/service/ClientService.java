@@ -8,7 +8,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,9 +51,7 @@ public class ClientService {
     }
 
     private ClientDTO convertToDTO(Client client) {
-        ClientDTO clientDTO = new ClientDTO();
-        BeanUtils.copyProperties(client, clientDTO);
-        return clientDTO;
+        return new ClientDTO(client);
     }
 
     private Client convertToEntity(ClientDTO clientDTO) {

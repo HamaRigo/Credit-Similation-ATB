@@ -1,5 +1,6 @@
 package dev.atb.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,8 +24,13 @@ public class Credit {
 
     private String statut;
 
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "numero_compte_id")
+//    @JsonIgnoreProperties("credits")
+//    private Compte numeroCompte;
+    @JsonIgnoreProperties("credits")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "numero_compte_id")
+    @JoinColumn(name = "numeroCompte")
     private Compte numeroCompte;
 
     @OneToOne(mappedBy = "creditId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

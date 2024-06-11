@@ -3,9 +3,9 @@ package dev.atb.Service;
 
 import dev.atb.compte.repo.CompteRepository;
 import dev.atb.dto.OcrDTO;
-import dev.atb.models.Compte;
 import dev.atb.models.Ocr;
 import dev.atb.repo.OcrRepository;
+import dev.atb.models.Compte;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -22,6 +22,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OcrService {
@@ -37,39 +38,31 @@ public class OcrService {
         return convertToDTO(ocr);
     }
 
-    public List<Ocr> getAllOcrEntities() {
-        return ocrRepository.findAll();
+    public List<OcrDTO> getAllOcrEntities() {
+        List<Ocr> ocrs = ocrRepository.findAll();
+        return ocrs.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public OcrDTO performOcr(MultipartFile imageFile) {
         try {
-            // Initialize Tesseract OCR engine
             ITesseract tesseract = new Tesseract();
-            // Set the path to the tessdata directory (containing language data files)
             tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
 
-            // Convert MultipartFile to BufferedImage
             BufferedImage bufferedImage = ImageIO.read(imageFile.getInputStream());
-
-            // Perform OCR on the image
             String ocrResult = tesseract.doOCR(bufferedImage);
 
-            // Create an OcrDTO object with the OCR result
             OcrDTO ocrDTO = new OcrDTO();
             ocrDTO.setResultatsReconnaissance(ocrResult);
 
-            // Convert image file to base64 string
             byte[] imageBytes = imageFile.getBytes();
             String base64Image = Base64.getEncoder().encodeToString(imageBytes);
             ocrDTO.setImage(base64Image);
 
-            // Save the OCR result and image to the database
             Ocr ocrEntity = convertToEntity(ocrDTO);
             ocrEntity = ocrRepository.save(ocrEntity);
 
             return convertToDTO(ocrEntity);
         } catch (TesseractException | IOException e) {
-            // Handle OCR errors
             e.printStackTrace();
             throw new RuntimeException("Error performing OCR: " + e.getMessage());
         }
@@ -83,7 +76,7 @@ public class OcrService {
         OcrDTO dto = new OcrDTO();
         BeanUtils.copyProperties(ocr, dto);
         if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompteId(ocr.getNumeroCompte().getNumeroCompte());
+            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
         }
         return dto;
     }
@@ -91,8 +84,8 @@ public class OcrService {
     private Ocr convertToEntity(OcrDTO dto) {
         Ocr ocr = new Ocr();
         BeanUtils.copyProperties(dto, ocr);
-        if (dto.getNumeroCompteId() != null) {
-            Compte compte = compteRepository.findById(dto.getNumeroCompteId()).orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
+        if (dto.getNumeroCompte() != null) {
+            Compte compte = compteRepository.findById(dto.getNumeroCompte()).orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
             ocr.setNumeroCompte(compte);
         }
         return ocr;
@@ -104,23 +97,19 @@ public class OcrService {
             ocrRepository.deleteById(id);
             return true;
         } else {
-            return false; // If the OCR with the given ID doesn't exist
+            return false;
         }
     }
 
     public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
         try {
-            // Analyze the image using OCR
             ITesseract tesseract = new Tesseract();
-            tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
+            tesseract.setDatapath("/path/to/tessdata");
 
-            // Convert MultipartFile to BufferedImage
             BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
             String resultatsReconnaissance = tesseract.doOCR(bufferedImage);
 
-            // Create an Ocr entity
             Ocr ocrEntity = new Ocr();
-            ocrEntity.setId(Long.valueOf(UUID.randomUUID().toString())); // Generate a unique ID
             ocrEntity.setTypeDocument(typeDocument);
             ocrEntity.setResultatsReconnaissance(resultatsReconnaissance);
 
@@ -129,13 +118,10 @@ public class OcrService {
                 ocrEntity.setNumeroCompte(compte);
             }
 
-            // Save the Ocr entity to the database
             ocrRepository.save(ocrEntity);
 
-            // Convert the Ocr entity to OcrDTO and return it
             return convertToDTO(ocrEntity);
         } catch (TesseractException | IOException e) {
-            // Handle IO exception (e.g., if the file cannot be read)
             e.printStackTrace();
             throw new RuntimeException("Error analyzing and saving image: " + e.getMessage());
         }

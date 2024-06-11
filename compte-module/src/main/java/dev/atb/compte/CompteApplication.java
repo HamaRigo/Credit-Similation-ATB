@@ -7,9 +7,12 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableDiscoveryClient
-
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "dev.atb.compte.repo") // Adjusted base package for JPA repositories
+@EnableJpaRepositories(basePackages = {
+        "dev.atb.client.repo",
+        "dev.atb.compte.repo",
+        "dev.atb.repo"
+})
 @EntityScan(basePackages = "dev.atb.models")
 public class CompteApplication {
 

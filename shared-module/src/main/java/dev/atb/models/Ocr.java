@@ -1,5 +1,6 @@
 package dev.atb.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,42 +28,12 @@ public class Ocr {
     @Lob
     private String image; // Storing image data as a Base64 encoded string
 
+    @JsonIgnoreProperties("ocrs")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "numero_compte_id")
+    @JoinColumn(name = "numeroCompte")
     private Compte numeroCompte; // Changed to Compte
 
     // Getters and setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTypeDocument() {
-        return typeDocument;
-    }
-
-    public void setTypeDocument(String typeDocument) {
-        this.typeDocument = typeDocument;
-    }
-
-    public String getResultatsReconnaissance() {
-        return resultatsReconnaissance;
-    }
-
-    public void setResultatsReconnaissance(String resultatsReconnaissance) {
-        this.resultatsReconnaissance = resultatsReconnaissance;
-    }
-
-    public boolean isFraude() {
-        return fraude;
-    }
-
-    public void setFraude(boolean fraude) {
-        this.fraude = fraude;
-    }
 
     public String getImage() {
         return image;
@@ -70,13 +41,5 @@ public class Ocr {
 
     public void setImage(String image) {
         this.image = image;
-    }
-
-    public Compte getNumeroCompte() {
-        return numeroCompte;
-    }
-
-    public void setNumeroCompte(Compte numeroCompte) {
-        this.numeroCompte = numeroCompte;
     }
 }
