@@ -62,42 +62,39 @@ public class CompteService {
         BeanUtils.copyProperties(compte, dto);
 
         if (compte.getOcrs() != null) {
-            Set<String> ocrs = new HashSet<>();
-            for (Ocr ocr : compte.getOcrs()) {
-                Long id = Long.valueOf(ocr.getId());
-                ocrs.add(String.valueOf(id));
-            }
+            Set<String> ocrs = compte.getOcrs().stream()
+                    .map(ocr -> ocr.getId().toString())
+                    .collect(Collectors.toSet());
             dto.setOcrs(ocrs);
         }
 
-        if (compte.getCin() != null) {
-            dto.setClient(compte.getCin().toString());
+        if (compte.getClient() != null) {
+            dto.setClient_cin(compte.getClient().getCin()); // Set cin of the client
         }
 
         if (compte.getCredits() != null) {
-            Set<String> credits = new HashSet<>();
-            for (Credit credit : compte.getCredits()) {
-                Long id = credit.getId();
-                credits.add(String.valueOf(id));
-            }
+            Set<String> credits = compte.getCredits().stream()
+                    .map(credit -> credit.getId().toString())
+                    .collect(Collectors.toSet());
             dto.setCredits(credits);
         }
 
         return dto;
     }
 
+
     private Compte convertToEntity(CompteDTO dto) {
         Compte compte = new Compte();
         BeanUtils.copyProperties(dto, compte);
 
-        if (dto.getClient() != null) {
-            Client client = clientRepository.findById(dto.getClient()).orElse(null);
-            compte.setCin(client);
+        if (dto.getClient_cin() != null) {
+            Client client = clientRepository.findById(dto.getClient_cin()).orElse(null);
+            compte.setClient(client); // Set the Client entity
         }
 
         if (dto.getOcrs() != null) {
             Set<Ocr> ocrs = dto.getOcrs().stream()
-                    .map(ocrId -> ocrRepository.findById(ocrId).orElse(null))
+                    .map(ocrId -> ocrRepository.findById(String.valueOf(Long.valueOf(ocrId))).orElse(null))
                     .collect(Collectors.toSet());
             compte.setOcrs(ocrs);
         }
@@ -111,4 +108,5 @@ public class CompteService {
 
         return compte;
     }
+
 }

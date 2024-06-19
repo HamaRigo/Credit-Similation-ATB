@@ -50,20 +50,15 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-        <!-- Shared Module -->
-
-        <dependency>
-            <groupId>dev.atb</groupId>
-            <artifactId>shared-module</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>dev.atb</groupId>
             <artifactId>shared-module</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Shared Module -->
+
+
 
 
     </dependencies>
