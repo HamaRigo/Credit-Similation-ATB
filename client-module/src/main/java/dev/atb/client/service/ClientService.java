@@ -1,7 +1,9 @@
 package dev.atb.client.service;
 
 import dev.atb.dto.ClientDTO;
+import dev.atb.dto.CompteDTO;
 import dev.atb.models.Client;
+import dev.atb.models.Compte;
 import dev.atb.repo.ClientRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,12 +52,33 @@ public class ClientService {
     }
 
     private ClientDTO convertToDTO(Client client) {
-        return new ClientDTO(client);
+        ClientDTO clientDTO = new ClientDTO();
+        BeanUtils.copyProperties(client, clientDTO);
+        return clientDTO;
     }
+
+    private CompteDTO convertToDTO(Compte compte) {
+        CompteDTO compteDTO = new CompteDTO();
+        BeanUtils.copyProperties(compte, compteDTO);
+
+        // Set only the 'cin' from the client
+        if (compte.getClient() != null) {
+            compteDTO.setClient(compte.getClient().getCin());
+        }
+
+        return compteDTO;
+    }
+
 
     private Client convertToEntity(ClientDTO clientDTO) {
         Client client = new Client();
         BeanUtils.copyProperties(clientDTO, client);
         return client;
+    }
+
+    private Compte convertToEntity(CompteDTO compteDTO) {
+        Compte compte = new Compte();
+        BeanUtils.copyProperties(compteDTO, compte);
+        return compte;
     }
 }

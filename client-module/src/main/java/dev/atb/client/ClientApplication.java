@@ -8,12 +8,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableDiscoveryClient
-
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "dev.atb.repo")
-@ComponentScan("dev.atb.repo")
+@ComponentScan(basePackages = "dev.atb")
 @EntityScan(basePackages = "dev.atb.models")
-
+@EnableJpaRepositories(basePackages = "dev.atb.repo")
 public class ClientApplication {
 
     public static void main(String[] args) {
