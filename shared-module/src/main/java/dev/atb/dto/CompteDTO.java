@@ -17,4 +17,7 @@ public class CompteDTO {
     private Set<String> ocrs; // Assuming Ocr DTO has a String field to represent it
     private String client_cin; // Assuming Client DTO has a String field to represent it
     private Set<String> credits; // Assuming Credit DTO has a String field to represent it
+
+    public void setClient(String cin) {
+    }
 }

@@ -63,7 +63,7 @@ public class CompteService {
 
         if (compte.getOcrs() != null) {
             Set<String> ocrs = compte.getOcrs().stream()
-                    .map(ocr -> ocr.getId().toString())
+                    .map(ocr -> ocr.getId())
                     .collect(Collectors.toSet());
             dto.setOcrs(ocrs);
         }
@@ -74,7 +74,7 @@ public class CompteService {
 
         if (compte.getCredits() != null) {
             Set<String> credits = compte.getCredits().stream()
-                    .map(credit -> credit.getId().toString())
+                    .map(credit -> String.valueOf(credit.getId()))
                     .collect(Collectors.toSet());
             dto.setCredits(credits);
         }
@@ -94,7 +94,7 @@ public class CompteService {
 
         if (dto.getOcrs() != null) {
             Set<Ocr> ocrs = dto.getOcrs().stream()
-                    .map(ocrId -> ocrRepository.findById(String.valueOf(Long.valueOf(ocrId))).orElse(null))
+                    .map(ocrId -> ocrRepository.findById(ocrId).orElse(null))
                     .collect(Collectors.toSet());
             compte.setOcrs(ocrs);
         }

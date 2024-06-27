@@ -33,13 +33,16 @@ public class OcrService {
     private CompteRepository compteRepository;
 
     public OcrDTO getOcrById(String id) {
-        Ocr ocr = ocrRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("OCR not found"));
+        Ocr ocr = ocrRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("OCR not found"));
         return convertToDTO(ocr);
     }
 
     public List<OcrDTO> getAllOcrEntities() {
         List<Ocr> ocrs = ocrRepository.findAll();
-        return ocrs.stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ocrs.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     public OcrDTO performOcr(MultipartFile imageFile) {
@@ -71,11 +74,11 @@ public class OcrService {
         return ocrRepository.save(ocrEntity);
     }
 
-    public OcrDTO convertToDTO(Ocr ocr) {
+    private OcrDTO convertToDTO(Ocr ocr) {
         OcrDTO dto = new OcrDTO();
         BeanUtils.copyProperties(ocr, dto, "numeroCompte"); // Exclude conflicting property
         if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompte(String.valueOf(ocr.getNumeroCompte()));
+            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
         }
         return dto;
     }
@@ -85,7 +88,8 @@ public class OcrService {
         Ocr ocr = new Ocr();
         BeanUtils.copyProperties(dto, ocr);
         if (dto.getNumeroCompte() != null) {
-            Compte compte = compteRepository.findById(dto.getNumeroCompte()).orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
+            Compte compte = compteRepository.findById(dto.getNumeroCompte())
+                    .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
             ocr.setNumeroCompte(compte);
         }
         return ocr;
@@ -114,7 +118,8 @@ public class OcrService {
             ocrEntity.setResultatsReconnaissance(resultatsReconnaissance);
 
             if (numeroCompteId != null) {
-                Compte compte = compteRepository.findById(numeroCompteId).orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
+                Compte compte = compteRepository.findById(numeroCompteId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
                 ocrEntity.setNumeroCompte(compte);
             }
 

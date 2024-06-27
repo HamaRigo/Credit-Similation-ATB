@@ -6,19 +6,12 @@ import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "ocr")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Ocr {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    private String id;  // Ensure this is String
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+    private String id;
 
     @Column(nullable = false)
     private String typeDocument;
@@ -34,7 +27,8 @@ public class Ocr {
     @JsonIgnoreProperties("ocrs")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "numeroCompte")
-    private Compte numeroCompte; // Changed to Compte
+    private Compte numeroCompte;
+
     public Compte getNumeroCompte() {
         return numeroCompte;
     }
@@ -49,5 +43,11 @@ public class Ocr {
     public void setResultatsReconnaissance(String resultatsReconnaissance) {
     }
 
+    public String getId() {
+        return id;
+    }
 
+    public void setId(String id) {
+        this.id = id;
+    }
 }
