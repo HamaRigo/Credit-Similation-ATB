@@ -1,6 +1,5 @@
 package dev.atb.Service;
 
-
 import dev.atb.dto.OcrDTO;
 import dev.atb.models.Ocr;
 import dev.atb.models.Compte;
@@ -9,7 +8,6 @@ import dev.atb.repo.OcrRepository;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
-import org.bytedeco.tesseract.Tesseract;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,7 +45,7 @@ public class OcrService {
 
     public OcrDTO performOcr(MultipartFile imageFile) {
         try {
-            ITesseract tesseract = (ITesseract) new Tesseract();
+            ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
             tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
 
             BufferedImage bufferedImage = ImageIO.read(imageFile.getInputStream());
@@ -70,44 +68,9 @@ public class OcrService {
         }
     }
 
-    public Ocr createOcrEntity(Ocr ocrEntity) {
-        return ocrRepository.save(ocrEntity);
-    }
-
-    private OcrDTO convertToDTO(Ocr ocr) {
-        OcrDTO dto = new OcrDTO();
-        BeanUtils.copyProperties(ocr, dto, "numeroCompte"); // Exclude conflicting property
-        if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
-        }
-        return dto;
-    }
-
-
-    private Ocr convertToEntity(OcrDTO dto) {
-        Ocr ocr = new Ocr();
-        BeanUtils.copyProperties(dto, ocr);
-        if (dto.getNumeroCompte() != null) {
-            Compte compte = compteRepository.findById(dto.getNumeroCompte())
-                    .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
-            ocr.setNumeroCompte(compte);
-        }
-        return ocr;
-    }
-
-    public boolean deleteOcrById(String id) {
-        Optional<Ocr> ocrOptional = ocrRepository.findById(id);
-        if (ocrOptional.isPresent()) {
-            ocrRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
         try {
-            ITesseract tesseract = (ITesseract) new Tesseract();
+            ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
             tesseract.setDatapath("/path/to/tessdata");
 
             BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
@@ -130,5 +93,35 @@ public class OcrService {
             e.printStackTrace();
             throw new RuntimeException("Error analyzing and saving image: " + e.getMessage());
         }
+    }
+
+    public boolean deleteOcrById(String id) {
+        Optional<Ocr> ocrOptional = ocrRepository.findById(id);
+        if (ocrOptional.isPresent()) {
+            ocrRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private OcrDTO convertToDTO(Ocr ocr) {
+        OcrDTO dto = new OcrDTO();
+        BeanUtils.copyProperties(ocr, dto, "numeroCompte"); // Exclude conflicting property
+        if (ocr.getNumeroCompte() != null) {
+            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
+        }
+        return dto;
+    }
+
+    private Ocr convertToEntity(OcrDTO dto) {
+        Ocr ocr = new Ocr();
+        BeanUtils.copyProperties(dto, ocr);
+        if (dto.getNumeroCompte() != null) {
+            Compte compte = compteRepository.findById(dto.getNumeroCompte())
+                    .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
+            ocr.setNumeroCompte(compte);
+        }
+        return ocr;
     }
 }

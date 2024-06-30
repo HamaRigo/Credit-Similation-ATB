@@ -1,8 +1,6 @@
 package dev.atb.controller;
 
 import dev.atb.Service.OcrService;
-
-
 import dev.atb.dto.OcrDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,13 +29,12 @@ public class OcrController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllOcrEntities() {
+    public ResponseEntity<List<OcrDTO>> getAllOcrEntities() {
         try {
             List<OcrDTO> ocrEntities = ocrService.getAllOcrEntities();
             return ResponseEntity.ok(ocrEntities);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error retrieving OCRs: " + e.getMessage());
+            return null ;
         }
     }
 
