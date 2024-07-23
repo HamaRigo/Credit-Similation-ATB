@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class OcrService {
-
     @Autowired
     private OcrRepository ocrRepository;
 
@@ -44,11 +43,19 @@ public class OcrService {
     }
 
     public OcrDTO performOcr(MultipartFile imageFile) {
+        if (imageFile.isEmpty()) {
+            throw new IllegalArgumentException("The file is empty");
+        }
+
         try {
             ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
             tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
 
             BufferedImage bufferedImage = ImageIO.read(imageFile.getInputStream());
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException("The buffered image is null");
+            }
+
             String ocrResult = tesseract.doOCR(bufferedImage);
 
             OcrDTO ocrDTO = new OcrDTO();
@@ -69,11 +76,29 @@ public class OcrService {
     }
 
     public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("The file is empty");
+        }
+
         try {
+            // Log file details
+            System.out.println("File name: " + file.getOriginalFilename());
+            System.out.println("File size: " + file.getSize());
+            System.out.println("File content type: " + file.getContentType());
+
+            // Check if the file is an image
+            if (!file.getContentType().startsWith("image/")) {
+                throw new IllegalArgumentException("The file is not a valid image");
+            }
+
             ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
-            tesseract.setDatapath("/path/to/tessdata");
+            tesseract.setDatapath("/path/to/tessdata"); // Change this to your tessdata directory path
 
             BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException("The buffered image is null");
+            }
+
             String resultatsReconnaissance = tesseract.doOCR(bufferedImage);
 
             Ocr ocrEntity = new Ocr();
@@ -109,7 +134,8 @@ public class OcrService {
         OcrDTO dto = new OcrDTO();
         BeanUtils.copyProperties(ocr, dto, "numeroCompte"); // Exclude conflicting property
         if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompte(ocr.getNumeroCompte().getNumeroCompte());
+
+//            dto.setNumeroCompte(ocr.getNumeroCompte());
         }
         return dto;
     }
@@ -117,11 +143,12 @@ public class OcrService {
     private Ocr convertToEntity(OcrDTO dto) {
         Ocr ocr = new Ocr();
         BeanUtils.copyProperties(dto, ocr);
-        if (dto.getNumeroCompte() != null) {
-            Compte compte = compteRepository.findById(dto.getNumeroCompte())
-                    .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
-            ocr.setNumeroCompte(compte);
-        }
+////        if (dto.getNumeroCompte() != null) {
+//            Compte compte = compteRepository.findById(dto.getNumeroCompte().getNumeroCompte())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Compte not found"));
+//            ocr.setNumeroCompte(compte);
+//        }
+        System.out.println("Converted OcrDTO to Ocr: " + ocr);
         return ocr;
     }
 }

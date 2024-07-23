@@ -1,6 +1,7 @@
 package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import dev.atb.dto.CompteDTO;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
