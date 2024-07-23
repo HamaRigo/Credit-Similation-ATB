@@ -24,7 +24,7 @@ public class CompteController {
         return compteService.findAll();
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public CompteDTO createCompte(@RequestBody CompteDTO compteDTO) {
         return compteService.save(compteDTO);
     }

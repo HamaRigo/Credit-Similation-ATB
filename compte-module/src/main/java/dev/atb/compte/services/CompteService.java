@@ -1,6 +1,5 @@
 package dev.atb.compte.services;
 
-
 import dev.atb.dto.CompteDTO;
 import dev.atb.models.Compte;
 import dev.atb.models.Client;
@@ -15,14 +14,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class CompteService {
-
 
     @Autowired
     private CompteRepository compteRepository;
@@ -32,7 +29,6 @@ public class CompteService {
     private OcrRepository ocrRepository;
     @Autowired
     private CreditRepository creditRepository;
-
 
     public CompteDTO findById(String numeroCompte) {
         Compte compte = compteRepository.findById(numeroCompte).orElse(null);
@@ -45,9 +41,18 @@ public class CompteService {
     }
 
     public CompteDTO save(CompteDTO compteDTO) {
-        Compte compte = convertToEntity(compteDTO);
-        Compte savedCompte = compteRepository.save(compte);
-        return convertToDTO(savedCompte);
+        Compte existingCompte = compteRepository.findById(compteDTO.getNumeroCompte()).orElse(null);
+        if (existingCompte != null) {
+            // Update the existing compte
+            BeanUtils.copyProperties(compteDTO, existingCompte, "numeroCompte"); // Keep numeroCompte unchanged
+            Compte updatedCompte = compteRepository.save(existingCompte);
+            return convertToDTO(updatedCompte);
+        } else {
+            // Create a new compte
+            Compte newCompte = convertToEntity(compteDTO);
+            Compte savedCompte = compteRepository.save(newCompte);
+            return convertToDTO(savedCompte);
+        }
     }
 
     public void deleteById(String id) {
@@ -63,13 +68,13 @@ public class CompteService {
 
         if (compte.getOcrs() != null) {
             Set<String> ocrs = compte.getOcrs().stream()
-                    .map(ocr -> ocr.getId())
+                    .map(Ocr::getId)
                     .collect(Collectors.toSet());
             dto.setOcrs(ocrs);
         }
 
         if (compte.getClient() != null) {
-            dto.setClient_cin(compte.getClient().getCin()); // Set cin of the client
+            dto.setClient_cin(compte.getClient()); // Set cin of the client
         }
 
         if (compte.getCredits() != null) {
@@ -82,13 +87,12 @@ public class CompteService {
         return dto;
     }
 
-
     private Compte convertToEntity(CompteDTO dto) {
         Compte compte = new Compte();
         BeanUtils.copyProperties(dto, compte);
 
         if (dto.getClient_cin() != null) {
-            Client client = clientRepository.findById(dto.getClient_cin()).orElse(null);
+            Client client = clientRepository.findById(dto.getClient_cin().getCin()).orElse(null);
             compte.setClient(client); // Set the Client entity
         }
 
@@ -108,5 +112,4 @@ public class CompteService {
 
         return compte;
     }
-
 }
