@@ -31,6 +31,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+            <version>8.2.0</version>
             <scope>runtime</scope>
         </dependency>
         <!-- Lombok -->
@@ -52,12 +53,7 @@
         </dependency>
         <!-- Shared Module -->
 
-        <dependency>
-            <groupId>dev.atb</groupId>
-            <artifactId>shared-module</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+
 <!--###############-->
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -97,5 +93,6 @@
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 </project>
