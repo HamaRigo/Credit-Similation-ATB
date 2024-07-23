@@ -24,7 +24,7 @@ public class CompteController {
         return compteService.findAll();
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public CompteDTO createCompte(@RequestBody CompteDTO compteDTO) {
         return compteService.save(compteDTO);
     }
@@ -34,6 +34,7 @@ public class CompteController {
         compteDTO.setNumeroCompte(id);
         return compteService.save(compteDTO);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteCompte(@PathVariable String id) {

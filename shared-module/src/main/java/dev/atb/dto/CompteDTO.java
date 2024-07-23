@@ -2,7 +2,6 @@ package dev.atb.dto;
 
 
 
-import dev.atb.models.Client;
 import lombok.*;
 
 import java.util.Set;
@@ -16,9 +15,11 @@ public class CompteDTO {
     private double solde;
     private String typeCompte;
     private Set<String> ocrs; // Assuming Ocr DTO has a String field to represent it
-    private Client client_cin; // Assuming Client DTO has a String field to represent it
+    private String clientCin; // Assuming Client DTO has a String field to represent CIN
     private Set<String> credits; // Assuming Credit DTO has a String field to represent it
 
+    // If you need this method for some specific reason, implement it properly.
     public void setClient(String cin) {
+        this.clientCin = cin;
     }
 }

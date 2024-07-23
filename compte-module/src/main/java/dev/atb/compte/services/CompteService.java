@@ -5,7 +5,6 @@ import dev.atb.models.Compte;
 import dev.atb.models.Client;
 import dev.atb.models.Ocr;
 import dev.atb.models.Credit;
-
 import dev.atb.repo.ClientRepository;
 import dev.atb.repo.CompteRepository;
 import dev.atb.repo.CreditRepository;
@@ -74,7 +73,7 @@ public class CompteService {
         }
 
         if (compte.getClient() != null) {
-            dto.setClient_cin(compte.getClient()); // Set cin of the client
+            dto.setClientCin(compte.getClient().getCin()); // Set cin of the client
         }
 
         if (compte.getCredits() != null) {
@@ -91,14 +90,15 @@ public class CompteService {
         Compte compte = new Compte();
         BeanUtils.copyProperties(dto, compte);
 
-        if (dto.getClient_cin() != null) {
-            Client client = clientRepository.findById(dto.getClient_cin().getCin()).orElse(null);
+        if (dto.getClientCin() != null) {
+            Client client = clientRepository.findById(dto.getClientCin()).orElse(null);
             compte.setClient(client); // Set the Client entity
         }
 
         if (dto.getOcrs() != null) {
             Set<Ocr> ocrs = dto.getOcrs().stream()
                     .map(ocrId -> ocrRepository.findById(ocrId).orElse(null))
+                    .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toSet());
             compte.setOcrs(ocrs);
         }
@@ -106,6 +106,7 @@ public class CompteService {
         if (dto.getCredits() != null) {
             Set<Credit> credits = dto.getCredits().stream()
                     .map(creditId -> creditRepository.findById(Long.valueOf(creditId)).orElse(null))
+                    .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toSet());
             compte.setCredits(credits);
         }
