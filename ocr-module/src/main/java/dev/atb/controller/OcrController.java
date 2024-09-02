@@ -50,12 +50,31 @@ public class OcrController {
         }
     }
 
+//    @PostMapping("/analyze")
+//    public ResponseEntity<?> analyzeAndSaveImage(
+//            @RequestParam("file") MultipartFile file,
+//            @RequestParam("typeDocument") String typeDocument,
+//            @RequestParam("numeroCompteId") String numeroCompteId) {
+//        try {
+//            OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, numeroCompteId);
+//            return ResponseEntity.ok(ocrDTO);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Error analyzing and saving image: " + e.getMessage());
+//        }
+//    }
     @PostMapping("/analyze")
     public ResponseEntity<?> analyzeAndSaveImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam("typeDocument") String typeDocument,
             @RequestParam("numeroCompteId") String numeroCompteId) {
         try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is empty");
+            }
+            // Log file information
+            System.out.println("File received: " + file.getOriginalFilename());
+
             OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, numeroCompteId);
             return ResponseEntity.ok(ocrDTO);
         } catch (Exception e) {
