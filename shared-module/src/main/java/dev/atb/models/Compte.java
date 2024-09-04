@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.util.Set;
 
-
 @Entity
 @Getter
 @Setter
@@ -18,6 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Compte {
+
     @Id
     @Column(nullable = false, updatable = false)
     private String numeroCompte;
@@ -36,4 +36,13 @@ public class Compte {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cin") // Assuming 'cin' is the name of the foreign key column in the database
     private Client client;
+
+    /**
+     * Returns the ID of the Compte entity.
+     *
+     * @return the ID (numeroCompte) of the Compte entity
+     */
+    public String getId() {
+        return this.numeroCompte;
+    }
 }
