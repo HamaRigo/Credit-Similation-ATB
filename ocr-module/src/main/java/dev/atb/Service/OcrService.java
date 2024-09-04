@@ -1,16 +1,16 @@
 package dev.atb.Service;
 
+import dev.atb.config.OCRConfig;
 import dev.atb.dto.OcrDTO;
-import dev.atb.exceptions.OcrNotFoundException;
 import dev.atb.exceptions.CompteNotFoundException;
-import dev.atb.models.Ocr;
+import dev.atb.exceptions.OcrNotFoundException;
 import dev.atb.models.Compte;
+import dev.atb.models.Ocr;
 import dev.atb.repo.CompteRepository;
 import dev.atb.repo.OcrRepository;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -35,14 +35,24 @@ public class OcrService {
 
     private static final Logger logger = LoggerFactory.getLogger(OcrService.class);
 
-    @Autowired
-    private OcrRepository ocrRepository;
+    private final OcrRepository ocrRepository;
 
-    @Autowired
-    private CompteRepository compteRepository;
+    private final CompteRepository compteRepository;
 
-    private final String tesseractDataPath = "/path/to/tessdata"; // Replace with actual config
+    private final OCRConfig ocrConfig; // Inject the OCRConfig for Tesseract data path
 
+    public OcrService(OcrRepository ocrRepository, CompteRepository compteRepository, OCRConfig ocrConfig) {
+        this.ocrRepository = ocrRepository;
+        this.compteRepository = compteRepository;
+        this.ocrConfig = ocrConfig;
+    }
+
+    /**
+     * Fetches an OCR entity by its ID.
+     *
+     * @param id the ID of the OCR entity
+     * @return the OCR DTO
+     */
     public OcrDTO getOcrById(String id) {
         logger.debug("Fetching OCR entity with ID: {}", id);
         Ocr ocr = ocrRepository.findById(id)
@@ -50,6 +60,11 @@ public class OcrService {
         return convertToDTO(ocr);
     }
 
+    /**
+     * Fetches all OCR entities.
+     *
+     * @return a list of OCR DTOs
+     */
     public List<OcrDTO> getAllOcrEntities() {
         logger.debug("Fetching all OCR entities");
         return ocrRepository.findAll().stream()
@@ -57,6 +72,12 @@ public class OcrService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Performs OCR on the provided image file.
+     *
+     * @param imageFile the image file to process
+     * @return the OCR DTO with results and encoded image
+     */
     public OcrDTO performOcr(MultipartFile imageFile) {
         validateImageFile(imageFile);
 
@@ -80,6 +101,14 @@ public class OcrService {
         }
     }
 
+    /**
+     * Analyzes and saves the provided image, setting fraud status based on OCR results.
+     *
+     * @param file the image file to process
+     * @param typeDocument the type of document (e.g., "effet" or "cheque")
+     * @param numeroCompteId the ID of the associated Compte
+     * @return the OCR DTO with results and fraud status
+     */
     public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
         validateImageFile(file);
 
@@ -87,9 +116,13 @@ public class OcrService {
             BufferedImage bufferedImage = convertImageFile(file);
             String resultatsReconnaissance = performOcrOnImage(bufferedImage);
 
+            // Determine if the document is fraudulent
+            boolean isFraud = !resultatsReconnaissance.equals("expectedResult"); // Replace with your fraud detection logic
+
             Ocr ocrEntity = new Ocr();
             ocrEntity.setTypeDocument(typeDocument);
             ocrEntity.setResultatsReconnaissance(resultatsReconnaissance);
+            ocrEntity.setFraude(isFraud);
 
             if (numeroCompteId != null) {
                 Compte compte = compteRepository.findById(numeroCompteId)
@@ -106,6 +139,12 @@ public class OcrService {
         }
     }
 
+    /**
+     * Deletes an OCR entity by its ID.
+     *
+     * @param id the ID of the OCR entity
+     * @return true if the entity was deleted, false otherwise
+     */
     public boolean deleteOcrById(String id) {
         if (ocrRepository.existsById(id)) {
             ocrRepository.deleteById(id);
@@ -116,27 +155,45 @@ public class OcrService {
         }
     }
 
+    /**
+     * Converts an Ocr entity to an OcrDTO.
+     *
+     * @param ocr the Ocr entity
+     * @return the OcrDTO
+     */
     private OcrDTO convertToDTO(Ocr ocr) {
         OcrDTO dto = new OcrDTO();
-        BeanUtils.copyProperties(ocr, dto, "numeroCompte");
-        // Add logic to handle numeroCompte if needed
+        BeanUtils.copyProperties(ocr, dto);
+        if (ocr.getNumeroCompte() != null) {
+            dto.setNumeroCompteId(ocr.getNumeroCompte().getId());
+        }
         return dto;
     }
 
+    /**
+     * Converts an OcrDTO to an Ocr entity.
+     *
+     * @param dto the OcrDTO
+     * @return the Ocr entity
+     */
     private Ocr convertToEntity(OcrDTO dto) {
         Ocr ocr = new Ocr();
         BeanUtils.copyProperties(dto, ocr);
-        // Add additional conversion logic if needed
-        logger.debug("Converted OcrDTO to Ocr: {}", ocr);
         return ocr;
     }
 
+    /**
+     * Validates the provided image file.
+     *
+     * @param file the image file to validate
+     */
     private void validateImageFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("The file is empty");
         }
 
-        if (!file.getContentType().startsWith("image/")) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("The file is not a valid image");
         }
 
@@ -145,6 +202,14 @@ public class OcrService {
         }
     }
 
+
+    /**
+     * Converts a MultipartFile to a BufferedImage.
+     *
+     * @param file the image file
+     * @return the BufferedImage
+     * @throws IOException if an I/O error occurs
+     */
     private BufferedImage convertImageFile(MultipartFile file) throws IOException {
         String fileExtension = getFileExtension(file.getOriginalFilename());
 
@@ -155,17 +220,37 @@ public class OcrService {
         }
     }
 
+    /**
+     * Performs OCR on the provided BufferedImage.
+     *
+     * @param image the BufferedImage
+     * @return the OCR result
+     * @throws TesseractException if an OCR error occurs
+     */
     private String performOcrOnImage(BufferedImage image) throws TesseractException {
         ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
-        tesseract.setDatapath(tesseractDataPath);
+        tesseract.setDatapath(ocrConfig.getTesseractDataPath()); // Use the path from OCRConfig
         return tesseract.doOCR(image);
     }
 
+    /**
+     * Encodes an image file to a Base64 string.
+     *
+     * @param imageFile the image file
+     * @return the Base64 encoded string
+     * @throws IOException if an I/O error occurs
+     */
     private String encodeImageToBase64(MultipartFile imageFile) throws IOException {
         byte[] imageBytes = imageFile.getBytes();
         return Base64.getEncoder().encodeToString(imageBytes);
     }
 
+    /**
+     * Gets the file extension from the file name.
+     *
+     * @param fileName the file name
+     * @return the file extension
+     */
     private String getFileExtension(String fileName) {
         if (fileName == null || !fileName.contains(".")) {
             return "";
@@ -173,44 +258,34 @@ public class OcrService {
         return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
 
+    /**
+     * Converts a HEIC image file to JPG format.
+     *
+     * @param heicStream the input stream of the HEIC file
+     * @return the BufferedImage in JPG format
+     * @throws IOException if an I/O error occurs
+     */
     private BufferedImage convertHeicToJpg(InputStream heicStream) throws IOException {
         // Generate unique file names
         String uniqueFileName = UUID.randomUUID().toString();
-        String heicFilePath = uniqueFileName + ".heic";
-        String jpgFilePath = uniqueFileName + ".jpg";
+        File tempHeicFile = File.createTempFile(uniqueFileName, ".heic");
+        File tempJpgFile = File.createTempFile(uniqueFileName, ".jpg");
 
-        // Save the HEIC input stream to a temporary file
-        Files.copy(heicStream, Paths.get(heicFilePath), StandardCopyOption.REPLACE_EXISTING);
+        // Save the HEIC input stream to a temp file
+        Files.copy(heicStream, tempHeicFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        // Use ImageMagick to convert HEIC to JPG
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                "magick", heicFilePath, jpgFilePath
-        );
-
-        // Execute the conversion command
+        // Convert HEIC to JPG using heif-convert
+        ProcessBuilder processBuilder = new ProcessBuilder("heif-convert", tempHeicFile.getAbsolutePath(), tempJpgFile.getAbsolutePath());
         Process process = processBuilder.start();
-
         try {
-            // Wait for the process to complete
             process.waitFor();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Image conversion process was interrupted", e);
+            throw new IOException("Conversion process was interrupted", e);
         }
 
-        // Check if the conversion was successful
-        File jpgFile = new File(jpgFilePath);
-        if (!jpgFile.exists()) {
-            throw new IOException("Failed to convert HEIC to JPG");
-        }
-
-        // Read the converted JPG file into a BufferedImage
-        BufferedImage bufferedImage = ImageIO.read(jpgFile);
-
-        // Clean up temporary files
-        new File(heicFilePath).delete();
-        jpgFile.delete();
-
-        return bufferedImage;
+        // Read the JPG file
+        return ImageIO.read(tempJpgFile);
     }
+
 }

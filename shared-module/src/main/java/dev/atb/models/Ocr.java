@@ -1,7 +1,6 @@
 package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import dev.atb.dto.CompteDTO;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -9,6 +8,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = "ocr")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Ocr {
+
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -30,25 +30,52 @@ public class Ocr {
     @JoinColumn(name = "numeroCompte")
     private Compte numeroCompte;
 
-    public Compte getNumeroCompte() {
-        return numeroCompte;
-    }
-
-    public void setNumeroCompte(Compte numeroCompte) {
-        this.numeroCompte = numeroCompte;
-    }
-
-    public void setTypeDocument(String typeDocument) {
-    }
-
-    public void setResultatsReconnaissance(String resultatsReconnaissance) {
-    }
-
+    // Getters and Setters
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTypeDocument() {
+        return typeDocument;
+    }
+
+    public void setTypeDocument(String typeDocument) {
+        this.typeDocument = typeDocument;
+    }
+
+    public String getResultatsReconnaissance() {
+        return resultatsReconnaissance;
+    }
+
+    public void setResultatsReconnaissance(String resultatsReconnaissance) {
+        this.resultatsReconnaissance = resultatsReconnaissance;
+    }
+
+    public boolean isFraude() {
+        return fraude;
+    }
+
+    public void setFraude(boolean fraude) {
+        this.fraude = fraude;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public Compte getNumeroCompte() {
+        return numeroCompte;
+    }
+
+    public void setNumeroCompte(Compte numeroCompte) {
+        this.numeroCompte = numeroCompte;
     }
 }
