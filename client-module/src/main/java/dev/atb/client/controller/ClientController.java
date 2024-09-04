@@ -2,7 +2,6 @@ package dev.atb.client.controller;
 
 import dev.atb.client.service.ClientService;
 import dev.atb.dto.ClientDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +12,11 @@ import java.util.List;
 @RequestMapping("/clients")
 public class ClientController {
 
-    @Autowired
-    private ClientService clientService;
+    private final ClientService clientService;
+
+    public ClientController(ClientService clientService) {
+        this.clientService = clientService;
+    }
 
     @GetMapping("/{cin}")
     public ResponseEntity<ClientDTO> getClientByCin(@PathVariable String cin) {

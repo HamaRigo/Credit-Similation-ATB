@@ -95,7 +95,6 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -107,8 +106,11 @@ public class ClientService {
 
     private final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
-    @Autowired
-    private ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
+
+    public ClientService(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
 
     public ClientDTO getClientByCIN(String cin) {
         Client client = clientRepository.findByCin(cin)
