@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>ocr-module</artifactId>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -19,7 +20,6 @@
     </properties>
 
     <repositories>
-        <!-- JitPack repository, ensure this is necessary -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -73,8 +73,7 @@
             <version>3.6.1</version>
         </dependency>
 
-        <!-- Tesseract OCR Engine Dependency -->
-        <!-- Consider removing one of the OCR libraries if not necessary -->
+        <!-- Tesseract OCR Engine Dependencies -->
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacpp</artifactId>
@@ -103,53 +102,42 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- OCR plugin (Tess4j) -->
-        <dependency>
-            <groupId>net.sourceforge.tess4j</groupId>
-            <artifactId>tess4j</artifactId>
-            <version>4.5.5</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.xmlgraphics</groupId>
-                    <artifactId>xmlgraphics-commons</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.lowagie</groupId>
-                    <artifactId>itext</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- OCR Plugin (Tess4j) -->
+       
 
-        <!-- Commons Collections -->
+        <!-- Commons Collections 4 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.4</version>
         </dependency>
 
-
         <!-- Commons BeanUtils -->
-        <!-- https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils -->
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Shared Module -->
+        <dependency>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>4.5.5</version> <!-- or the version you're using -->
+        </dependency>
+
+                <!-- Shared Module -->
         <dependency>
             <groupId>dev.atb</groupId>
             <artifactId>shared-module</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 </project>
