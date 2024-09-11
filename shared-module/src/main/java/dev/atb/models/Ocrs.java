@@ -5,9 +5,9 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
-@Table(name = "ocr")
+@Table(name = "ocrs")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Ocr {
+public class Ocrs {
 
     @Id
     @GeneratedValue(generator = "uuid2")

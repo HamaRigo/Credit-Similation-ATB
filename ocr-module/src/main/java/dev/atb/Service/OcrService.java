@@ -1,291 +1,192 @@
 package dev.atb.Service;
 
-import dev.atb.config.OCRConfig;
 import dev.atb.dto.OcrDTO;
-import dev.atb.exceptions.CompteNotFoundException;
-import dev.atb.exceptions.OcrNotFoundException;
-import dev.atb.models.Compte;
-import dev.atb.models.Ocr;
-import dev.atb.repo.CompteRepository;
+import dev.atb.exceptions.OcrProcessingException;
+import dev.atb.models.Ocrs;
 import dev.atb.repo.OcrRepository;
+import dev.atb.repo.CompteRepository;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.TesseractException;
-import org.springframework.beans.BeanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-
-import java.util.Base64;
+import java.io.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.nio.file.StandardCopyOption;
 
 @Service
 public class OcrService {
 
     private static final Logger logger = LoggerFactory.getLogger(OcrService.class);
 
+    private final ITesseract tesseract;
     private final OcrRepository ocrRepository;
-
     private final CompteRepository compteRepository;
+    private final ImageConverter imageConverter;
 
-    private final OCRConfig ocrConfig; // Inject the OCRConfig for Tesseract data path
-
-    public OcrService(OcrRepository ocrRepository, CompteRepository compteRepository, OCRConfig ocrConfig) {
+    @Autowired
+    public OcrService(ITesseract tesseract, OcrRepository ocrRepository, CompteRepository compteRepository, ImageConverter imageConverter) {
+        this.tesseract = tesseract;
         this.ocrRepository = ocrRepository;
         this.compteRepository = compteRepository;
-        this.ocrConfig = ocrConfig;
+        this.imageConverter = imageConverter;
     }
 
-    /**
-     * Fetches an OCR entity by its ID.
-     *
-     * @param id the ID of the OCR entity
-     * @return the OCR DTO
-     */
-    public OcrDTO getOcrById(String id) {
-        logger.debug("Fetching OCR entity with ID: {}", id);
-        Ocr ocr = ocrRepository.findById(id)
-                .orElseThrow(() -> new OcrNotFoundException("OCR entity with ID " + id + " not found"));
-        return convertToDTO(ocr);
+    private String generateUniqueFileName(String prefix, String extension) {
+        return prefix + "_" + UUID.randomUUID() + extension;
     }
 
-    /**
-     * Fetches all OCR entities.
-     *
-     * @return a list of OCR DTOs
-     */
-    public List<OcrDTO> getAllOcrEntities() {
-        logger.debug("Fetching all OCR entities");
-        return ocrRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Performs OCR on the provided image file.
-     *
-     * @param imageFile the image file to process
-     * @return the OCR DTO with results and encoded image
-     */
-    public OcrDTO performOcr(MultipartFile imageFile) {
-        validateImageFile(imageFile);
-
+    public OcrDTO performOcr(File file) {
         try {
-            BufferedImage bufferedImage = convertImageFile(imageFile);
-            String ocrResult = performOcrOnImage(bufferedImage);
+            if (file.length() == 0) {
+                logger.error("File is empty.");
+                throw new IOException("File is empty.");
+            }
+
+            String ocrResult = tesseract.doOCR(file);
+            boolean isFraud = determineFraud(ocrResult);
 
             OcrDTO ocrDTO = new OcrDTO();
             ocrDTO.setResultatsReconnaissance(ocrResult);
+            ocrDTO.setFraude(isFraud);
+            ocrDTO.setImage(encodeImageToBase64(file)); // Encode the image to Base64
 
-            String base64Image = encodeImageToBase64(imageFile);
-            ocrDTO.setImage(base64Image);
+            return ocrDTO;
 
-            Ocr ocrEntity = convertToEntity(ocrDTO);
-            ocrEntity = ocrRepository.save(ocrEntity);
-
-            return convertToDTO(ocrEntity);
-        } catch (IOException | TesseractException e) {
-            logger.error("Error performing OCR: ", e);
-            throw new RuntimeException("Error performing OCR: " + e.getMessage(), e);
+        } catch (TesseractException e) {
+            logger.error("Error occurred during OCR processing for file: {}", file.getName(), e);
+            throw new OcrProcessingException("Error occurred during OCR processing", e);
+        } catch (IOException e) {
+            logger.error("I/O error occurred during OCR processing for file: {}", file.getName(), e);
+            throw new OcrProcessingException("Error occurred while processing OCR", e);
         }
     }
 
-    /**
-     * Analyzes and saves the provided image, setting fraud status based on OCR results.
-     *
-     * @param file the image file to process
-     * @param typeDocument the type of document (e.g., "effet" or "cheque")
-     * @param numeroCompteId the ID of the associated Compte
-     * @return the OCR DTO with results and fraud status
-     */
-    public OcrDTO analyzeAndSaveImage(MultipartFile file, String typeDocument, String numeroCompteId) {
-        validateImageFile(file);
-
+    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, String numeroCompteId) {
+        File tempFile = null;
+        File tempConvertedFile = null;
         try {
-            BufferedImage bufferedImage = convertImageFile(file);
-            String resultatsReconnaissance = performOcrOnImage(bufferedImage);
+            String originalFileName = imageFile.getOriginalFilename();
+            String fileExtension = getFileExtension(originalFileName);
 
-            // Determine if the document is fraudulent
-            boolean isFraud = !resultatsReconnaissance.equals("expectedResult"); // Replace with your fraud detection logic
-
-            Ocr ocrEntity = new Ocr();
-            ocrEntity.setTypeDocument(typeDocument);
-            ocrEntity.setResultatsReconnaissance(resultatsReconnaissance);
-            ocrEntity.setFraude(isFraud);
-
-            if (numeroCompteId != null) {
-                Compte compte = compteRepository.findById(numeroCompteId)
-                        .orElseThrow(() -> new CompteNotFoundException("Compte with ID " + numeroCompteId + " not found"));
-                ocrEntity.setNumeroCompte(compte);
+            // Create a temporary file for the image and handle conversions
+            if (fileExtension.equalsIgnoreCase("heic")) {
+                tempFile = File.createTempFile("temp", ".heic");
+                imageFile.transferTo(tempFile);
+                tempConvertedFile = imageConverter.convertHeicToPng(tempFile);
+            } else if (fileExtension.equalsIgnoreCase("jpg")) {
+                tempFile = File.createTempFile("temp", ".jpg");
+                imageFile.transferTo(tempFile);
+                tempConvertedFile = imageConverter.convertJpgToPng(tempFile);
+            } else if (fileExtension.equalsIgnoreCase("pdf")) {
+                tempFile = File.createTempFile("temp", ".pdf");
+                imageFile.transferTo(tempFile);
+                tempConvertedFile = imageConverter.convertPdfToPng(tempFile);
+            } else {
+                logger.error("Unsupported file format: {}", fileExtension);
+                throw new IOException("Unsupported file format.");
             }
 
-            ocrEntity = ocrRepository.save(ocrEntity);
+            // Ensure the converted file is valid
+            if (tempConvertedFile == null || !tempConvertedFile.exists() || tempConvertedFile.length() == 0) {
+                logger.error("Converted file creation failed or file is empty.");
+                throw new IOException("Converted file creation failed or file is empty.");
+            }
 
-            return convertToDTO(ocrEntity);
-        } catch (IOException | TesseractException e) {
-            logger.error("Error analyzing and saving image: ", e);
-            throw new RuntimeException("Error analyzing and saving image: " + e.getMessage(), e);
+            // Perform OCR directly on the converted file
+            OcrDTO ocrDTO = performOcr(tempConvertedFile);
+            ocrDTO.setTypeDocument(typeDocument);
+            ocrDTO.setNumeroCompteId(numeroCompteId);
+
+            return ocrDTO;
+        } catch (IOException e) {
+            logger.error("I/O error processing image file: {}", imageFile.getOriginalFilename(), e);
+            throw new OcrProcessingException("Error occurred while processing image", e);
+        } catch (OcrProcessingException e) {
+            logger.error("OCR processing error: {}", e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error: {}", e.getMessage(), e);
+            throw new OcrProcessingException("Unexpected error occurred", e);
+        } finally {
+            // Clean up temporary files
+            if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
+                logger.warn("Failed to delete temporary file: {}", tempFile.getAbsolutePath());
+            }
+            if (tempConvertedFile != null && tempConvertedFile.exists() && !tempConvertedFile.delete()) {
+                logger.warn("Failed to delete temporary converted file: {}", tempConvertedFile.getAbsolutePath());
+            }
         }
     }
 
-    /**
-     * Deletes an OCR entity by its ID.
-     *
-     * @param id the ID of the OCR entity
-     * @return true if the entity was deleted, false otherwise
-     */
-    public boolean deleteOcrById(String id) {
-        if (ocrRepository.existsById(id)) {
-            ocrRepository.deleteById(id);
-            logger.debug("Deleted OCR entity with ID: {}", id);
-            return true;
-        } else {
-            throw new OcrNotFoundException("OCR entity with ID " + id + " not found");
-        }
-    }
-
-    /**
-     * Converts an Ocr entity to an OcrDTO.
-     *
-     * @param ocr the Ocr entity
-     * @return the OcrDTO
-     */
-    private OcrDTO convertToDTO(Ocr ocr) {
-        OcrDTO dto = new OcrDTO();
-        BeanUtils.copyProperties(ocr, dto);
-        if (ocr.getNumeroCompte() != null) {
-            dto.setNumeroCompteId(ocr.getNumeroCompte().getId());
-        }
-        return dto;
-    }
-
-    /**
-     * Converts an OcrDTO to an Ocr entity.
-     *
-     * @param dto the OcrDTO
-     * @return the Ocr entity
-     */
-    private Ocr convertToEntity(OcrDTO dto) {
-        Ocr ocr = new Ocr();
-        BeanUtils.copyProperties(dto, ocr);
-        return ocr;
-    }
-
-    /**
-     * Validates the provided image file.
-     *
-     * @param file the image file to validate
-     */
-    private void validateImageFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("The file is empty");
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("The file is not a valid image");
-        }
-
-        if (file.getSize() > 10 * 1024 * 1024) { // Limit size to 10 MB
-            throw new IllegalArgumentException("The file size exceeds the maximum allowed size of 10 MB");
-        }
-    }
-
-
-    /**
-     * Converts a MultipartFile to a BufferedImage.
-     *
-     * @param file the image file
-     * @return the BufferedImage
-     * @throws IOException if an I/O error occurs
-     */
-    private BufferedImage convertImageFile(MultipartFile file) throws IOException {
-        String fileExtension = getFileExtension(file.getOriginalFilename());
-
-        if ("heic".equalsIgnoreCase(fileExtension)) {
-            return convertHeicToJpg(file.getInputStream());
-        } else {
-            return ImageIO.read(file.getInputStream());
-        }
-    }
-
-    /**
-     * Performs OCR on the provided BufferedImage.
-     *
-     * @param image the BufferedImage
-     * @return the OCR result
-     * @throws TesseractException if an OCR error occurs
-     */
-    private String performOcrOnImage(BufferedImage image) throws TesseractException {
-        ITesseract tesseract = new net.sourceforge.tess4j.Tesseract();
-        tesseract.setDatapath(ocrConfig.getTesseractDataPath()); // Use the path from OCRConfig
-        return tesseract.doOCR(image);
-    }
-
-    /**
-     * Encodes an image file to a Base64 string.
-     *
-     * @param imageFile the image file
-     * @return the Base64 encoded string
-     * @throws IOException if an I/O error occurs
-     */
-    private String encodeImageToBase64(MultipartFile imageFile) throws IOException {
-        byte[] imageBytes = imageFile.getBytes();
-        return Base64.getEncoder().encodeToString(imageBytes);
-    }
-
-    /**
-     * Gets the file extension from the file name.
-     *
-     * @param fileName the file name
-     * @return the file extension
-     */
     private String getFileExtension(String fileName) {
-        if (fileName == null || !fileName.contains(".")) {
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
             return "";
         }
-        return fileName.substring(fileName.lastIndexOf('.') + 1);
+        return fileName.substring(lastDotIndex + 1);
     }
 
-    /**
-     * Converts a HEIC image file to JPG format.
-     *
-     * @param heicStream the input stream of the HEIC file
-     * @return the BufferedImage in JPG format
-     * @throws IOException if an I/O error occurs
-     */
-    private BufferedImage convertHeicToJpg(InputStream heicStream) throws IOException {
-        // Generate unique file names
-        String uniqueFileName = UUID.randomUUID().toString();
-        File tempHeicFile = File.createTempFile(uniqueFileName, ".heic");
-        File tempJpgFile = File.createTempFile(uniqueFileName, ".jpg");
+    public List<OcrDTO> getAllOcrEntities() {
+        List<Ocrs> ocrsList = ocrRepository.findAll();
+        return ocrsList.stream().map(this::convertToOcrDTO).collect(Collectors.toList());
+    }
 
-        // Save the HEIC input stream to a temp file
-        Files.copy(heicStream, tempHeicFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    public OcrDTO getOcrById(String id) {
+        Optional<Ocrs> optionalOcr = ocrRepository.findById(id);
+        return optionalOcr.map(this::convertToOcrDTO).orElse(null);
+    }
 
-        // Convert HEIC to JPG using heif-convert
-        ProcessBuilder processBuilder = new ProcessBuilder("heif-convert", tempHeicFile.getAbsolutePath(), tempJpgFile.getAbsolutePath());
-        Process process = processBuilder.start();
-        try {
-            process.waitFor();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Conversion process was interrupted", e);
+    public boolean deleteOcr(String id) {
+        if (ocrRepository.existsById(id)) {
+            ocrRepository.deleteById(id);
+            logger.info("Deleted OCR record with ID: {}", id);
+            return true;
+        } else {
+            logger.warn("OCR record with ID {} not found.", id);
+            return false;
         }
-
-        // Read the JPG file
-        return ImageIO.read(tempJpgFile);
     }
 
+    public Ocrs updateOcr(String id, String newText, String documentType) {
+        Optional<Ocrs> optionalOcr = ocrRepository.findById(id);
+        if (optionalOcr.isPresent()) {
+            Ocrs ocr = optionalOcr.get();
+            ocr.setResultatsReconnaissance(newText);
+            ocr.setTypeDocument(documentType);
+            return ocrRepository.save(ocr);
+        } else {
+            logger.error("OCR record with ID {} not found.", id);
+            throw new OcrProcessingException("OCR record not found");
+        }
+    }
+
+    public OcrDTO convertToOcrDTO(Ocrs ocrs) {
+        OcrDTO ocrDTO = new OcrDTO();
+        ocrDTO.setId(ocrs.getId());
+        ocrDTO.setTypeDocument(ocrs.getTypeDocument());
+        ocrDTO.setResultatsReconnaissance(ocrs.getResultatsReconnaissance());
+        ocrDTO.setFraude(ocrs.isFraude());
+        ocrDTO.setImage(ocrs.getImage());
+        String numeroCompteId = ocrs.getNumeroCompte() != null ? ocrs.getNumeroCompte().getId() : null;
+        ocrDTO.setNumeroCompteId(numeroCompteId);
+        return ocrDTO;
+    }
+
+    private boolean determineFraud(String text) {
+        // Placeholder for fraud detection logic
+        return false; // Implement actual fraud detection logic
+    }
+
+    private String encodeImageToBase64(File imageFile) throws IOException {
+        try (InputStream inputStream = new FileInputStream(imageFile)) {
+            byte[] fileContent = inputStream.readAllBytes();
+            return java.util.Base64.getEncoder().encodeToString(fileContent);
+        }
+    }
 }
