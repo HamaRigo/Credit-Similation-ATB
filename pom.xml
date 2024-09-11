@@ -14,12 +14,12 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>shared-module</module>
         <module>discovery-server</module>
+        <module>api-gateway</module>
         <module>ocr-module</module>
         <module>credit-module</module>
         <module>client-module</module>
-        <module>api-gateway</module>
-        <module>shared-module</module>
         <module>compte-module</module>
     </modules>
 
