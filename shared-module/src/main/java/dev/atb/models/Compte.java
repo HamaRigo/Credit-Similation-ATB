@@ -27,7 +27,7 @@ public class Compte {
     private String typeCompte;
 
     @OneToMany(mappedBy = "numeroCompte", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Ocr> ocrs;
+    private Set<Ocrs> ocrs;
 
     @OneToMany(mappedBy = "numeroCompte", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Credit> credits;

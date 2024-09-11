@@ -3,7 +3,7 @@ package dev.atb.compte.services;
 import dev.atb.dto.CompteDTO;
 import dev.atb.models.Compte;
 import dev.atb.models.Client;
-import dev.atb.models.Ocr;
+import dev.atb.models.Ocrs;
 import dev.atb.models.Credit;
 import dev.atb.repo.ClientRepository;
 import dev.atb.repo.CompteRepository;
@@ -67,7 +67,7 @@ public class CompteService {
 
         if (compte.getOcrs() != null) {
             Set<String> ocrs = compte.getOcrs().stream()
-                    .map(Ocr::getId)
+                    .map(Ocrs::getId)
                     .collect(Collectors.toSet());
             dto.setOcrs(ocrs);
         }
@@ -96,7 +96,7 @@ public class CompteService {
         }
 
         if (dto.getOcrs() != null) {
-            Set<Ocr> ocrs = dto.getOcrs().stream()
+            Set<Ocrs> ocrs = dto.getOcrs().stream()
                     .map(ocrId -> ocrRepository.findById(ocrId).orElse(null))
                     .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toSet());
