@@ -1,7 +1,7 @@
 //package dev.atb.client.service;
 //
-//import dev.atb.dto.ClientDTO;
-//import dev.atb.dto.CompteDTO;
+//import dev.atb.client.dto.ClientDTO;
+//import dev.atb.compte.dto.CompteDTO;
 //import dev.atb.models.Client;
 //import dev.atb.models.Compte;
 //import dev.atb.repo.ClientRepository;
@@ -88,7 +88,7 @@
 //}
 package dev.atb.client.service;
 
-import dev.atb.dto.ClientDTO;
+import dev.atb.client.dto.ClientDTO;
 import dev.atb.models.Client;
 import dev.atb.repo.ClientRepository;
 import jakarta.transaction.Transactional;

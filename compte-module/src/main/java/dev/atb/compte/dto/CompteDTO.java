@@ -1,4 +1,4 @@
-package dev.atb.dto;
+package dev.atb.compte.dto;
 
 
 

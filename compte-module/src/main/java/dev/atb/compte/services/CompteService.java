@@ -1,6 +1,6 @@
 package dev.atb.compte.services;
 
-import dev.atb.dto.CompteDTO;
+import dev.atb.compte.dto.CompteDTO;
 import dev.atb.models.Compte;
 import dev.atb.models.Client;
 import dev.atb.models.Ocrs;
