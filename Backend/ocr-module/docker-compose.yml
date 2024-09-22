@@ -1,0 +1,44 @@
+#version: '3.8'
+#services:
+#  eureka-server:
+#    build:
+#      context: ../discovery-server # Update this path to the actual location of the Eureka server module
+#    ports:
+#      - "8761:8761"
+#    networks:
+#      - ocr-network
+#
+#  ocr-service:
+#    build:
+#      context: . # OCR module path
+#      dockerfile: Dockerfile
+#    ports:
+#      - "3333:3333"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=default
+#    depends_on:
+#      - eureka-server
+#    networks:
+#      - ocr-network
+#
+#networks:
+#  ocr-network:
+#    driver: bridge
+
+version: '3.8'
+
+services:
+  tesseract:
+    image: tesseractshadow/tesseract4re:latest
+    container_name: tesseract
+    ports:
+      - "9090:9090"  # Assuming your service runs on this port
+    volumes:
+      - ./input:/input
+      - ./output:/output
+    networks:
+      - ocr-network
+
+networks:
+  ocr-network:
+    driver: bridge
