@@ -31,6 +31,15 @@
     </repositories>
 
     <dependencies>
+        <!-- Shared Module -->
+        <dependency>
+            <groupId>dev.atb</groupId>
+            <artifactId>shared-module</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+
         <!-- Spring Boot Starter Data JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -48,6 +57,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+            <version>8.2.0</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -96,10 +106,8 @@
         <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http44</artifactId>
-            <version>1.38.0</version>
+            <version>1.37.0</version>
         </dependency>
-
-
 
         <!-- SLF4J and Logback for logging -->
         <dependency>
@@ -133,12 +141,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Shared Module -->
-        <dependency>
-            <groupId>dev.atb</groupId>
-            <artifactId>shared-module</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -150,5 +152,12 @@
             <artifactId>spring-test</artifactId>
             <version>6.1.8</version>
         </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

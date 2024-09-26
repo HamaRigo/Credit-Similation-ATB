@@ -1,12 +1,14 @@
-package dev.atb;
+package dev.atb.ocr;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "dev.atb.repo") // Corrected base package for JPA repositories
-@EntityScan(basePackages = "dev.atb.models") // Ensure the package for entities is included
+@ComponentScan(basePackages = {"dev.atb.ocr", "dev.atb"})  // Ensure scanning for both client-specific and shared components
+@EntityScan(basePackages = {"dev.atb.models"})  // Scan for shared JPA entities
+@EnableJpaRepositories(basePackages = {"dev.atb.repo"})  // Scanning for JPA repositories
 public class OCRApplication {
     public static void main(String[] args) {
         SpringApplication.run(OCRApplication.class, args);
