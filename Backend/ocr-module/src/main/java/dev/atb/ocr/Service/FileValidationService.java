@@ -1,4 +1,4 @@
-package dev.atb.Service;
+package dev.atb.ocr.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

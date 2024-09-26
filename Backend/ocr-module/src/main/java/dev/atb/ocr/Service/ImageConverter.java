@@ -1,4 +1,4 @@
-package dev.atb.Service;
+package dev.atb.ocr.Service;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;

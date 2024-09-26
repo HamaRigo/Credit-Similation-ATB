@@ -1,4 +1,4 @@
-package dev.atb.config;
+package dev.atb.ocr.config;
 
 import java.io.File;
 import java.io.IOException;

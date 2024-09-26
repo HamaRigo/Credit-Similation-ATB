@@ -1,4 +1,4 @@
-package dev.atb.config;
+package dev.atb.ocr.config;
 
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;

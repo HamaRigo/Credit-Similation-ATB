@@ -1,7 +1,7 @@
 package dev.atb.client.controller;
 
 import dev.atb.client.service.ClientService;
-import dev.atb.client.dto.ClientDTO;
+import dev.atb.dto.ClientDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

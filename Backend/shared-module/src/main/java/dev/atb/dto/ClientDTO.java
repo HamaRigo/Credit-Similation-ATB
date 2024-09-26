@@ -1,4 +1,4 @@
-package dev.atb.client.dto;
+package dev.atb.dto;
 
 import dev.atb.models.Client;
 import lombok.AllArgsConstructor;

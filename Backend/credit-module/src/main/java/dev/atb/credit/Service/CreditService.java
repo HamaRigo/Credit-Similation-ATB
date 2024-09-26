@@ -1,15 +1,13 @@
-package dev.atb.Service;
+package dev.atb.credit.Service;
 
 import dev.atb.dto.CreditDTO;
 import dev.atb.dto.CreditModelDTO;
 import dev.atb.models.Credit;
 import dev.atb.models.Credit_model;
-
 import dev.atb.repo.CreditModelRepository;
 import dev.atb.repo.CreditRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
@@ -20,11 +18,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class CreditService {
 
-    @Autowired
-    private CreditRepository creditRepository;
+    private final CreditRepository creditRepository;
 
-    @Autowired
-    private CreditModelRepository creditModelRepository;
+    private final CreditModelRepository creditModelRepository;
+
+    public CreditService(CreditRepository creditRepository, CreditModelRepository creditModelRepository) {
+        this.creditRepository = creditRepository;
+        this.creditModelRepository = creditModelRepository;
+    }
 
     public CreditDTO getCreditById(Long id) {
         Credit credit = creditRepository.findById(id).orElseThrow(() -> new RuntimeException("Credit not found"));

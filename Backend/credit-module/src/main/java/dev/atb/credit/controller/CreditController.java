@@ -1,8 +1,8 @@
-package dev.atb.controller;
+package dev.atb.credit.controller;
 
 import dev.atb.dto.CreditDTO;
 import dev.atb.dto.CreditModelDTO;
-import dev.atb.Service.CreditService;
+import dev.atb.credit.Service.CreditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
