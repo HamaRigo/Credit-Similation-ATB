@@ -1,4 +1,4 @@
-package dev.atb.config;
+package dev.atb.ocr.config;
 
 public class ResponseWrapper<T> {
     private T data;
