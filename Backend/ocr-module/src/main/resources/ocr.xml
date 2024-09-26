@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <tessdata_dir>/usr/share/tesseract-ocr/4.00/tessdata</tessdata_dir>
+    <language>eng</language> <!-- Set the default language for OCR -->
+    <output_format>txt</output_format> <!-- Output format can be 'txt', 'hocr', 'pdf', etc. -->
+    <preserve_interword_spaces>true</preserve_interword_spaces> <!-- Preserve spaces between words -->
+    <tessedit_char_whitelist>0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</tessedit_char_whitelist> <!-- Whitelisted characters -->
+    <tessedit_pageseg_mode>3</tessedit_pageseg_mode> <!-- Page segmentation mode -->
+</config>
