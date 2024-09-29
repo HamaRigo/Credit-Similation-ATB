@@ -2,19 +2,16 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Credit {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private float montant;
 
     @Column(nullable = false)
     private float tauxInteret;
@@ -22,21 +19,17 @@ public class Credit {
     @Column(nullable = false)
     private int duree;
 
+    @Column(nullable = false)
+    private float montant;
+
+    @Column(nullable = false)
     private String statut;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "numero_compte_id")
-//    @JsonIgnoreProperties("credits")
-//    private Compte numeroCompte;
     @JsonIgnoreProperties("credits")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "numeroCompte")
-    private Compte numeroCompte;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Compte compte;
 
-    @OneToOne(mappedBy = "creditId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Credit_model modeldecredit;
-
-
-
-
+    @JsonIgnoreProperties("credit")
+    @OneToOne(mappedBy = "credit")
+    private CreditModel modelDeCredit;
 }

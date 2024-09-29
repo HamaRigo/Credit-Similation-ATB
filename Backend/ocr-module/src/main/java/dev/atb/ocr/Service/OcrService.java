@@ -102,7 +102,7 @@ public class OcrService {
             ocr.setResultatsReconnaissance(ocrResult);
             ocr.setTypeDocument(typeDocument);
             if (numeroCompteId != null) {
-                compteRepository.findById(numeroCompteId).ifPresent(ocr::setNumeroCompte);
+                compteRepository.findById(numeroCompteId).ifPresent(ocr::setCompte);
             }
 
             ocrRepository.save(ocr);

@@ -10,29 +10,9 @@ const navigation = [
     icon: "bi bi-speedometer2",
   },
   {
-    title: "Alert",
-    href: "/alerts",
-    icon: "bi bi-bell",
-  },
-  {
     title: "Clients",
     href: "/Clients",
     icon: "bi bi-people",
-  },
-  {
-    title: "Badges",
-    href: "/badges",
-    icon: "bi bi-patch-check",
-  },
-  {
-    title: "Buttons",
-    href: "/buttons",
-    icon: "bi bi-hdd-stack",
-  },
-  {
-    title: "Cards",
-    href: "/cards",
-    icon: "bi bi-card-text",
   },
   {
     title: "Comptes",
@@ -42,32 +22,7 @@ const navigation = [
   {
     title: "Ocrs",
     href: "/Ocrs",
-    icon: "bi bi-card-text",
-  },
-  {
-    title: "Grid",
-    href: "/grid",
-    icon: "bi bi-columns",
-  },
-  {
-    title: "Table",
-    href: "/table",
-    icon: "bi bi-layout-split",
-  },
-  {
-    title: "Forms",
-    href: "/forms",
-    icon: "bi bi-textarea-resize",
-  },
-  {
-    title: "Breadcrumbs",
-    href: "/breadcrumbs",
     icon: "bi bi-link",
-  },
-  {
-    title: "About",
-    href: "/about",
-    icon: "bi bi-people",
   },
 ];
 

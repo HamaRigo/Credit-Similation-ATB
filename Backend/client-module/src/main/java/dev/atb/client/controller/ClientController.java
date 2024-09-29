@@ -2,53 +2,48 @@ package dev.atb.client.controller;
 
 import dev.atb.client.service.ClientService;
 import dev.atb.dto.ClientDTO;
+import dev.atb.models.Client;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
 @RequestMapping("/clients")
 public class ClientController {
+    @Autowired
+    private ClientService clientService;
 
-    private final ClientService clientService;
-
-    public ClientController(ClientService clientService) {
-        this.clientService = clientService;
+    @GetMapping
+    public ResponseEntity<List<ClientDTO>> getAllClients() {
+        return new ResponseEntity<>(clientService.getAllClients(), HttpStatus.OK);
     }
 
     @GetMapping("/{cin}")
-    public ResponseEntity<ClientDTO> getClientByCin(@PathVariable String cin) {
+    public ResponseEntity<?> getClientByCin(@PathVariable final String cin) {
         try {
-            ClientDTO clientDTO = clientService.getClientByCIN(cin);
-            return new ResponseEntity<>(clientDTO, HttpStatus.OK);
+            return new ResponseEntity<>(clientService.getClientByCin(cin), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ClientDTO>> getAllClients() {
-        List<ClientDTO> clients = clientService.getAllClients();
-        return new ResponseEntity<>(clients, HttpStatus.OK);
-    }
-
     @PostMapping
-    public ResponseEntity<ClientDTO> createClient(@RequestBody ClientDTO clientDTO) {
+    public ResponseEntity<ClientDTO> createClient(@RequestBody final Client client) {
         try {
-            ClientDTO createdClient = clientService.createClient(clientDTO);
-            return new ResponseEntity<>(createdClient, HttpStatus.CREATED);
+            return new ResponseEntity<>(clientService.createClient(client), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PutMapping("/{cin}")
-    public ResponseEntity<ClientDTO> updateClient(@PathVariable String cin, @RequestBody ClientDTO clientDTO) {
+    @PutMapping
+    public ResponseEntity<ClientDTO> updateClient(@RequestBody final Client client) {
         try {
-            ClientDTO updatedClient = clientService.updateClient(cin, clientDTO);
-            return new ResponseEntity<>(updatedClient, HttpStatus.OK);
+            return new ResponseEntity<>(clientService.updateClient(client), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -57,7 +52,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{cin}")
-    public ResponseEntity<Void> deleteClient(@PathVariable String cin) {
+    public ResponseEntity<Void> deleteClient(@PathVariable final String cin) {
         try {
             clientService.deleteClient(cin);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -65,15 +60,15 @@ public class ClientController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     // HEAD request to check if client exists by CIN
     @RequestMapping(method = RequestMethod.HEAD, value = "/{cin}")
     public ResponseEntity<Void> checkClientExists(@PathVariable String cin) {
         try {
-            clientService.getClientByCIN(cin); // This method should not return the client but just check existence
+            clientService.getClientByCin(cin); // This method should not return the client but just check existence
             return new ResponseEntity<>(HttpStatus.OK); // Client exists
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Client does not exist
         }
-
     }
 }
