@@ -1,41 +1,160 @@
 #version: '3.8'
-#services:
-#  eureka-server:
-#    build:
-#      context: ../discovery-server # Update this path to the actual location of the Eureka server module
-#    ports:
-#      - "8761:8761"
-#    networks:
-#      - ocr-network
 #
-#  ocr-service:
-#    build:
-#      context: . # OCR module path
-#      dockerfile: Dockerfile
+#services:
+#  tesseract:
+#      image: tesseractshadow/tesseract4re:latest
+#      container_name: tesseract
+#      platform: linux/amd64  # Specify the platform
+#      ports:
+#        - "9090:9090"
+#      volumes:
+#        - ./temp/uploaded_files:/input
+#        - ./temp/resultats_reconnaissance:/output
+#      networks:
+#        - ocr-network
+#      healthcheck:
+#        test: [ "CMD", "curl", "-f", "http://localhost:9090" ]
+#        interval: 30s
+#        timeout: 10s
+#        retries: 5
+#
+#  ocr-module:
+#    build: ./../ocr-module
+#    container_name: ocr-module
 #    ports:
 #      - "3333:3333"
 #    environment:
-#      - SPRING_PROFILES_ACTIVE=default
+#      OCR_CONFIG_PATH: /app/ocr.xml
+#      TESSERACT_HOST: tesseract   # Hostname of Tesseract service
+#      TESSERACT_PORT: 9090        # Tesseract port
+#      OCR_INPUT_DIR: /input       # Input path for uploaded files
+#      OCR_OUTPUT_DIR: /output     # Output path for OCR results
+#      SPRING_APPLICATION_NAME: ocr-module
+#      SPRING_DATASOURCE_URL: jdbc:mysql://ocr-db:3306/shared_database
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: ''
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#    volumes:
+#      - ./ocr-module/logs:/app/logs
+#      - ./resultats_reconnaissance:/output  # Mount the output directory
+#      - ./uploaded_files:/input  # Mount the input directory
 #    depends_on:
-#      - eureka-server
+#      tesseract:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - ocr-network
+#
+#  db:
+#    image: mysql:8
+#    container_name: ocr-db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root_password
+#      MYSQL_DATABASE: shared_database
+#      MYSQL_USER: root
+#      MYSQL_PASSWORD: ''
+#    ports:
+#      - "3306:3306"
+#    networks:
+#      - ocr-network
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:latest
+#    container_name: zookeeper
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    ports:
+#      - "2181:2181"
+#    networks:
+#      - ocr-network
+#
+#  kafka:
+#    image: confluentinc/cp-kafka:latest
+#    container_name: kafka
+#    ports:
+#      - "9092:9092"
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#    depends_on:
+#      - zookeeper
 #    networks:
 #      - ocr-network
 #
 #networks:
 #  ocr-network:
 #    driver: bridge
-
+#-----------------
 version: '3.8'
 
 services:
   tesseract:
     image: tesseractshadow/tesseract4re:latest
     container_name: tesseract
+    platform: linux/amd64  # Specify the platform
     ports:
-      - "9090:9090"  # Assuming your service runs on this port
+      - "9090:9090"
     volumes:
-      - ./input:/input
-      - ./output:/output
+      - ./temp/uploaded_files:/input
+      - ./temp/resultats_reconnaissance:/output
+    networks:
+      - ocr-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9090" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: mysql:8
+    container_name: ocr-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: shared_database
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ''
+    ports:
+      - "3307:3306"
+    networks:
+      - ocr-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - ocr-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
     networks:
       - ocr-network
 

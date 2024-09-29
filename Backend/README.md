@@ -16,5 +16,11 @@ This approach should work well as long as the shared-module is carefully managed
 
 
 
-
+// step 1 : upload img
+// step 2 : convert in needed
+// step 3 : send to container X
+// step 4 : fetch texts in img
+// step 5 : send texts to back X
+// step 6 : analyse fraude
+// step 7 : save in db
 

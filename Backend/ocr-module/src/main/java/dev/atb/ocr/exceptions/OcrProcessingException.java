@@ -1,4 +1,4 @@
-package dev.atb.exceptions;
+package dev.atb.ocr.exceptions;
 
 public class OcrProcessingException extends RuntimeException {
 

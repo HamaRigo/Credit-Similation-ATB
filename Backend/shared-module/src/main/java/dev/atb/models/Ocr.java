@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "ocrs")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -17,7 +19,7 @@ public class Ocr {
     @Column(nullable = false)
     private String typeDocument;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "resultatsReconnaissance") // Renamed to match the database column
     private String resultatsReconnaissance;
 
     private boolean fraude;
@@ -29,6 +31,13 @@ public class Ocr {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "numeroCompte")
     private Compte numeroCompte;
+
+    // Optional: Add created and updated timestamps
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     // Getters and Setters
     public String getId() {
@@ -77,5 +86,32 @@ public class Ocr {
 
     public void setNumeroCompte(Compte numeroCompte) {
         this.numeroCompte = numeroCompte;
+    }
+
+    // Optional: Getters and setters for createdAt and updatedAt
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
