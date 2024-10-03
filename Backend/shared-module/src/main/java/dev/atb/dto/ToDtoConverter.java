@@ -9,11 +9,12 @@ import java.util.List;
 public final class ToDtoConverter {
     public static ClientDTO clientToDto(final Client client) {
         return new ClientDTO(
-                client.getCin(),
+                client.getNumeroDocument(),
+                client.getTypeDocument(),
                 client.getNom(),
                 client.getPrenom(),
                 client.getAdresse(),
-                client.getNumeroTelephone()
+                client.getTelephone()
         );
     }
 
@@ -29,14 +30,6 @@ public final class ToDtoConverter {
             }
             compteDTO.setOcrs(ocrDTOList);
         }
-        List<CreditDTO> creditDTOList = new ArrayList<>();
-        if (compte.getCredits() != null) {
-            for (Credit credit : compte.getCredits()) {
-                CreditDTO creditDTO = creditToDto(credit);
-                creditDTOList.add(creditDTO);
-            }
-            compteDTO.setCredits(creditDTOList);
-        }
         if (compte.getClient() != null) {
             ClientDTO clientDTO = clientToDto(compte.getClient());
             compteDTO.setClient(clientDTO);
@@ -48,19 +41,14 @@ public final class ToDtoConverter {
     public static CreditDTO creditToDto(final Credit credit) {
         return new CreditDTO(
                 credit.getId(),
-                credit.getTauxInteret(),
-                credit.getDuree(),
-                credit.getMontant(),
+                credit.getType(),
                 credit.getStatut(),
-                creditModelToDto(credit.getModelDeCredit())
-        );
-    }
-
-    public static CreditModelDTO creditModelToDto(final CreditModel creditModel) {
-        return new CreditModelDTO(
-                creditModel.getId(),
-                creditModel.getFacteursDeRisque(),
-                creditModel.getScores()
+                credit.getTauxInteret(),
+                credit.getMontant(),
+                credit.getDateDebut(),
+                credit.getDateFin(),
+                credit.getPaiementMensuel(),
+                clientToDto(credit.getClient())
         );
     }
 
@@ -72,6 +60,29 @@ public final class ToDtoConverter {
                 ocr.isFraude(),
                 ocr.getImage(),
                 ocr.getModelUsed()
+        );
+    }
+
+    public static UserDTO userToDto(final User user) {
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(user, userDTO);
+
+        List<RoleDTO> roleDTOList = new ArrayList<>();
+        if (user.getRoles() != null) {
+            for (Role role : user.getRoles()) {
+                RoleDTO roleDTO = roleToDto(role);
+                roleDTOList.add(roleDTO);
+            }
+            userDTO.setRoles(roleDTOList);
+        }
+
+        return userDTO;
+    }
+
+    public static RoleDTO roleToDto(final Role role) {
+        return new RoleDTO(
+          role.getId(),
+          role.getName()
         );
     }
 }

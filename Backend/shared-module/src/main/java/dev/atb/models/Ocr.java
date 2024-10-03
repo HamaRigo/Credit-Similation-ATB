@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class Ocr {
     @Id
-    @GeneratedValue(generator = "uuid2")//, strategy = GenerationType.UUID)
+    @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     private String id;
 

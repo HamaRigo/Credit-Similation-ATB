@@ -2,7 +2,12 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Data
@@ -13,23 +18,34 @@ public class Credit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private float tauxInteret;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private CreditType type;
 
-    @Column(nullable = false)
-    private int duree;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private CreditStatus statut;
 
-    @Column(nullable = false)
-    private float montant;
+    @NotNull
+    private double tauxInteret;
 
-    @Column(nullable = false)
-    private String statut;
+    @NotNull
+    private double montant;
+
+    @NotNull
+    private Date dateDebut;
+
+    @NotNull
+    private Date dateFin;
+
+    @NotNull
+    private double paiementMensuel;
 
     @JsonIgnoreProperties("credits")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private Compte compte;
+    private Client client;
 
-    @JsonIgnoreProperties("credit")
-    @OneToOne(mappedBy = "credit")
-    private CreditModel modelDeCredit;
+    @NotNull
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
