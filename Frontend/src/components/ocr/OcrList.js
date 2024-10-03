@@ -1,7 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { getAllOcrEntities, analyzeAndSaveImage, deleteOcrById, updateOcrById } from '../../services/ocrService';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Typography, IconButton } from '@mui/material';
+import {
+    getAllOcrEntities,
+    analyzeAndSaveImage,
+    deleteOcrById,
+    updateOcrById
+} from '../../services/ocrService';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Button,
+    Typography,
+    IconButton,
+    TextField,
+    CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    DialogContent,
+    DialogContentText
+} from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,18 +36,23 @@ const OcrList = () => {
     const [numeroCompteId, setNumeroCompteId] = useState('');
     const [editOcrId, setEditOcrId] = useState(null);
     const [editField, setEditField] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchOcrEntities = useCallback(async () => {
+        setLoading(true);
         try {
             const response = await getAllOcrEntities();
-            console.log('API Response:', response); // Log the entire response
-
-            // Adjust based on the actual response format
+            console.log('API Response:', response);
             const ocrData = response?.data || response || [];
             setOcrList(Array.isArray(ocrData) ? ocrData : []);
         } catch (error) {
-            console.error('Error fetching OCR entities:', error); // Log the error
+            console.error('Error fetching OCR entities:', error);
             toast.error('Error fetching OCR entities.');
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -46,30 +73,41 @@ const OcrList = () => {
             toast.error('Please provide both document type and account number.');
             return;
         }
+        setLoading(true);
         try {
             const ocrEntity = await analyzeAndSaveImage(file, typeDocument, numeroCompteId);
-            setOcrList([...ocrList, ocrEntity.data]);
+            setOcrList(prevList => [...prevList, ocrEntity.data]);
             toast.success('Document analyzed and OCR entity saved.');
             setFile(null);
             setTypeDocument('');
             setNumeroCompteId('');
         } catch (error) {
             toast.error('Failed to analyze and save document.');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = (id) => {
+        setOpenDialog(true);
+        setDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
         try {
-            await deleteOcrById(id);
-            setOcrList(ocrList.filter(ocr => ocr.id !== id));
+            await deleteOcrById(deleteId);
+            setOcrList(prevList => prevList.filter(ocr => ocr.id !== deleteId));
             toast.success('OCR entity deleted.');
         } catch (error) {
             toast.error('Error deleting OCR entity.');
+        } finally {
+            setOpenDialog(false);
+            setDeleteId(null);
         }
     };
 
     const handleInputChange = (id, field, value) => {
-        setOcrList(ocrList.map(ocr =>
+        setOcrList(prevList => prevList.map(ocr =>
             ocr.id === id ? { ...ocr, [field]: value } : ocr
         ));
     };
@@ -97,27 +135,41 @@ const OcrList = () => {
         }
     };
 
+    const filteredOcrList = ocrList.filter(ocr =>
+        ocr.typeDocument.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ocr.numeroCompteId.toString().includes(searchTerm)
+    );
+
     return (
         <div className="ocr-list-container">
             <Typography variant="h6">OCR List</Typography>
             <div className="file-input-section">
                 <input type="file" onChange={handleFileChange} />
-                <input
-                    type="text"
-                    placeholder="Document Type"
+                <TextField
+                    label="Document Type"
+                    variant="outlined"
                     value={typeDocument}
                     onChange={(e) => setTypeDocument(e.target.value)}
+                    style={{ marginLeft: '10px' }}
                 />
-                <input
-                    type="text"
-                    placeholder="Account Number ID"
+                <TextField
+                    label="Account Number ID"
+                    variant="outlined"
                     value={numeroCompteId}
                     onChange={(e) => setNumeroCompteId(e.target.value)}
+                    style={{ marginLeft: '10px' }}
                 />
-                <Button variant="contained" color="primary" onClick={handleAnalyzeAndSave}>
-                    Analyze and Save
+                <Button variant="contained" color="primary" onClick={handleAnalyzeAndSave} disabled={loading}>
+                    {loading ? <CircularProgress size={24} /> : 'Analyze and Save'}
                 </Button>
             </div>
+            <TextField
+                label="Search"
+                variant="outlined"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ marginTop: '20px', marginBottom: '10px', width: '300px' }}
+            />
             <TableContainer>
                 <Table>
                     <TableHead>
@@ -125,7 +177,6 @@ const OcrList = () => {
                             <TableCell>ID</TableCell>
                             <TableCell>Type Document</TableCell>
                             <TableCell>Results</TableCell>
-
                             <TableCell>Account Number</TableCell>
                             <TableCell>Image</TableCell>
                             <TableCell>Fraud</TableCell>
@@ -133,8 +184,8 @@ const OcrList = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {ocrList.length > 0 ? (
-                            ocrList.map((ocr) => (
+                        {filteredOcrList.length > 0 ? (
+                            filteredOcrList.map((ocr) => (
                                 <TableRow key={ocr.id}>
                                     <TableCell>{ocr.id}</TableCell>
                                     <TableCell onClick={() => handleCellClick(ocr.id, 'typeDocument')}>
@@ -151,7 +202,6 @@ const OcrList = () => {
                                         )}
                                     </TableCell>
                                     <TableCell>{ocr.resultatsReconnaissance}</TableCell>
-
                                     <TableCell>{ocr.numeroCompteId}</TableCell>
                                     <TableCell>
                                         {ocr.image && (
@@ -189,6 +239,22 @@ const OcrList = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this OCR entity?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={confirmDelete} color="secondary">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };
