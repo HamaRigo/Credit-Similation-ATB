@@ -1,12 +1,11 @@
 package dev.atb.dto;
 
 import dev.atb.models.*;
-import org.springframework.beans.BeanUtils;
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class ToDtoConverter {
+
     public static ClientDTO clientToDto(final Client client) {
         return new ClientDTO(
                 client.getCin(),
@@ -18,25 +17,31 @@ public final class ToDtoConverter {
     }
 
     public static CompteDTO compteToDto(final Compte compte) {
-        CompteDTO compteDTO = new CompteDTO();
-        BeanUtils.copyProperties(compte, compteDTO);
+        // Mapping the fields based on your updated Compte model
+        CompteDTO compteDTO = new CompteDTO(
+                compte.getNumeroCompte(),   // Use numeroCompte instead of id
+                compte.getSolde(),
+                compte.getTypeCompte(),      // Use typeCompte
+                null, // Client to be set below
+                null, // OCRs to be set below
+                null  // Credits to be set below
+        );
 
-        List<OcrDTO> ocrDTOList = new ArrayList<>();
-        if (compte.getOcrs() != null) {
-            for (Ocr ocr : compte.getOcrs()) {
-                OcrDTO ocrDTO = ocrToDto(ocr);
-                ocrDTOList.add(ocrDTO);
-            }
-            compteDTO.setOcrs(ocrDTOList);
-        }
-        List<CreditDTO> creditDTOList = new ArrayList<>();
-        if (compte.getCredits() != null) {
-            for (Credit credit : compte.getCredits()) {
-                CreditDTO creditDTO = creditToDto(credit);
-                creditDTOList.add(creditDTO);
-            }
-            compteDTO.setCredits(creditDTOList);
-        }
+        // Convert Ocr list using streams
+        List<OcrDTO> ocrDTOList = (compte.getOcrs() != null) ?
+            compte.getOcrs().stream()
+                .map(ToDtoConverter::ocrToDto)
+                .collect(Collectors.toList()) : null;
+        compteDTO.setOcrs(ocrDTOList);
+
+        // Convert Credit list using streams
+        List<CreditDTO> creditDTOList = (compte.getCredits() != null) ?
+            compte.getCredits().stream()
+                .map(ToDtoConverter::creditToDto)
+                .collect(Collectors.toList()) : null;
+        compteDTO.setCredits(creditDTOList);
+
+        // Convert Client if present
         if (compte.getClient() != null) {
             ClientDTO clientDTO = clientToDto(compte.getClient());
             compteDTO.setClient(clientDTO);
@@ -69,7 +74,7 @@ public final class ToDtoConverter {
                 ocr.getId(),
                 ocr.getTypeDocument(),
                 ocr.getResultatsReconnaissance(),
-                ocr.isFraude(),
+                ocr.isFraud(),
                 ocr.getImage(),
                 ocr.getModelUsed()
         );
