@@ -1,17 +1,20 @@
-FROM openjdk:17-jdk-slim
+# Use TensorFlow Serving image for your TensorFlow model
+FROM emacski/tensorflow-serving:latest
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the jar file and the OCR configuration file
-COPY target/ocr-module.jar /app/ocr-module.jar
-COPY src/main/resources/ocr.xml /app/ocr.xml
+# Copy your TensorFlow model files to the container (adjust the path to your real model location)
+COPY ./tensorflow/models /models
 
-# Set the environment variable for the OCR configuration path
-ENV OCR_CONFIG_PATH=/app/ocr.xml
+# Set the environment variable for the model name
+ENV MODEL_NAME=model
 
-# Expose the required port
-EXPOSE 8088
+# Expose the required port for TensorFlow Serving
+EXPOSE 8501
 
-# Run the OCR module
-CMD ["java", "-jar", "/app/ocr-module.jar"]
+# Start TensorFlow Serving using the model files
+CMD ["tensorflow_model_server", \
+     "--rest_api_port=8501", \
+     "--model_name=${MODEL_NAME}", \
+     "--model_base_path=/models"]
