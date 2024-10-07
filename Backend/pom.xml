@@ -23,7 +23,6 @@
         <module>api-gateway</module>
     </modules>
 
-
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -34,6 +33,7 @@
         <testcontainers.version>1.17.6</testcontainers.version>
         <jackson.version>2.15.2</jackson.version>
         <woodstox.version>6.2.6</woodstox.version> <!-- Specify a safe version -->
+        <kafka.version>3.0.0</kafka.version> <!-- Add a Kafka version property -->
     </properties>
 
     <dependencyManagement>
@@ -69,6 +69,12 @@
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-boot-starter</artifactId>
                 <version>3.0.0</version>
+            </dependency>
+            <!-- Kafka Dependency -->
+            <dependency>
+                <groupId>org.springframework.kafka</groupId>
+                <artifactId>spring-kafka</artifactId>
+                <version>${kafka.version}</version> <!-- Use the version defined in properties -->
             </dependency>
         </dependencies>
     </dependencyManagement>

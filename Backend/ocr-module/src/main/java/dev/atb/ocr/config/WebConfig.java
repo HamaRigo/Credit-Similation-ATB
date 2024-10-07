@@ -9,10 +9,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // Adjust this to match your API base URL
-                .allowedOrigins("http://localhost:3000","http://localhost:9090") // Replace with your frontend URL
+        // Match all URLs in OcrController
+        registry.addMapping("/ocrs/**") // Matches all endpoints in the OcrController
+                .allowedOrigins("http://localhost:3000", "http://localhost:9090") // Frontend and Docker URLs
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(true); // Allow credentials if necessary
     }
 }
