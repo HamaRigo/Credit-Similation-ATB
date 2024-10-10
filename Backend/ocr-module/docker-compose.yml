@@ -114,7 +114,39 @@ services:
       timeout: 10s
       retries: 5
 
-  # OCR Module service
+  # Model Retraining Service (Auto-retraining based on new data)
+  model-trainer:
+    build:
+      context: ./trainer
+    container_name: model-trainer
+    volumes:
+      - /Users/hammarigo/Desktop/ocr branche/Backend/ocr-module/tensorflow/models:/models/model
+      - ./trainer/data:/trainer/data  # Data for model retraining
+    environment:
+      - MODEL_BASE_PATH=/models/model
+    networks:
+      - ocr-network
+    depends_on:
+      - tensorflow
+    restart: always
+    command: python3 retrain_model.py
+
+  # Logging and Monitoring with ELK (ElasticSearch, Logstash, Kibana)
+  elk:
+    image: sebp/elk:761
+    container_name: elk
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "5601:5601"  # Kibana Dashboard
+      - "9200:9200"  # Elasticsearch
+      - "5044:5044"  # Logstash
+    networks:
+      - ocr-network
+    volumes:
+      - elk_data:/var/lib/elasticsearch  # Persistent storage for Elasticsearch
+
+  # OCR Module Service
   ocr-module:
     build:
       context: .
@@ -127,6 +159,12 @@ services:
     depends_on:
       - db
       - tensorflow
+      - kafka
+
+# Persistent volumes for data storage
+volumes:
+  mysql_data:  # Persistent volume for MySQL
+  elk_data:    # Persistent volume for Elasticsearch
 
 # Secrets for secure database credentials
 secrets:
