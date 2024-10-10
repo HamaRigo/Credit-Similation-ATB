@@ -11,6 +11,9 @@ services:
     volumes:
       - ./temp/uploaded_files:/input
       - ./temp/resultats_reconnaissance:/output
+    environment:
+      TESSDATA_PREFIX: /usr/share/tesseract-ocr/4.00/tessdata
+      TESSERACT_LANGUAGE: eng+fra+ar  # Specify languages for OCR
     networks:
       - ocr-network
     healthcheck:
@@ -19,17 +22,21 @@ services:
       timeout: 10s
       retries: 5
 
-  # MySQL Database
+  # MySQL Database with persistent volume for data storage
   db:
     image: mysql:8
-    container_name: ocr-db
+    container_name: db-instance
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
       MYSQL_DATABASE: shared_database
       MYSQL_USER: root
       MYSQL_PASSWORD: ''
     ports:
       - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persistent data storage
+    secrets:
+      - mysql_root_password
     networks:
       - ocr-network
     healthcheck:
@@ -50,7 +57,7 @@ services:
     networks:
       - ocr-network
 
-  # Kafka service
+  # Kafka service for event-driven OCR task distribution
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
@@ -66,30 +73,30 @@ services:
     networks:
       - ocr-network
 
-  # Utility container to initialize the required directories and TensorFlow model files
+  # TensorFlow Model Initialization Service
   model-init:
     image: alpine
     container_name: model-init
     command: sh -c "mkdir -p /models/model/1/variables && \
+      mkdir -p /models/model/1/assets && \
       touch /models/model/1/saved_model.pb && \
       touch /models/model/1/variables/variables.data-00000-of-00001 && \
       touch /models/model/1/variables/variables.index"
     volumes:
-      - ./tensorflow/models:/models/model
+      - "/Users/hammarigo/Desktop/ocr branche/Backend/ocr-module/tensorflow/models:/models/model"
     networks:
       - ocr-network
     depends_on:
       - db
 
+  # TensorFlow Model Server for serving the trained machine learning model
   tensorflow:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: emacski/tensorflow-serving:latest  # ARM-compatible image
     container_name: tensorflow
     ports:
       - "8501:8501"
     volumes:
-      - ./tensorflow/models:/models/model
+      - /Users/hammarigo/Desktop/ocr branche/Backend/ocr-module/tensorflow/models:/models/model
     environment:
       - MODEL_NAME=model
     depends_on:
@@ -121,6 +128,12 @@ services:
       - db
       - tensorflow
 
+# Secrets for secure database credentials
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+
+# Networks to ensure services communicate in isolation
 networks:
   ocr-network:
     driver: bridge
