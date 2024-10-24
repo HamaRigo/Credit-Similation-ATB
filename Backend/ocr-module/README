@@ -1,0 +1,122 @@
+/ocr-module/
+│
+├── /temp/                         # For file storage in Tesseract
+│   ├── /uploaded_files/            # Input images for OCR
+│   └── /resultats_reconnaissance/  # Output OCR results
+│
+├── /tensorflow/                    # TensorFlow-related directories
+│   └── /models/                    # TensorFlow model directory
+│       └── /model/                 # Versioned model structure
+│           └── /1/                 # Version 1 of the model
+│               ├── assets/         # TensorFlow assets (optional)
+│               ├── saved_model.pb  # Serialized TensorFlow model
+│               └── variables/      # Variables for the model
+│                   ├── variables.data-00000-of-00001
+│                   └── variables.index
+│
+├── /trainer/                       # For model retraining
+│   ├── /data/                      # Data used for retraining
+│   │   ├── /validation_data/       # Validation data
+│   │   └── /training_data/         # Training data
+│   └── retrain_model.py            # Python script for retraining
+│
+├── /secrets/                       # Secrets for database
+│   └── mysql_root_password.txt     # MySQL root password
+│
+├── /docker-compose.yml             # Docker Compose configuration
+├── /Dockerfile                     # Dockerfile for ocr-module
+└── /src/                           # Your OCR module code
+    ├── main/                       # Main source code
+    └── test/                       # Tests
+
+
+-Overview: Brief description of the project and its goals.
+-Directory Structure: Explain the purpose of each directory.
+-Setup Instructions: Steps to build and run the Docker containers.
+-Usage Instructions: How to use the OCR services, including endpoints and examples.
+-Testing Instructions: How to run tests and check logs.
+
++------------------+           +-------------------+
+| Input Image      | --------> | OCR Processing    |
+| Reception        |           | (Tesseract OCR)   |
++------------------+           +-------------------+
+                                   |
+                                   V
+                         +----------------------+
+                         | Image Validation      |
+                         +----------------------+
+                                   |
+                                   V
+                         +----------------------+
+                         | ML Model Training     |
+                         | (InceptionV3)        |
+                         +----------------------+
+                                   |
+                                   V
+                         +----------------------+
+                         | Database Operations    |
+                         +----------------------+
+                                   |
+                                   V
+                         +----------------------+
+                         | User Notification      |
+                         +----------------------+
+
+
+##Here’s a step-by-step description of how the image moves through the logic:
+
+Image Upload:
+
+The process begins when a user uploads an image file as a MultipartFile. This file is passed into the analyzeAndSaveImage method of the OcrService.
+Temporary File Creation:
+
+Inside the analyzeAndSaveImage method, the uploaded MultipartFile is temporarily saved as a file on the server. The tempFile variable is created using File.createTempFile, which generates a temporary file in the default temporary file directory.
+File Transfer:
+
+The content of the MultipartFile is transferred to the temporary file using imageFile.transferTo(tempFile). At this point, the uploaded image is now stored in the temporary file location.
+PDF Conversion (if applicable):
+
+If the uploaded file is a PDF, it is converted to a TIFF file by calling the convertPdfToTiff method. The original tempFile reference is updated to point to the new TIFF file.
+Perform OCR:
+
+The performOcrWithTesseract method is called with the tempFile (now either the original image file or the TIFF file). This method checks the validity of the file, executes the Tesseract OCR process, and generates the OCR output in a text file.
+OCR Result Handling:
+
+After the OCR process completes, the text output is read and stored in a string (ocrResult). An Ocr object is then created, where the results of the OCR and the type of document are set.
+Image Encoding:
+
+The original uploaded image is also converted to a Base64 encoded string using Base64.getEncoder().encodeToString(imageBytes), and this string is saved in the Ocr object. This allows the original image to be stored in a format suitable for databases or further processing.
+Database Save:
+
+The Ocr object, now containing the OCR results, document type, and the Base64-encoded image, is saved to the database using ocrRepository.save(ocr).
+Response Creation:
+
+Finally, the method converts the Ocr entity back to an OcrDTO object using convertToOcrDTO(ocr) and returns it, completing the process.
+Temporary File Cleanup:
+
+In the finally block, the temporary file is deleted using cleanupTemporaryFiles(tempFile), ensuring that no unnecessary files remain on the server after processing.
+Summary of the Movement:
+From: User uploads the image file as a MultipartFile.
+To: The uploaded image is temporarily saved as a file on the server (tempFile).
+From: If a PDF is uploaded, it is converted to a TIFF file.
+To: The temporary file is processed by Tesseract OCR to extract text.
+From: The extracted text and Base64 encoded image are stored in an Ocr entity.
+To: The Ocr entity is saved in the database, and the temporary file is deleted.
+--------------------------------------------------------------------------------------
+
+###Explanation of Changes:
+Signature Verification Logic: The signature verification logic, originally in a separate SignatureVerificationService, is now merged into the OcrService as a private method (verifySignature). This keeps the service unified.
+
+Image Handling:
+
+The Base64 signature image is converted to a temporary image file (convertBase64ToImageFile), which is then compared with a saved signature using the verifySignature method.
+The OCR process continues as before, with the result saved to the database.
+Code Cleanup:
+
+All file-handling methods (like cleanupTemporaryFiles and convertBase64ToImageFile) are now internal helper methods.
+The PDF-to-TIFF conversion and OCR validation logic are still part of the service, but encapsulated as private methods for clarity.
+Benefits:
+Single Responsibility: The entire OCR and signature verification logic are now part of a single service. This reduces the need for inter-service communication and simplifies method calls.
+Efficiency: Since everything happens within the same service, you avoid overhead from separate service calls and enhance the readability and maintainability of the code.
+Centralized Logic: All OCR and image-processing logic (including signature verification) is in one place, making it easier to debug and manage.
+This merged version streamlines your service by keeping all related methods together.
