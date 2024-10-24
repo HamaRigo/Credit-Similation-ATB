@@ -15,8 +15,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Ocr {
-    @Id
 
+    @Id
+    @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     private String id;
 
@@ -39,19 +40,20 @@ public class Ocr {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Compte compte;
 
-    public boolean isFraud() {
-        return fraud;
-    }
-
-    public void setFraud(boolean fraude) {
-        this.fraud = fraud;
-    }
+    @Column(updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Column(updatable = false)
-    private LocalDateTime updatedAt;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 
-
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
