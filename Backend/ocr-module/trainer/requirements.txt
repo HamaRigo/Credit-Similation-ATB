@@ -1,0 +1,7 @@
+tensorflow==2.17.0
+keras  # Ensure the Keras version matches TensorFlow
+numpy==1.24.0
+requests==2.31.0  # Ensure the latest version of requests for security updates
+Pillow==9.2.0  # For image processing
+opencv-python-headless==4.5.5.64  # For image processing in Docker (headless version)
+scikit-image==0.19.3  # Version compatible with TensorFlow and OpenCV
