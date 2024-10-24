@@ -1,11 +1,15 @@
 package dev.atb.ocr.Service;
 
 import dev.atb.dto.OcrDTO;
-import dev.atb.ocr.config.OcrConfig; // Import the OcrConfig
+import dev.atb.ocr.config.OcrConfig;
 import dev.atb.ocr.exceptions.OcrProcessingException;
 import dev.atb.models.Ocr;
 import dev.atb.repo.OcrRepository;
 import dev.atb.repo.CompteRepository;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +21,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,37 +35,38 @@ public class OcrService {
 
     private final OcrRepository ocrRepository;
     private final CompteRepository compteRepository;
-    private final OcrConfig ocrConfig; // Inject the OcrConfig
+    private final OcrConfig ocrConfig;
+    // Load OpenCV library for image processing
+    static {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
 
     @Autowired
-    public OcrService(OcrRepository ocrRepository,
-                      CompteRepository compteRepository,
-                      OcrConfig ocrConfig) { // Remove unused dependencies
+    public OcrService(OcrRepository ocrRepository, CompteRepository compteRepository, OcrConfig ocrConfig) {
         this.ocrRepository = ocrRepository;
         this.compteRepository = compteRepository;
-        this.ocrConfig = ocrConfig; // Initialize OcrConfig
+        this.ocrConfig = ocrConfig;
     }
 
-    private String generateUniqueFileName(String prefix, String extension) {
-        return prefix + "_" + UUID.randomUUID() + extension;
-    }
-
+    // Perform OCR using Tesseract
     public String performOcrWithTesseract(File file) {
         try {
-            if (file.length() == 0) {
-                logger.error("File is empty.");
-                throw new IOException("File is empty.");
-            }
+            validateInputFile(file);
 
             // Define the output file name without extension
             String outputFileName = file.getName().substring(0, file.getName().lastIndexOf('.'));
             File outputFile = new File(file.getParent(), outputFileName);
 
             // Command to execute Tesseract
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    "tesseract", file.getAbsolutePath(), outputFile.getAbsolutePath());
+            ProcessBuilder processBuilder = new ProcessBuilder("tesseract", file.getAbsolutePath(), outputFile.getAbsolutePath());
 
             Process process = processBuilder.start();
+
+            // Timeout for process
+            if (!process.waitFor(60, TimeUnit.SECONDS)) {
+                process.destroy(); // Forcefully terminate the process if it times out
+                throw new OcrProcessingException("Tesseract process timed out");
+            }
 
             int exitCode = process.waitFor();
 
@@ -67,6 +74,7 @@ public class OcrService {
                 throw new OcrProcessingException("Tesseract process failed with exit code: " + exitCode);
             }
 
+            // Read and return the OCR results
             return new String(Files.readAllBytes(new File(outputFile.getAbsolutePath() + ".txt").toPath()));
 
         } catch (Exception e) {
@@ -76,60 +84,99 @@ public class OcrService {
     }
 
     /**
-     * Analyzes and saves the image provided as a MultipartFile.
+     * Analyze and save the image provided as a MultipartFile, including saving the image to the database.
      *
-     * @param imageFile     the image file to process
-     * @param typeDocument  the type of document being processed (can be null)
-     * @param numeroCompteId the account ID associated with the document (can be null)
-     * @return an OcrDTO containing the results of the OCR processing
-     * @throws OcrProcessingException if there is an error during processing
+     * @param imageFile the image file to process
+     * @param typeDocument the type of document being processed (optional)
+     * @param numeroCompteId the account ID associated with the document (optional)
+     * @param signatureBase64 Base64 encoded signature for verification
+     * @return OcrDTO containing the OCR results
      */
-    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, String numeroCompteId) {
+
+    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, String numeroCompteId, String signatureBase64) {
         File tempFile = null;
-        File tempConvertedFile = null;
         try {
+            // Save image to a temporary file
             String originalFileName = imageFile.getOriginalFilename();
             String fileExtension = getFileExtension(originalFileName);
             tempFile = File.createTempFile("temp", "." + fileExtension);
             imageFile.transferTo(tempFile);
 
-            // Convert the image
-            tempConvertedFile = convertImage(tempFile, fileExtension);
-            validateConvertedFile(tempConvertedFile);
+            // Convert PDFs to TIFF if necessary
 
-            String ocrResult = performOcrWithTesseract(tempConvertedFile);
-            Ocr ocr = new Ocr();
-            ocr.setResultatsReconnaissance(ocrResult);
-            ocr.setTypeDocument(typeDocument);
-            if (numeroCompteId != null) {
-                compteRepository.findById(numeroCompteId).ifPresent(ocr::setCompte);
-            }
-
-            ocrRepository.save(ocr);
-            return convertToOcrDTO(ocr);
-        } catch (IOException e) {
-            logger.error("Error processing image file: {}", imageFile.getOriginalFilename(), e);
-            throw new OcrProcessingException("Error occurred while processing image", e);
-        } finally {
-            cleanupTemporaryFiles(tempFile, tempConvertedFile);
+        if ("pdf".equalsIgnoreCase(fileExtension)) {
+                tempFile = convertPdfToTiff(tempFile); // Optional if you're handling PDFs
         }
+
+            // Perform OCR using Tesseract
+        validateInputFile(tempFile);
+        String ocrResult = performOcrWithTesseract(tempFile);
+        Ocr ocr = new Ocr();
+        ocr.setResultatsReconnaissance(ocrResult);
+        ocr.setTypeDocument(typeDocument);
+
+            // Convert image to Base64 and save in the database
+        byte[] imageBytes = imageFile.getBytes();
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        ocr.setImage(base64Image); // Store Base64 encoded string
+
+        if (numeroCompteId != null) {
+            compteRepository.findById(numeroCompteId).ifPresent(ocr::setCompte);
+        }
+
+            // Signature Verification
+            File signatureFile = convertBase64ToImageFile(signatureBase64, "signature");
+            String savedSignaturePath = getSavedSignaturePath(numeroCompteId);
+            String verificationResult = verifySignature(signatureFile.getAbsolutePath(), savedSignaturePath);
+
+            boolean isFraud = verificationResult.equalsIgnoreCase("fraud");
+            ocr.setFraud(isFraud);
+            ocrRepository.save(ocr); // Save OCR results to the database
+            logger.info("OCR results saved successfully for file: {}", originalFileName);
+        return convertToOcrDTO(ocr);
+    } catch (IOException e) {
+        logger.error("Error processing image file: {}", imageFile.getOriginalFilename(), e);
+        throw new OcrProcessingException("Error occurred while processing image", e);
+    } finally {
+        cleanupTemporaryFiles(tempFile);
+    }
+}
+
+    // Helper Methods
+
+    // Perform Signature Verification (merged from SignatureVerificationService)
+    private String verifySignature(String inputImagePath, String savedSignaturePath) throws IOException {
+        Mat inputImage = Imgcodecs.imread(inputImagePath);
+        Mat savedSignature = Imgcodecs.imread(savedSignaturePath);
+
+        // Convert to grayscale and apply binary thresholding
+        Mat inputGray = new Mat();
+        Mat signatureGray = new Mat();
+        Imgproc.cvtColor(inputImage, inputGray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(savedSignature, signatureGray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(inputGray, inputGray, 128, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(signatureGray, signatureGray, 128, 255, Imgproc.THRESH_BINARY);
+
+        // Compare the two images
+        double similarity = Imgproc.matchShapes(inputGray, signatureGray, Imgproc.CV_CONTOURS_MATCH_I1, 0);
+
+        // Return fraud or not fraud based on similarity threshold
+        return similarity < 0.5 ? "fraud" : "not fraud";
     }
 
-    // Overloaded method to allow analyzing images without specifying typeDocument and numeroCompteId
-    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile) {
-        return analyzeAndSaveImage(imageFile, "defaultType", null);
+
+    // Method to convert PDF to TIFF
+    private File convertPdfToTiff(File pdfFile) throws IOException {
+        // Implement your PDF to TIFF conversion logic here
+        // This is a placeholder. You might need a library like Apache PDFBox.
+        File tiffFile = new File(pdfFile.getAbsolutePath().replace(".pdf", ".tiff"));
+        // Conversion logic here
+        return tiffFile;
     }
 
-    private File convertImage(File inputFile, String extension) throws IOException {
-        File outputFile = File.createTempFile("converted", ".png");
-        BufferedImage bufferedImage = ImageIO.read(inputFile);
-        ImageIO.write(bufferedImage, "png", outputFile); // Convert to PNG format
-        return outputFile;
-    }
-
-    private void validateConvertedFile(File file) throws IOException {
+    private void validateInputFile(File file) throws IOException {
         if (!file.exists() || file.length() == 0) {
-            throw new IOException("Converted file is invalid or empty: " + file.getAbsolutePath());
+            throw new IOException("Input file is invalid or empty: " + file.getAbsolutePath());
         }
     }
 
@@ -152,7 +199,6 @@ public class OcrService {
             }
         }
     }
-
 
     public List<OcrDTO> getAllOcrEntities() {
         return ocrRepository.findAll().stream().map(this::convertToOcrDTO).collect(Collectors.toList());
@@ -180,22 +226,27 @@ public class OcrService {
             ocr.setResultatsReconnaissance(newText);
             ocr.setTypeDocument(documentType);
             ocr = ocrRepository.save(ocr);
+            logger.info("Updated OCR record with ID: {}", id);
             return convertToOcrDTO(ocr);
         } else {
             logger.error("OCR record with ID {} not found.", id);
             throw new OcrProcessingException("OCR record not found");
         }
     }
-
-    private String getFileExtension(String originalFileName) {
-        int lastDotIndex = originalFileName.lastIndexOf('.');
-        return (lastDotIndex > 0) ? originalFileName.substring(lastDotIndex) : ""; // return empty string if no extension
+    private String getSavedSignaturePath(String numeroCompteId) {
+        // Logic to get the saved signature path based on account ID
+        return "path/to/saved/signature"; // Placeholder implementation
     }
 
-    // Example method using ocrConfig properties
-    public void printOcrConfig() {
-        logger.info("Supported image types: {}", ocrConfig.getImageTypes());
-        logger.info("Tesseract config path: {}", ocrConfig.getConfigPath());
-        logger.info("Language: {}", ocrConfig.getLang());
+    private File convertBase64ToImageFile(String base64, String fileName) throws IOException {
+        byte[] imageBytes = Base64.getDecoder().decode(base64);
+        File file = new File(System.getProperty("java.io.tmpdir"), fileName + ".png");
+        Files.write(file.toPath(), imageBytes);
+        return file;
     }
+
+    private String getFileExtension(String fileName) {
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
+    }
+
 }

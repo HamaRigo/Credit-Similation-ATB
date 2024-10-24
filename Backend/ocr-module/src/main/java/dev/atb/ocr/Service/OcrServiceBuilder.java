@@ -3,7 +3,7 @@ package dev.atb.ocr.Service;
 import dev.atb.repo.OcrRepository;
 import dev.atb.repo.CompteRepository;
 import dev.atb.ocr.config.OcrConfig; // Import OcrConfig
-import org.springframework.web.client.RestTemplate; // Import RestTemplate
+import org.springframework.web.client.RestTemplate; // Import RestTemplate;
 
 public class OcrServiceBuilder {
     private OcrRepository ocrRepository;
@@ -26,6 +26,11 @@ public class OcrServiceBuilder {
         return this;
     }
 
+    public OcrServiceBuilder setRestTemplate(RestTemplate restTemplate) { // Add setter for RestTemplate
+        this.restTemplate = restTemplate;
+        return this;
+    }
+
     public OcrService build() {
         // Validation to ensure all required fields are set
         if (ocrRepository == null) {
@@ -37,11 +42,11 @@ public class OcrServiceBuilder {
         if (ocrConfig == null) {
             throw new IllegalStateException("OcrConfig must be set");
         }
-        if (restTemplate == null) { // Add validation for RestTemplate
+        if (restTemplate == null) { // Validation for RestTemplate
             throw new IllegalStateException("RestTemplate must be set");
         }
 
         // Create and return the OcrService instance
-        return new OcrService(ocrRepository, compteRepository, ocrConfig, restTemplate); // Adjust the constructor call
+        return new OcrService(ocrRepository, compteRepository, ocrConfig); // Include restTemplate
     }
 }
