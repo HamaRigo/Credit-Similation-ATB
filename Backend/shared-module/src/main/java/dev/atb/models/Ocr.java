@@ -23,16 +23,12 @@ public class Ocr {
 
     @Column(nullable = false)
     private String typeDocument;
-
     @Column(nullable = false)
     private String resultatsReconnaissance;
-
     private boolean fraud;
-
     @Lob
     @NotBlank(message = "Image data cannot be empty")
     private String image; // Storing image data as a Base64 encoded string
-
     private String modelUsed;
     private String errorMessage;
 
@@ -46,12 +42,14 @@ public class Ocr {
     @Column(updatable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Automatically set the creation date
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now(); // Initial setting for update tracking
     }
 
+    // Automatically set the update date
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
