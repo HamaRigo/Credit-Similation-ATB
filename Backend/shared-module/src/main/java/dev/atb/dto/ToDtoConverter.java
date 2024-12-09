@@ -4,18 +4,34 @@ import dev.atb.models.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for converting model entities to their respective DTO representations.
+ */
 public final class ToDtoConverter {
 
+    /**
+     * Converts a `Client` model to `ClientDTO`.
+     *
+     * @param client The `Client` model to convert.
+     * @return The converted `ClientDTO`.
+     */
     public static ClientDTO clientToDto(final Client client) {
         return new ClientDTO(
                 client.getCin(),
                 client.getNom(),
                 client.getPrenom(),
                 client.getAdresse(),
-                client.getNumeroTelephone()
+                client.getNumeroTelephone(),
+                client.getSignature()
         );
     }
 
+    /**
+     * Converts a `Compte` model to `CompteDTO`, including nested DTOs for associated OCR and Credit entities.
+     *
+     * @param compte The `Compte` model to convert.
+     * @return The converted `CompteDTO`.
+     */
     public static CompteDTO compteToDto(final Compte compte) {
         // Mapping the fields based on your updated Compte model
         CompteDTO compteDTO = new CompteDTO(
@@ -34,14 +50,15 @@ public final class ToDtoConverter {
                 .collect(Collectors.toList()) : null;
         compteDTO.setOcrs(ocrDTOList);
 
-        // Convert Credit list using streams
+
+        // Convert associated Credit entities
         List<CreditDTO> creditDTOList = (compte.getCredits() != null) ?
             compte.getCredits().stream()
                 .map(ToDtoConverter::creditToDto)
                 .collect(Collectors.toList()) : null;
         compteDTO.setCredits(creditDTOList);
 
-        // Convert Client if present
+        // Convert associated Client entity
         if (compte.getClient() != null) {
             ClientDTO clientDTO = clientToDto(compte.getClient());
             compteDTO.setClient(clientDTO);
@@ -50,6 +67,12 @@ public final class ToDtoConverter {
         return compteDTO;
     }
 
+    /**
+     * Converts a `Credit` model to `CreditDTO`, including nested DTO for `CreditModel`.
+     *
+     * @param credit The `Credit` model to convert.
+     * @return The converted `CreditDTO`.
+     */
     public static CreditDTO creditToDto(final Credit credit) {
         return new CreditDTO(
                 credit.getId(),
@@ -61,6 +84,12 @@ public final class ToDtoConverter {
         );
     }
 
+    /**
+     * Converts a `CreditModel` model to `CreditModelDTO`.
+     *
+     * @param creditModel The `CreditModel` model to convert.
+     * @return The converted `CreditModelDTO`.
+     */
     public static CreditModelDTO creditModelToDto(final CreditModel creditModel) {
         return new CreditModelDTO(
                 creditModel.getId(),
@@ -69,9 +98,15 @@ public final class ToDtoConverter {
         );
     }
 
+    /**
+     * Converts an `Ocr` model to `OcrDTO`.
+     *
+     * @param ocr The `Ocr` model to convert.
+     * @return The converted `OcrDTO`.
+     */
     public static OcrDTO ocrToDto(final Ocr ocr) {
         return new OcrDTO(
-                ocr.getId(),
+                ocr.getNumeroCompte(),
                 ocr.getTypeDocument(),
                 ocr.getResultatsReconnaissance(),
                 ocr.isFraud(),

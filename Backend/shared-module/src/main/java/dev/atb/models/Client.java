@@ -27,6 +27,9 @@ public class Client {
     @Column(nullable = false)
     private String numeroTelephone;
 
+    @Column(nullable = false)
+    private String signature;
+
     @JsonIgnoreProperties("client")
     @OneToOne(mappedBy = "client", cascade = CascadeType.REMOVE)
     private Compte compte;
