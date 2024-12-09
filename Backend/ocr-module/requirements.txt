@@ -1,0 +1,14 @@
+# General dependencies for your project
+Flask==2.3.3                # Web framework for building REST APIs
+Flask-Cors==3.0.10          # For handling Cross-Origin Resource Sharing
+numpy~=1.24.0
+opencv-python==4.7.0.72     # For image processing
+onnx==1.14.1                # ONNX support
+onnxruntime==1.16.0         # ONNX runtime for model inference
+Pillow~=9.2.0
+scikit-learn==1.2.0         # For any machine learning needs
+tensorflow~=2.17.0
+torch==2.0.0                # If PyTorch is needed for any models
+requests==2.31.0            # For making HTTP requests
+pydantic==1.10.2            # Data validation and settings management
+pymysql

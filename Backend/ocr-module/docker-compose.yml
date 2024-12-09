@@ -1,38 +1,63 @@
+
 services:
-  # Tesseract OCR service
+  # Tesseract OCR service (Flask-based server)
   tesseract:
-    image: tesseractshadow/tesseract4re:latest
+    image: tesseractshadow/tesseract4re:4.0.0-rc1
     container_name: tesseract
     platform: linux/amd64
     ports:
-      - "9090:9090"
+    - "5006:5006"
     volumes:
+      - ./tessdata:/usr/share/tesseract-ocr/4.00/tessdata
       - ./temp/uploaded_files:/input
       - ./temp/resultats_reconnaissance:/output
     environment:
       TESSDATA_PREFIX: /usr/share/tesseract-ocr/4.00/tessdata
-      TESSERACT_LANGUAGE: ${TESSERACT_LANGUAGE:-eng+fra+ar}  # Specify languages for OCR
+      TESSERACT_LANGUAGE: ${TESSERACT_LANGUAGE:-fra+ar}
     networks:
       - ocr-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090"]
+      test: ["CMD", "curl", "-f", "http://localhost:5006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: >
+      sh -c "flask run --host=0.0.0.0 --port=5006"
+
+  # Flask app (sign-service)
+  web:
+    build:
+      context: ./sign
+      dockerfile: Dockerfile
+    container_name: sign-service
+    ports:
+      - "5005:5005"
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=production
+    depends_on:
+      - db
+      - kafka
+      - tesseract
+    networks:
+      - ocr-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5005/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # MySQL Database with persistent volume for data storage
+  # MySQL Database
   db:
     image: mysql:8
     container_name: db-instance
     environment:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
       MYSQL_DATABASE: shared_database
-      MYSQL_USER: root
-      MYSQL_PASSWORD: ''
     ports:
       - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql  # Persistent data storage
+      - mysql_data:/var/lib/mysql
     secrets:
       - mysql_root_password
     networks:
@@ -45,7 +70,7 @@ services:
 
   # Zookeeper service for Kafka
   zookeeper:
-    image: arm64v8/zookeeper  # ARM-compatible image for Zookeeper
+    image: arm64v8/zookeeper  # Explicitly use arm64v8 image for compatibility
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -55,123 +80,85 @@ services:
     networks:
       - ocr-network
     healthcheck:
-      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "grep", "imok"]
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Kafka service for event-driven OCR task distribution
+  # Kafka service
   kafka:
     image: confluentinc/cp-kafka:latest
+    hostname: kafka
     container_name: kafka
     ports:
       - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ZOOKEEPER_PORT: 2181
     depends_on:
       - zookeeper
     networks:
       - ocr-network
-    platform: linux/amd64
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'describe cluster' | kafka-console-producer --bootstrap-server kafka:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10  # Increased retries to ensure Kafka is fully up
 
-  # TensorFlow Model Serving
-  tensorflow-serving:
-    image: emacski/tensorflow-serving:latest  # ARM-compatible image
-    container_name: tensorflow-serving
+
+  # NGINX reverse proxy
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
     ports:
-      - "8501:8501"  # REST API port for model serving
+      - "87:80"
+      - "743:443"
     volumes:
-      - ./tensorflow/models:/models/model  # Model files shared with retraining
-    environment:
-      - MODEL_NAME=model
-      - MODEL_BASE_PATH=/models/model
-      - TF_SERVING_VERSION_POLICY=latest  # Serve the latest model version
+#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /Users/hammarigo/Desktop/ocr_branche/Backend/ocr-module/nginx/nginx.conf
+    depends_on:
+      - web
     networks:
       - ocr-network
+    platform: linux/arm64/v8  # ARM64 platform for NGINX as well
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/v1/models/model"]
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # TensorFlow Model Retraining
-  tensorflow-retrain:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: tensorflow-retrain
-    volumes:
-      - ./trainer/data:/trainer/data  # Training data for retraining
-      - ./tensorflow/models:/models/model  # Ensure retraining uses the same volume
-    networks:
-      - ocr-network
-    command: >
-      /bin/bash -c "
-      source /app/venv/bin/activate &&
-      python3 /trainer/retrain_model.py
-      "
-
-  # OCR Module Service
-  ocr-module:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ocr-module
-    ports:
-      - "8502:8502"
-    networks:
-      - ocr-network
-    depends_on:
-      - db
-      - tensorflow-serving
-      - kafka
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'        # Limit to 50% of a CPU
-          memory: 512M       # Limit to 512MB of memory
-
-  # Logging and Monitoring with ELK (ElasticSearch, Logstash, Kibana)
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2-arm64
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-    ports:
-      - "9200:9200"  # Elasticsearch
-    networks:
-      - ocr-network
-    volumes:
-      - es_data:/usr/share/elasticsearch/data  # Persistent storage for Elasticsearch
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.6.2-arm64
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"  # Kibana Dashboard
-    networks:
-      - ocr-network
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.6.2-arm64
-    container_name: logstash
-    environment:
-     LS_JAVA_OPTS: "-Xmx256m -Xms256m"  # Define JVM options
-    ports:
-      - "5044:5044"  # Logstash
-    networks:
-      - ocr-network
+  # OCR Java service (ocr-service) - Java application (commented out for now)
+#  ocr-service:
+#    build:
+#      context: ./  # Path to the OCR module directory
+#      dockerfile: Dockerfile  # Java Dockerfile
+#    container_name: ocr-service
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      tesseract:
+#        condition: service_healthy
+#    networks:
+#      - ocr-network
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
 
 # Persistent volumes for data storage
 volumes:
-  mysql_data:  # Persistent volume for MySQL
-  es_data:     # Persistent volume for Elasticsearch
+  mysql_data:
+  tessdata:
 
 # Secrets for secure database credentials
 secrets:

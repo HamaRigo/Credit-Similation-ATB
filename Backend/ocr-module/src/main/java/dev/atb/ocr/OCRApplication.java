@@ -7,7 +7,10 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.kafka.annotation.EnableKafka;
+
 @SpringBootApplication
+@EnableKafka
 @EnableConfigurationProperties(OcrConfig.class)  // Enable custom config properties
 @ComponentScan(basePackages = {"dev.atb.ocr", "dev.atb"})  // Ensure scanning for both client-specific and shared components
 @EntityScan(basePackages = {"dev.atb.models"})  // Scan for shared JPA entities

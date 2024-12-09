@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+torch
+torchvision
+tensorflow==2.17.0
+opencv-python-headless
+scikit-learn
+numpy
+Pillow

@@ -1,25 +1,12 @@
-# Use TensorFlow Serving image for your TensorFlow model
-FROM emacski/tensorflow-serving:latest
-
-# Set the working directory inside the container
+# Stage 1: Build the application
+FROM maven:3.8.3 AS build
 WORKDIR /app
+COPY . .
+RUN #./mvnw clean package -DskipTests
 
-# Copy your TensorFlow model files to the container (adjust the path to your real model location)
-COPY ./tensorflow/models /models
-
-# Set the environment variable for the model name
-ENV MODEL_NAME=model
-ENV MODEL_BASE_PATH=/models
-
-# Expose the port for TensorFlow Serving REST API
-EXPOSE 8501
-
-# Healthcheck to ensure TensorFlow Serving is running correctly
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8501/v1/models/${MODEL_NAME} || exit 1
-
-# Start TensorFlow Serving with the provided model
-CMD ["tensorflow_model_server", \
-     "--rest_api_port=8501", \
-     "--model_name=${MODEL_NAME}", \
-     "--model_base_path=${MODEL_BASE_PATH}"]
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+#COPY --from=build /app/target/ocr-module-1.0-SNAPSHOT.jar /app/ocr-module.jar
+EXPOSE 8080
+CMD ["java", "-jar", "/app/ocr-module.jar"]

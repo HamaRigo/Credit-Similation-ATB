@@ -1,0 +1,8 @@
+flask
+flask_sqlalchemy
+Pillow
+opencv-python
+tensorflow
+Flask
+pytesseract
+# Any other dependencies
