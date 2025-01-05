@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: compte-module
+          uri: lb://compte-module
+          predicates:
+            - Path=/api/compte/**
+          filters:
+            - JwtAuthentication
+            - AuthorizeRequest=hasRole('ROLE_user')
+
+        - id: client-module
+          uri: lb://client-module
+          predicates:
+            - Path=/api/client/**
+          filters:
+            - JwtAuthentication
+            - AuthorizeRequest=hasRole('ROLE_admin')
+
+        - id: credit-module
+          uri: lb://credit-module
+          predicates:
+            - Path=/api/credit/**
+          filters:
+            - JwtAuthentication
+            - AuthorizeRequest=hasRole('ROLE_admin')
+
+        - id: ocr-module
+          uri: lb://ocr-module
+          predicates:
+            - Path=/api/ocrs/**
+          filters:
+            - JwtAuthentication
+            - AuthorizeRequest=hasRole('ROLE_user')
+
+        - id: discovery-server
+          uri: http://localhost:8761
+          predicates:
+            - Path=/eureka/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8282/realms/spring-microservices-realm
+      client:
+        registration:
+          keycloak:
+            client-id: api-gateway
+            client-secret: ${KEYCLOAK_CLIENT_SECRET} # Use an env variable
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8282/realms/spring-microservices-realm
+
+server:
+  port: 8187
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+  level:
+    org.springframework: INFO
+    org.springframework.security: INFO

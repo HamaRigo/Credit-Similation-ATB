@@ -249,7 +249,8 @@ const ClientList = React.memo(() => {
                                     onBlur={() => handleCellClick(client.cin, 'numeroTelephone')}
                                 />
                             ) : (
-                                client.numeroTelephone
+                                client.numeroTelephone,
+                                client.signature
                             )}
                         </td>
                     </tr>

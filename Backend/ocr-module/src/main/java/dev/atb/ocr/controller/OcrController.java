@@ -2,8 +2,10 @@ package dev.atb.ocr.controller;
 
 import dev.atb.dto.OcrDTO;
 import dev.atb.ocr.Service.OcrService;
-import dev.atb.ocr.Service.SignatureService;
 import dev.atb.ocr.exceptions.OcrProcessingException;
+import jakarta.validation.constraints.NotEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Controller for OCR operations such as image uploading, analysis, and data retrieval.
@@ -20,6 +23,7 @@ import java.util.List;
 @RequestMapping("/all")
 public class OcrController {
 
+    private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
     private final OcrService ocrService;
 
     @Autowired
@@ -28,7 +32,7 @@ public class OcrController {
     }
 
     /**
-     * Uploads and analyzes an image file for OCR, performs fraud detection, and saves the result if necessary.
+     * Uploads and analyzes an image file for OCR, performs fraud detection, and saves the result.
      *
      * @param file           the image file to be analyzed
      * @param typeDocument   the type of the document (e.g., cheque, effet)
@@ -36,12 +40,13 @@ public class OcrController {
      * @return the OCR analysis result
      */
     @PostMapping("/upload")
-    public ResponseEntity<OcrDTO> uploadImage(@RequestParam("file") MultipartFile file,
-                                              @RequestParam("typeDocument") String typeDocument,
-                                              @RequestParam("numeroCompteId") String numeroCompteId) {
-        if (file.isEmpty()) {
-            return handleInvalidFile("Uploaded file is empty.");
-        }
+    public CompletableFuture<ResponseEntity<OcrDTO>> uploadImageAsync(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("typeDocument") @NotEmpty String typeDocument,
+            @RequestParam("numeroCompteId") @NotEmpty String numeroCompteId) {
+
+        return CompletableFuture.supplyAsync(() -> {
+            validateFile(file);
         try {
             byte[] fileBytes = file.getBytes();
             String signatureBase64 = ocrService.generateSignatureBase64(fileBytes);
@@ -55,6 +60,7 @@ public class OcrController {
         } catch (Exception e) {
             return handleException("Unknown error during image upload", e);
         }
+        });
     }
 
     /**
@@ -66,10 +72,9 @@ public class OcrController {
      */
     @PostMapping("/upload-preview")
     public ResponseEntity<OcrDTO> uploadImageAndPreview(@RequestParam("file") MultipartFile file,
-                                                        @RequestParam("typeDocument") String typeDocument) {
-        if (file.isEmpty()) {
-            return handleInvalidFile("Uploaded file is empty.");
-        }
+            @RequestParam("typeDocument") @NotEmpty String typeDocument) {
+
+        validateFile(file);
         try {
             OcrDTO ocrDTO = ocrService.uploadImageAndPreview(file, typeDocument);
             return ResponseEntity.status(HttpStatus.CREATED).body(ocrDTO);
@@ -96,7 +101,7 @@ public class OcrController {
      *
      * @return list of all OCR records
      */
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<OcrDTO>> getAllOcrEntities() {
         List<OcrDTO> ocrList = ocrService.getAllOcrEntities();
         return ResponseEntity.ok(ocrList);
@@ -142,9 +147,7 @@ public class OcrController {
      */
     @PostMapping("/signature")
     public ResponseEntity<String> generateSignature(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("Uploaded file is empty.");
-        }
+        validateFile(file);
         try {
             byte[] fileBytes = file.getBytes();
             String signatureBase64 = ocrService.generateSignatureBase64(fileBytes);
@@ -157,15 +160,14 @@ public class OcrController {
     }
 
     /**
-     * Handles invalid file uploads (e.g., empty files).
+     * Validates that the uploaded file is not null or empty.
      *
-     * @param message the error message
-     * @return a ResponseEntity with error details
+     * @param file the uploaded file
      */
-    private ResponseEntity<OcrDTO> handleInvalidFile(String message) {
-        OcrDTO errorResponse = new OcrDTO();
-        errorResponse.setError(message);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    private void validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty or null.");
+        }
     }
 
     /**
@@ -176,6 +178,7 @@ public class OcrController {
      * @return a ResponseEntity with error details
      */
     private ResponseEntity<OcrDTO> handleException(String message, Exception e) {
+        logger.error(message, e);
         OcrDTO errorResponse = new OcrDTO();
         errorResponse.setError(message + ": " + e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

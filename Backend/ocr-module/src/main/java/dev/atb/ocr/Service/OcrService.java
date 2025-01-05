@@ -257,7 +257,6 @@ public class OcrService {
     public String generateSignatureBase64(byte[] signatureBytes) {
         return Base64.getEncoder().encodeToString(signatureBytes);
     }
-
     private OcrDTO convertToOcrDTO(Ocr ocr) {
         OcrDTO dto = new OcrDTO();
         dto.setNumeroCompte(ocr.getNumeroCompte());

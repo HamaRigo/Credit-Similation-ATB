@@ -1,131 +1,86 @@
-import { Container, Col, Row, Card, CardBody, CardTitle } from "reactstrap";
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Container, Row, Col, Card, CardBody, CardTitle } from 'reactstrap';
 
-const Grid = () => {
+const Grid = ({ title, rows }) => {
   return (
     <div>
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Start Inner Div*/}
-      {/* --------------------------------------------------------------------------------*/}
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Row*/}
-      {/* --------------------------------------------------------------------------------*/}
       <Card>
         <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-          Grid Layout
+          {title || 'Dynamic Grid Layout'}
         </CardTitle>
-        <CardBody className="">
+        <CardBody>
           <Container>
-            <Row>
-              <Col>
-                <div className="bg-light p-2 border">.col</div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col>
-                <div className="bg-light p-2 border">.col</div>
-              </Col>
-              <Col>
-                <div className="bg-light p-2 border">.col</div>
-              </Col>
-              <Col>
-                <div className="bg-light p-2 border">.col</div>
-              </Col>
-              <Col>
-                <div className="bg-light p-2 border">.col</div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col xs="3">
-                <div className="bg-light p-2 border">.col-3</div>
-              </Col>
-              <Col xs="auto">
-                <div className="bg-light p-2 border">
-                  .col-auto - variable width content
-                </div>
-              </Col>
-              <Col xs="3">
-                <div className="bg-light p-2 border">.col-3</div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col xs="6">
-                <div className="bg-light p-2 border">.col-6</div>
-              </Col>
-              <Col xs="6">
-                <div className="bg-light p-2 border">.col-6</div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col xs="6" sm="4">
-                <div className="bg-light p-2 border">.col-6 .col-sm-4</div>
-              </Col>
-              <Col xs="6" sm="4">
-                <div className="bg-light p-2 border">.col-6 .col-sm-4</div>
-              </Col>
-              <Col sm="4">
-                <div className="bg-light p-2 border">.col-sm-4</div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
+            {rows.map((row, rowIndex) => (
+              <Row key={`row-${rowIndex}`} className={row.className || 'mt-3'}>
+                {row.columns.map((col, colIndex) => (
               <Col
-                sm={{
-                  offset: 1,
-                  order: 2,
-                  size: 6,
-                }}
+                    key={`col-${rowIndex}-${colIndex}`}
+                    xs={col.xs}
+                    sm={col.sm}
+                    md={col.md}
+                    lg={col.lg}
+                    xl={col.xl}
+                    className={col.className}
+                    style={col.style}
               >
-                <div className="bg-light p-2 border">
-                  .col-sm-6 .col-sm-order-2 .col-sm-offset-2
+                    <div
+                      className={col.innerClassName || 'bg-light p-2 border'}
+                      style={col.innerStyle}
+              >
+                      {col.content || `.col-${col.xs || ''}`}
                 </div>
               </Col>
+                ))}
             </Row>
-            <Row className="mt-3">
-              <Col
-                sm="12"
-                md={{
-                  offset: 2,
-                  size: 8,
-                }}
-              >
-                <div className="bg-light p-2 border">
-                  .col-sm-12 .col-md-6 .col-md-offset-3
-                </div>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col
-                sm={{
-                  offset: 1,
-                  size: "auto",
-                }}
-              >
-                <div className="bg-light p-2 border">
-                  .col-sm .col-sm-offset-1
-                </div>
-              </Col>
-              <Col
-                sm={{
-                  offset: 1,
-                  size: "auto",
-                }}
-              >
-                <div className="bg-light p-2 border">
-                  .col-sm .col-sm-offset-1
-                </div>
-              </Col>
-            </Row>
+            ))}
           </Container>
         </CardBody>
       </Card>
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Row*/}
-      {/* --------------------------------------------------------------------------------*/}
-
-      {/* --------------------------------------------------------------------------------*/}
-      {/* End Inner Div*/}
-      {/* --------------------------------------------------------------------------------*/}
     </div>
   );
+};
+
+// Prop Types for validation
+Grid.propTypes = {
+  title: PropTypes.string,
+  rows: PropTypes.arrayOf(
+    PropTypes.shape({
+      className: PropTypes.string,
+      columns: PropTypes.arrayOf(
+        PropTypes.shape({
+          xs: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          sm: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          md: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          lg: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          xl: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          className: PropTypes.string,
+          style: PropTypes.object,
+          innerClassName: PropTypes.string,
+          innerStyle: PropTypes.object,
+          content: PropTypes.node,
+        })
+      ),
+    })
+  ),
+};
+
+// Default Props
+Grid.defaultProps = {
+  title: 'Grid Layout',
+  rows: [
+    {
+      columns: [
+        { xs: 12, content: '.col' },
+      ],
+    },
+    {
+      columns: [
+        { xs: 6, content: '.col-6' },
+        { xs: 6, content: '.col-6' },
+      ],
+    },
+  ],
 };
 
 export default Grid;

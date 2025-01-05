@@ -1,0 +1,28 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HamaRigo/Credit-Similation-ATB.git"
+  },
+  "private": true,
+  "devDependencies": {
+    "@mui/material": "^6.1.10",
+    "react-toastify": "^10.0.6"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.1.10",
+    "axios": "^1.7.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.0.2",
+    "reactstrap": "^9.2.3"
+  }
+}

@@ -20,271 +20,150 @@ const Buttons = () => {
   const onCheckboxBtnClick = (selected) => {
     const index = cSelected.indexOf(selected);
     if (index < 0) {
-      cSelected.push(selected);
+      setCSelected([...cSelected, selected]);
     } else {
-      cSelected.splice(index, 1);
+      setCSelected(cSelected.filter(item => item !== selected));
     }
-    setCSelected([...cSelected]);
+  };
+
+  // Button definitions for repeatability
+  const buttonColors = ["primary", "secondary", "success", "info", "warning", "danger"];
+  const buttonSizes = ["lg", "sm"];
+
+  const renderButtons = (color, size = "") => {
+    return buttonSizes.map((size) => (
+      <Button key={`${color}-${size}`} color={color} size={size} className="mb-2">
+        {`${color.charAt(0).toUpperCase() + color.slice(1)} ${size ? size.toUpperCase() : ''}`}
+      </Button>
+    ));
   };
 
   return (
     <div>
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Start Inner Div*/}
-      {/* --------------------------------------------------------------------------------*/}
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Row*/}
-      {/* --------------------------------------------------------------------------------*/}
+      {/* Row for all Button Groups */}
       <Row>
+        {/* Card 1: Regular Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-1*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Buttons
-            </CardTitle>
-            <CardBody className="">
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Buttons</CardTitle>
+            <CardBody>
               <div className="button-group">
-                <Button className="btn" color="primary">
-                  primary
+                {buttonColors.map(color => (
+                  <Button key={color} color={color} className="mb-2">
+                    {color.charAt(0).toUpperCase() + color.slice(1)}
                 </Button>
-                <Button className="btn" color="secondary">
-                  secondary
-                </Button>
-                <Button className="btn" color="success">
-                  success
-                </Button>
-                <Button className="btn" color="info">
-                  info
-                </Button>
-                <Button className="btn" color="warning">
-                  warning
-                </Button>
-                <Button className="btn" color="danger">
-                  danger
-                </Button>
-                <Button className="btn" color="link">
-                  link
-                </Button>
+                ))}
+                <Button color="link" className="mb-2">Link</Button>
               </div>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 2: Outline Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-2*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Outline Buttons
-            </CardTitle>
-            <CardBody className="">
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Outline Buttons</CardTitle>
+            <CardBody>
               <div className="button-group">
-                <Button className="btn" outline color="primary">
-                  primary
+                {buttonColors.map(color => (
+                  <Button key={color} outline color={color} className="mb-2">
+                    {color.charAt(0).toUpperCase() + color.slice(1)}
                 </Button>
-                <Button className="btn" outline color="secondary">
-                  secondary
-                </Button>
-                <Button className="btn" outline color="success">
-                  success
-                </Button>
-                <Button className="btn" outline color="info">
-                  info
-                </Button>
-                <Button className="btn" outline color="warning">
-                  warning
-                </Button>
-                <Button className="btn" outline color="danger">
-                  danger
-                </Button>
+                ))}
               </div>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 3: Large Size Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-3*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Large Size Buttons
-            </CardTitle>
-            <CardBody className="">
-              <div className="button-group">
-                <Button className="btn" color="primary" size="lg">
-                  Large Button
-                </Button>
-                <Button className="btn" color="secondary" size="lg">
-                  Large Button
-                </Button>
-              </div>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Large Size Buttons</CardTitle>
+            <CardBody>
+              {renderButtons("primary", "lg")}
+              {renderButtons("secondary", "lg")}
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 4: Small Size Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-4*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Small Size Buttons
-            </CardTitle>
-            <CardBody className="">
-              <div className="button-group">
-                <Button className="btn" color="primary" size="sm">
-                  Small Button
-                </Button>
-                <Button className="btn" color="secondary" size="sm">
-                  Small Button
-                </Button>
-              </div>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Small Size Buttons</CardTitle>
+            <CardBody>
+              {renderButtons("primary", "sm")}
+              {renderButtons("secondary", "sm")}
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 5: Active State Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-6*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Active State Buttons
-            </CardTitle>
-            <CardBody className="">
-              <div className="button-group">
-                <Button className="btn" color="primary" size="lg" active>
-                  Primary link
-                </Button>
-                <Button className="btn" color="secondary" size="lg" active>
-                  Link
-                </Button>
-              </div>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Active State Buttons</CardTitle>
+            <CardBody>
+              <Button color="primary" size="lg" active className="mb-2">Primary Active</Button>
+              <Button color="secondary" size="lg" active className="mb-2">Secondary Active</Button>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 6: Disabled State Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-7*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Disabled State Buttons
-            </CardTitle>
-            <CardBody className="">
-              <div className="button-group">
-                <Button className="btn" color="primary" size="lg" disabled>
-                  Primary button
-                </Button>
-                <Button className="btn" color="secondary" size="lg" disabled>
-                  Button
-                </Button>
-              </div>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Disabled State Buttons</CardTitle>
+            <CardBody>
+              <Button color="primary" size="lg" disabled className="mb-2">Primary Disabled</Button>
+              <Button color="secondary" size="lg" disabled className="mb-2">Secondary Disabled</Button>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 7: Block Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-5*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Block Buttons
-            </CardTitle>
-            <CardBody className="">
-              <div className="button-group">
-                <Button className="btn" color="primary" size="lg" block>
-                  Block level button
-                </Button>
-                <Button className="btn" color="secondary" size="lg" block>
-                  Block level button
-                </Button>
-              </div>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Block Buttons</CardTitle>
+            <CardBody>
+              <Button color="primary" size="lg" block className="mb-2">Block Level Primary</Button>
+              <Button color="secondary" size="lg" block className="mb-2">Block Level Secondary</Button>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 8: Checkbox Stateful Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-6*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Checkbox(Stateful Buttons)
-            </CardTitle>
-            <CardBody className="">
-              <h5>Checkbox Buttons</h5>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Checkbox Buttons</CardTitle>
+            <CardBody>
               <ButtonGroup>
-                <Button
-                  color="primary"
-                  onClick={() => onCheckboxBtnClick(1)}
-                  active={cSelected.includes(1)}
-                >
-                  One
+                {[1, 2, 3].map(item => (
+                  <Button key={item} color="primary" onClick={() => onCheckboxBtnClick(item)} active={cSelected.includes(item)}>
+                    {`Option ${item}`}
                 </Button>
-                <Button
-                  color="primary"
-                  onClick={() => onCheckboxBtnClick(2)}
-                  active={cSelected.includes(2)}
-                >
-                  Two
-                </Button>
-                <Button
-                  color="primary"
-                  onClick={() => onCheckboxBtnClick(3)}
-                  active={cSelected.includes(3)}
-                >
-                  Three
-                </Button>
+                ))}
               </ButtonGroup>
               <p className="mb-0">Selected: {JSON.stringify(cSelected)}</p>
             </CardBody>
           </Card>
         </Col>
+
+        {/* Card 9: Radio Stateful Buttons */}
         <Col xs="12" md="6">
-          {/* --------------------------------------------------------------------------------*/}
-          {/* Card-6*/}
-          {/* --------------------------------------------------------------------------------*/}
           <Card>
-            <CardTitle tag="h6" className="border-bottom p-3 mb-0">
-              Radio Buttons (Stateful Buttons)
-            </CardTitle>
-            <CardBody className="">
-              <h5>Radio Buttons</h5>
+            <CardTitle tag="h6" className="border-bottom p-3 mb-0">Radio Buttons</CardTitle>
+            <CardBody>
               <ButtonGroup>
-                <Button
-                  color="primary"
-                  onClick={() => onRadioBtnClick(1)}
-                  active={rSelected === 1}
-                >
-                  One
+                {[1, 2, 3].map(item => (
+                  <Button key={item} color="primary" onClick={() => onRadioBtnClick(item)} active={rSelected === item}>
+                    {`Option ${item}`}
                 </Button>
-                <Button
-                  color="primary"
-                  onClick={() => onRadioBtnClick(2)}
-                  active={rSelected === 2}
-                >
-                  Two
-                </Button>
-                <Button
-                  color="primary"
-                  onClick={() => onRadioBtnClick(3)}
-                  active={rSelected === 3}
-                >
-                  Three
-                </Button>
+                ))}
               </ButtonGroup>
               <p className="mb-0">Selected: {rSelected}</p>
             </CardBody>
           </Card>
         </Col>
       </Row>
-      {/* --------------------------------------------------------------------------------*/}
-      {/* Row*/}
-      {/* --------------------------------------------------------------------------------*/}
-
-      {/* --------------------------------------------------------------------------------*/}
-      {/* End Inner Div*/}
-      {/* --------------------------------------------------------------------------------*/}
     </div>
   );
 };

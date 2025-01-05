@@ -51,7 +51,7 @@
     "@babel/plugin-transform-private-property-in-object": "7.22.5",
     "@mui/icons-material": "^6.0.2",
     "@mui/material": "^6.0.2",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-toastify": "^10.0.5"
   },
   "overrides": {

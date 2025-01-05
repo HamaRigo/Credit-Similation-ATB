@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { analyzeAndSaveImage } from '../../services/ocrService';
-import { TextField, Button, Typography, CircularProgress, Alert } from '@mui/material';
+import { analyzeAndSaveImage } from '../../services/ocrService'; // Your service for OCR processing
+import { TextField, Button, Typography, CircularProgress, Alert, Box } from '@mui/material';
 
 const OcrUpload = () => {
     const [file, setFile] = useState(null);
@@ -11,8 +11,24 @@ const OcrUpload = () => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleFileChange = (event) => {
-        setFile(event.target.files[0]);
-        setErrorMessage(''); // Clear any previous error
+        const selectedFile = event.target.files[0];
+        setFile(selectedFile);
+        setTypeDocument('');
+        setNumeroCompteId('');
+
+        // Clear messages when a new file is selected
+        setErrorMessage('');
+        setSuccessMessage('');
+
+        // Validate file type and size
+        const maxFileSize = 5 * 1024 * 1024; // 5MB limit
+        if (selectedFile && !selectedFile.type.startsWith('image')) {
+            setErrorMessage('Please upload a valid image file (e.g., .jpg, .png).');
+            setFile(null); // Reset the file input if it's not an image
+        } else if (selectedFile && selectedFile.size > maxFileSize) {
+            setErrorMessage('The file size exceeds the 5MB limit.');
+            setFile(null); // Reset the file input if the size is too large
+        }
     };
 
     const handleSubmit = async () => {
@@ -31,6 +47,7 @@ const OcrUpload = () => {
         setErrorMessage('');
 
         try {
+            // Call the OCR service to analyze and save the image
             const response = await analyzeAndSaveImage(file, typeDocument, numeroCompteId);
             console.log('OCR result:', response);
             setSuccessMessage('OCR process completed successfully!');
@@ -43,13 +60,20 @@ const OcrUpload = () => {
     };
 
     return (
-        <div>
-            <Typography variant="h6">Upload Document for OCR</Typography>
+        <Box sx={{ maxWidth: 600, margin: '0 auto', padding: 4 }}>
+            <Typography variant="h5" align="center" gutterBottom>
+                Upload Document for OCR
+            </Typography>
+
+            {/* File Upload Input */}
             <input
                 type="file"
                 onChange={handleFileChange}
                 disabled={loading}
+                style={{ display: 'block', margin: '20px 0' }}
             />
+
+            {/* Document Type Input */}
             <TextField
                 label="Type of Document"
                 value={typeDocument}
@@ -58,6 +82,8 @@ const OcrUpload = () => {
                 fullWidth
                 margin="normal"
             />
+
+            {/* Optional Account ID Input */}
             <TextField
                 label="Account ID (Optional)"
                 value={numeroCompteId}
@@ -67,18 +93,34 @@ const OcrUpload = () => {
                 margin="normal"
             />
 
-            {loading ? (
-                <CircularProgress style={{ margin: '20px 0' }} />
-            ) : (
-                <Button variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
-                    Submit
-                </Button>
-            )}
+            {/* Submit Button with loading spinner */}
+            <Box display="flex" justifyContent="center" sx={{ marginTop: 2 }}>
+                {loading ? (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        disabled
+                        sx={{ width: '100%' }}
+                    >
+                        <CircularProgress size={24} sx={{ color: 'white' }} />
+                    </Button>
+                ) : (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        sx={{ width: '100%' }}
+                    >
+                        Submit
+                    </Button>
+                )}
+            </Box>
 
-            {/* Success and error messages */}
-            {successMessage && <Alert severity="success">{successMessage}</Alert>}
-            {errorMessage && <Alert severity="error" style={{ marginTop: '10px' }}>{errorMessage}</Alert>}
-        </div>
+            {/* Success and Error Alerts */}
+            {successMessage && <Alert severity="success" sx={{ marginTop: 2 }}>{successMessage}</Alert>}
+            {errorMessage && <Alert severity="error" sx={{ marginTop: 2 }}>{errorMessage}</Alert>}
+        </Box>
     );
 };
 

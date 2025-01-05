@@ -1,59 +1,74 @@
 import axios from 'axios';
+const API_BASE_URL = "http://localhost:3333/";
 
-const API_BASE_URL = "http://localhost:3333/ocrs";
-
-// Centralized error handling
+// Centralized error handling function
 const handleRequest = async (request) => {
     try {
         const response = await request;
         return response.data;
     } catch (error) {
         console.error('API request failed:', error);
-        throw error; // Rethrow or handle the error appropriately
+        throw new Error(error?.response?.data?.message || 'An error occurred');
     }
 };
 
-// Function to fetch OCR by ID
+// Reusable function to create FormData
+const createFormData = (file, additionalData = {}) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    for (const [key, value] of Object.entries(additionalData)) {
+        formData.append(key, value);
+    }
+    return formData;
+};
+
+// Fetch all OCR entries
+const getAllOcrEntities = () => handleRequest(axios.get(`${API_BASE_URL}all`));
+
+// Fetch OCR by ID
 const getOcrById = (id) => handleRequest(axios.get(`${API_BASE_URL}/${id}`));
 
-// Function to fetch all OCR entities
-const getAllOcrEntities = () => handleRequest(axios.get(API_BASE_URL));
-
-// Function to upload an image for OCR
-// Function to analyze and save an image
-const analyzeAndSaveImage = (file, typeDocument = "defaultType", numeroCompteId = null) => {
-    let formData = new FormData();
-    formData.append('file', file);
-    formData.append('typeDocument', typeDocument);
-
-    if (numeroCompteId) {
-        formData.append('numeroCompteId', numeroCompteId);
-    }
-
-    return handleRequest(axios.post(`${API_BASE_URL}/analyze`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    })).catch((error) => {
-        console.error('Error analyzing and saving image:', error);
-        throw new Error('Could not analyze and save image. Please try again.');
-    });
+// Update OCR by ID
+const updateOcrById = (id, newText, documentType) => {
+    const data = { newText, documentType };
+    return handleRequest(axios.put(`${API_BASE_URL}/${id}`, data, {
+        headers: { 'Content-Type': 'application/json' }
+    }));
 };
 
-// Function to delete OCR by ID
+// Delete OCR by ID
 const deleteOcrById = (id) => handleRequest(axios.delete(`${API_BASE_URL}/${id}`));
 
-// Function to update OCR by ID
-const updateOcrById = (id, newText, documentType) => {
-    let data = { newText, documentType };
-    return handleRequest(axios.put(`${API_BASE_URL}/${id}`, data)).catch((error) => {
-        console.error('Error updating OCR:', error);
-        throw new Error('Could not update OCR record. Please try again.');
-    });
+// Upload and analyze an image
+const analyzeAndSaveImage = (file, typeDocument = "defaultType", numeroCompteId = null) => {
+    const formData = createFormData(file, { typeDocument, numeroCompteId });
+    return handleRequest(axios.post(`${API_BASE_URL}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }));
+};
+
+// Upload image and preview OCR result (Base64 image)
+const uploadImageAndPreview = (file, typeDocument = "defaultType") => {
+    const formData = createFormData(file, { typeDocument });
+    return handleRequest(axios.post(`${API_BASE_URL}/upload-preview`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }));
+};
+
+// Generate signature from a file
+const generateSignature = (file) => {
+    const formData = createFormData(file);
+    return handleRequest(axios.post(`${API_BASE_URL}/signature`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }));
 };
 
 export {
-    getOcrById,
     getAllOcrEntities,
-    analyzeAndSaveImage,
+    getOcrById,
+    updateOcrById,
     deleteOcrById,
-    updateOcrById
+    analyzeAndSaveImage,
+    uploadImageAndPreview,
+    generateSignature
 };
