@@ -1,25 +1,34 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { apiRoutes } from '../routes/backend-config';
 
+// Define the Client data model
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  [key: string]: any; // Additional fields as needed
+}
+
 class ClientService {
-    list_clients() {
-        return axios.get(apiRoutes.LIST_CLIENT_URL);
+  // Fetch the list of clients
+  list_clients(): Promise<AxiosResponse<Client[]>> {
+    return axios.get<Client[]>(apiRoutes.LIST_CLIENT_URL);
     }
 
-    add_client(data: object) {
-        return axios.post(apiRoutes.ADD_CLIENT_URL, {
-            data,
-        });
+  // Add a new client
+  add_client(data: Client): Promise<AxiosResponse<Client>> {
+    return axios.post<Client>(apiRoutes.ADD_CLIENT_URL, data);
     }
 
-    edit_client(data: object, id: string) {
-        return axios.put(apiRoutes.EDIT_CLIENT_URL + id, {
-            data,
-        });
+  // Edit an existing client
+  edit_client(data: Partial<Client>, id: string): Promise<AxiosResponse<Client>> {
+    return axios.put<Client>(`${apiRoutes.EDIT_CLIENT_URL}${id}`, data);
     }
 
-    delete_client(id: string) {
-        return axios.delete(apiRoutes.DELETE_CLIENT_URL + id);
+  // Delete a client by ID
+  delete_client(id: string): Promise<void> {
+    return axios.delete(`${apiRoutes.DELETE_CLIENT_URL}${id}`);
     }
 }
 
