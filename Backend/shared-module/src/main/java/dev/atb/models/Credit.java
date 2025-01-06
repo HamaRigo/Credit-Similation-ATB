@@ -45,7 +45,7 @@ public class Credit {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Client client;
 
-    @NotNull
     @CreationTimestamp
+    @Column(updatable = false) // Ensure it is not updated after creation
     private LocalDateTime createdAt;
 }

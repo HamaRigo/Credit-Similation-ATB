@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { getClients } from '../../services/clientService';
+import { getClients } from '../../services/ClientService';
 import { createCompte } from '../../services/compteService';
 import { Card, Row, Col, CardTitle, CardBody, Button, Form, FormGroup, Label, Input, Select } from 'reactstrap';
-
+/*
 const AddCompte = () => {
     const [compte, setCompte] = useState({
         numeroCompte: '',
@@ -152,7 +152,7 @@ const AddCompte = () => {
                                     ))}
                                 </Input>
                             </FormGroup>
-                            {/* Add fields for OCRs and Credits if needed */}
+                            {/* Add fields for OCRs and Credits if needed *}
                             <Button color="primary" type="submit">
                                 Add Compte
                             </Button>
@@ -165,3 +165,4 @@ const AddCompte = () => {
 };
 
 export default AddCompte;
+ */

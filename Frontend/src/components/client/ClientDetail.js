@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { deleteClient, getClient, updateClient } from "../../services/clientService";
+import { deleteClient, getClient, updateClient } from "../../services/ClientService";
 
 const ClientDetail = () => {
     const { cin } = useParams();

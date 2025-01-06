@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { createClient, checkClientExists } from '../../services/clientService';
+import { createClient, checkClientExists } from '../../services/ClientService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Card, Row, Col, CardTitle, CardBody, Button, Form, FormGroup, Label, Input } from 'reactstrap';
-
+/*
 const AddClientForm = () => {
     const [client, setClient] = useState({
         cin: '',
@@ -168,3 +168,4 @@ const AddClientForm = () => {
 };
 
 export default AddClientForm;
+ */

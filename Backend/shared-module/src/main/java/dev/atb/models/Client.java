@@ -44,7 +44,7 @@ public class Client {
     @OneToMany(mappedBy = "client", cascade = CascadeType.REMOVE)
     private List<Credit> credits;
 
-    @NotNull
     @CreationTimestamp
+    @Column(updatable = false) // Ensure it is not updated after creation
     private LocalDateTime createdAt;
 }
