@@ -2,9 +2,9 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +20,9 @@ public abstract class Compte {
     @Column(nullable = false, updatable = false)
     private String numeroCompte;
 
+    @Formula("type_compte") // Exposes the discriminator column
+    private String typeCompte;
+
     private double solde;
 
     private boolean activated;
@@ -32,7 +35,7 @@ public abstract class Compte {
     @OneToMany(mappedBy = "compte", cascade = CascadeType.REMOVE)
     private List<Ocr> ocrs;
 
-    @NotNull
     @CreationTimestamp
+    @Column(updatable = false) // Ensure it is not updated after creation
     private LocalDateTime createdAt;
 }

@@ -1,12 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import {
   Navbar,
   Collapse,
   Nav,
-  NavItem,
   NavbarBrand,
-  UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
@@ -14,7 +11,9 @@ import {
   Button,
 } from "reactstrap";
 import Logo from "./Logo";
+// @ts-ignore
 import { ReactComponent as LogoWhite } from "../assets/images/logos/materialprowhite.svg";
+// @ts-ignore
 import user1 from "../assets/images/users/user4.jpg";
 
 const Header = () => {
@@ -27,6 +26,7 @@ const Header = () => {
     setIsOpen(!isOpen);
   };
   const showMobilemenu = () => {
+    // @ts-ignore
     document.getElementById("sidebarArea").classList.toggle("showSidebar");
   };
   return (
@@ -62,29 +62,7 @@ const Header = () => {
       </div>
 
       <Collapse navbar isOpen={isOpen}>
-        <Nav className="me-auto" navbar>
-          <NavItem>
-            <Link to="/starter" className="nav-link">
-              Starter
-            </Link>
-          </NavItem>
-          <NavItem>
-            <Link to="/about" className="nav-link">
-              About
-            </Link>
-          </NavItem>
-          <UncontrolledDropdown inNavbar nav>
-            <DropdownToggle caret nav>
-              DD Menu
-            </DropdownToggle>
-            <DropdownMenu end>
-              <DropdownItem>Option 1</DropdownItem>
-              <DropdownItem>Option 2</DropdownItem>
-              <DropdownItem divider />
-              <DropdownItem>Reset</DropdownItem>
-            </DropdownMenu>
-          </UncontrolledDropdown>
-        </Nav>
+        <Nav className="me-auto" navbar></Nav>
         <Dropdown isOpen={dropdownOpen} toggle={toggle}>
           <DropdownToggle color="transparent">
             <img
@@ -97,10 +75,7 @@ const Header = () => {
           <DropdownMenu>
             <DropdownItem header>Info</DropdownItem>
             <DropdownItem>My Account</DropdownItem>
-            <DropdownItem>Edit Profile</DropdownItem>
             <DropdownItem divider />
-            <DropdownItem>My Balance</DropdownItem>
-            <DropdownItem>Inbox</DropdownItem>
             <DropdownItem>Logout</DropdownItem>
           </DropdownMenu>
         </Dropdown>

@@ -9,8 +9,8 @@ import java.util.List;
 public final class ToDtoConverter {
     public static ClientDTO clientToDto(final Client client) {
         return new ClientDTO(
-                client.getNumeroDocument(),
                 client.getTypeDocument(),
+                client.getNumeroDocument(),
                 client.getNom(),
                 client.getPrenom(),
                 client.getAdresse(),

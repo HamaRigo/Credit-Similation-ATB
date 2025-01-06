@@ -1,12 +1,15 @@
 import { Button, Nav, NavItem } from "reactstrap";
 import { Link, useLocation } from "react-router-dom";
+// @ts-ignore
 import user1 from "../assets/images/users/user4.jpg";
+// @ts-ignore
 import probg from "../assets/images/bg/download.jpg";
+import React from "react";
 
 const navigation = [
   {
     title: "Dashboard",
-    href: "/starter",
+    href: "/dashboard",
     icon: "bi bi-speedometer2",
   },
   {
@@ -17,17 +20,33 @@ const navigation = [
   {
     title: "Comptes",
     href: "/Comptes",
-    icon: "bi bi-card-text",
+    icon: "bi bi-archive",
   },
   {
-    title: "Ocrs",
+    title: "Credits",
+    href: "/Credits",
+    icon: "bi bi-hdd",
+  },
+  {
+    title: "OCR",
     href: "/Ocrs",
-    icon: "bi bi-link",
+    icon: "bi bi-file-earmark-check",
+  },
+  {
+    title: "Users",
+    href: "/Users",
+    icon: "bi bi-person-lock",
+  },
+  {
+    title: "Roles",
+    href: "/Roles",
+    icon: "bi bi-shield-lock",
   },
 ];
 
 const Sidebar = () => {
   const showMobilemenu = () => {
+    // @ts-ignore
     document.getElementById("sidebarArea").classList.toggle("showSidebar");
   };
   let location = useLocation();
@@ -68,15 +87,6 @@ const Sidebar = () => {
               </Link>
             </NavItem>
           ))}
-          {/*<Button*/}
-          {/*  color="danger"*/}
-          {/*  tag="a"*/}
-          {/*  target="_blank"*/}
-          {/*  className="mt-3"*/}
-          {/*  href="https://wrappixel.com/templates/materialpro-react-admin/?ref=33"*/}
-          {/*>*/}
-          {/*  Upgrade To Pro*/}
-          {/*</Button>*/}
         </Nav>
       </div>
     </div>

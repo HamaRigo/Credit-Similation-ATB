@@ -5,7 +5,6 @@ import ClientList from "../../components/client/ClientList";
 const ClientTable = () => {
     return (
         <div>
-            {/*** Table ***/}
             <Row>
                 <Col lg="12">
                     <ClientList />

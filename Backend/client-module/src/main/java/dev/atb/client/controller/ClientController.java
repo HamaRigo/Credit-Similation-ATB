@@ -60,15 +60,4 @@ public class ClientController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    // HEAD request to check if client exists by CIN
-    @RequestMapping(method = RequestMethod.HEAD, value = "/{id}")
-    public ResponseEntity<Void> checkClientExists(@PathVariable String id) {
-        try {
-            clientService.getClientById(id); // This method should not return the client but just check existence
-            return new ResponseEntity<>(HttpStatus.OK); // Client exists
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Client does not exist
-        }
-    }
 }

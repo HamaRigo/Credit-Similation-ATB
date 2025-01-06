@@ -2,12 +2,15 @@ import { Col, Row } from "reactstrap";
 import SalesChart from "../components/dashboard/SalesChart";
 import Feeds from "../components/dashboard/Feeds";
 
-import Blog from "../components/dashboard/Blog";
+// @ts-ignore
 import bg1 from "../assets/images/bg/bg1.jpg";
+// @ts-ignore
 import bg2 from "../assets/images/bg/bg2.jpg";
+// @ts-ignore
 import bg3 from "../assets/images/bg/bg3.jpg";
+// @ts-ignore
 import bg4 from "../assets/images/bg/bg4.jpg";
-import ClientList from "../components/client/ClientList";
+import React from "react";
 
 const BlogData = [
   {
@@ -44,7 +47,7 @@ const BlogData = [
   },
 ];
 
-const Starter = () => {
+const Dashboard = () => {
   return (
     <div>
       {/***Top Cards***/}
@@ -58,13 +61,7 @@ const Starter = () => {
           <Feeds />
         </Col>
       </Row>
-      {/***Table ***/}
-      <Row>
-        <Col lg="12">
-          <ClientList />
-        </Col>
-      </Row>
-      {/***Blog Cards***/}
+      {/***Blog Cards
       <Row>
         {BlogData.map((blg, index) => (
           <Col sm="6" lg="6" xl="3" key={index}>
@@ -77,9 +74,9 @@ const Starter = () => {
             />
           </Col>
         ))}
-      </Row>
+      </Row>***/}
     </div>
   );
 };
 
-export default Starter;
+export default Dashboard;
