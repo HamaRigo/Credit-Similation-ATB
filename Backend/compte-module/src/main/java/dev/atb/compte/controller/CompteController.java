@@ -2,7 +2,6 @@ package dev.atb.compte.controller;
 
 import dev.atb.compte.services.CompteService;
 import dev.atb.dto.CompteDTO;
-import dev.atb.models.Compte;
 import dev.atb.models.CompteCourant;
 import dev.atb.models.CompteEpargne;
 import org.springframework.beans.factory.annotation.Autowired;
