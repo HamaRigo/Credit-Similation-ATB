@@ -15,6 +15,7 @@
 
     <modules>
         <module>shared-module</module>
+        <module>user-module</module>
         <module>client-module</module>
         <module>compte-module</module>
         <module>ocr-module</module>

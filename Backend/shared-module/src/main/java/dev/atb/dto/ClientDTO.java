@@ -1,5 +1,6 @@
 package dev.atb.dto;
 
+import dev.atb.models.DocumentType;
 import lombok.*;
 
 @Getter
@@ -8,11 +9,11 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class ClientDTO {
-    private String cin;
+    private DocumentType typeDocument;
+    private String numeroDocument;
     private String nom;
     private String prenom;
     private String adresse;
-    private String numeroTelephone;
+    private String telephone;
     private String signature;
-
 }

@@ -2,9 +2,14 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -13,24 +18,36 @@ import lombok.NoArgsConstructor;
 public class Client {
     @Id
     @Column(nullable = false, updatable = false)
-    private String cin;
+    private String numeroDocument;
 
-    @Column(nullable = false)
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private DocumentType typeDocument;
+
+    @NotNull
     private String nom;
 
-    @Column(nullable = false)
+    @NotNull
     private String prenom;
 
-    @Column(nullable = false)
+    @NotNull
     private String adresse;
 
-    @Column(nullable = false)
-    private String numeroTelephone;
+    @NotNull
+    private String telephone;
 
     @Column(nullable = false)
     private String signature;
 
     @JsonIgnoreProperties("client")
-    @OneToOne(mappedBy = "client", cascade = CascadeType.REMOVE)
-    private Compte compte;
+    @OneToMany(mappedBy = "client", cascade = CascadeType.REMOVE)
+    private List<Compte> comptes;
+
+    @JsonIgnoreProperties("client")
+    @OneToMany(mappedBy = "client", cascade = CascadeType.REMOVE)
+    private List<Credit> credits;
+
+    @CreationTimestamp
+    @Column(updatable = false) // Ensure it is not updated after creation
+    private LocalDateTime createdAt;
 }

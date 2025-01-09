@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCompte, updateCompte } from '../../services/compteService';
-import { getClients } from '../../services/clientService';
+import { getClients } from '../../services/ClientService';
 import { getOcrs } from '../../services/ocrService';
 import { getAllCredits } from '../../services/creditService';
 import { toast } from 'react-toastify';
