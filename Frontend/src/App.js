@@ -8,12 +8,14 @@ const App = () => {
   const routing = useRoutes(ThemeRoutes);
 
   return (
-    <ReactKeycloakProvider authClient={keycloak}>
-      <React.StrictMode>
-        <div className="dark">
-         {routing}
-        </div>
-      </React.StrictMode>
+    <ReactKeycloakProvider
+        authClient={keycloak}
+        initOptions={{
+            onLoad: 'login-required',
+            checkLoginIframe: false,
+        }}
+    >
+        <React.StrictMode>{routing}</React.StrictMode>
     </ReactKeycloakProvider>
   );
 };

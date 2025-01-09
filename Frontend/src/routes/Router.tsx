@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { Navigate } from "react-router-dom";
-import ProtectedRoute from "../components/ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute";
 import Loader from "../layouts/loader/Loader";
 
 /***** Layouts *****/
@@ -15,7 +15,6 @@ const Clients = lazy(() => import("../views/ui/Clients"));
 // const OcrList = lazy(() => import("../views/ui/OcrList"));
 // const OcrUpload = lazy(() => import("../views/ui/OcrUpload"));
 // const OcrDetail = lazy(() => import("../views/ui/OcrDetail"));
-const LoginPage = lazy(() => import("../views/LoginPage"));
 const UnauthorizedPage = lazy(() => import("../views/UnauthorizedPage"));
 
 /***** Routes *****/
@@ -49,12 +48,12 @@ const ThemeRoutes = [
           </ProtectedRoute>
         ),
       },
-      {
+      /*{
         path: "/clients/add",
         element: (
           <ProtectedRoute roles={["admin"]}>
             <Suspense fallback={<Loader />}>
-              {/*<AddClientForm />*/}
+              {<AddClientForm />}
             </Suspense>
           </ProtectedRoute>
         ),
@@ -64,7 +63,7 @@ const ThemeRoutes = [
         element: (
           <ProtectedRoute roles={["admin", "user"]}>
             <Suspense fallback={<Loader />}>
-              {/*<Comptes />*/}
+              {<Comptes />}
             </Suspense>
           </ProtectedRoute>
         ),
@@ -74,7 +73,7 @@ const ThemeRoutes = [
         element: (
           <ProtectedRoute roles={["admin"]}>
             <Suspense fallback={<Loader />}>
-              {/*<AddCompte />*/}
+              {<AddCompte />}
             </Suspense>
           </ProtectedRoute>
         ),
@@ -84,7 +83,7 @@ const ThemeRoutes = [
         element: (
           <ProtectedRoute roles={["admin", "user"]}>
             <Suspense fallback={<Loader />}>
-              {/*<OcrList />*/}
+              {<OcrList />}
             </Suspense>
           </ProtectedRoute>
         ),
@@ -94,7 +93,7 @@ const ThemeRoutes = [
         element: (
           <ProtectedRoute roles={["admin"]}>
             <Suspense fallback={<Loader />}>
-              {/*<OcrUpload />*/}
+              {<OcrUpload />}
             </Suspense>
           </ProtectedRoute>
         ),
@@ -104,19 +103,11 @@ const ThemeRoutes = [
         element: (
           <ProtectedRoute roles={["admin", "user"]}>
             <Suspense fallback={<Loader />}>
-              {/*<OcrDetail />*/}
+              {<OcrDetail />}
             </Suspense>
           </ProtectedRoute>
         ),
-      },
-      {
-        path: "/login",
-        element: (
-          <Suspense fallback={<Loader />}>
-            <LoginPage />
-          </Suspense>
-        ),
-      },
+      },*/
       {
         path: "/unauthorized",
         element: (

@@ -10,19 +10,17 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
     const { keycloak } = useKeycloak();
 
-    const isAuthorized = roles
+    const isLoggedIn = keycloak.authenticated;
+
+    /*const isAuthorized = roles
         ? roles.some((role) => keycloak.hasRealmRole(role))
         : true;
 
-    if (!keycloak.authenticated) {
-        return <Navigate to="/login" />;
-    }
-
     if (!isAuthorized) {
         return <Navigate to="/unauthorized" />;
-    }
+    }*/
 
-    return children;
+    return isLoggedIn ? children : null;
 };
 
 export default ProtectedRoute;

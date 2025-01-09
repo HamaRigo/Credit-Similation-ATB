@@ -1,5 +1,0 @@
-declare module "./keycloak" {
-  import Keycloak from "keycloak-js";
-  const keycloak: Keycloak.KeycloakInstance;
-    export default keycloak;
-}
