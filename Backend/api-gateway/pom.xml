@@ -70,10 +70,10 @@
         </dependency>
 
     <!-- Spring Security OAuth2 Jose (JWT Support) -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
+        </dependency>
 
         <!-- Spring Boot Test Starter -->
         <dependency>
