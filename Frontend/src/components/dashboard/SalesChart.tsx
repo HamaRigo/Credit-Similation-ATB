@@ -28,7 +28,7 @@ const SalesChart = () => {
         borderRadius: 2,
       },
     },
-    colors: ["#0d6efd", "#009efb", "#6771dc"],
+    colors: ["#b8c0c6", "#911212"],
     xaxis: {
       categories: [
         "Jan",
@@ -58,11 +58,11 @@ const SalesChart = () => {
   };
   const series = [
     {
-      name: "2020",
+      name: "2023",
       data: [20, 40, 50, 30, 40, 50, 30, 30, 40],
     },
     {
-      name: "2022",
+      name: "2024",
       data: [10, 20, 40, 60, 20, 40, 60, 60, 20],
     },
   ];

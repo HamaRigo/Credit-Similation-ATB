@@ -6,7 +6,7 @@ const FullLayout = lazy(() => import("../layouts/FullLayout"));
 
 /***** Pages ****/
 const Dashboard = lazy(() => import("../views/Dashboard"));
-const Clients = lazy(() => import("../views/ui/Clients"));
+const Clients = lazy(() => import("../components/client/Clients"));
 
 /*****Routes******/
 const ThemeRoutes = [
@@ -17,8 +17,7 @@ const ThemeRoutes = [
       { path: "/", element: <Navigate to="/dashboard" /> },
       { path: "/dashboard", exact: true, element: <Dashboard /> },
       { path: "/clients", exact: true, element: <Clients /> },
-      /*{ path: "/clients/add", exact: true, element: <AddClientForm /> },
-      { path: "/comptes", exact: true, element: <Comptes /> },
+      /*{ path: "/comptes", exact: true, element: <Comptes /> },
       { path: "/comptes/add", exact: true, element: <AddCompte /> },
       { path: "/ocrs", exact: true, element: <OcrList /> },
       { path: "/ocrs/upload", exact: true, element: <OcrUpload /> }, // Route for uploading and analyzing OCR

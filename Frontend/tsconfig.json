@@ -1,10 +1,17 @@
 {
   "compilerOptions": {
     "jsx": "react",
-    "strict": true,
+    "strict": false,
     "module": "ESNext",
     "target": "ES5",
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "noEmit": true
   }
 }

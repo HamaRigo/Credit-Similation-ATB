@@ -11,10 +11,8 @@ import {
   Button,
 } from "reactstrap";
 import Logo from "./Logo";
-// @ts-ignore
-import { ReactComponent as LogoWhite } from "../assets/images/logos/materialprowhite.svg";
-// @ts-ignore
-import user1 from "../assets/images/users/user4.jpg";
+import profile from "../assets/images/users/profile.png";
+import atb from "../assets/images/logos/atb.png";
 
 const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -26,21 +24,20 @@ const Header = () => {
     setIsOpen(!isOpen);
   };
   const showMobilemenu = () => {
-    // @ts-ignore
-    document.getElementById("sidebarArea").classList.toggle("showSidebar");
+    document.getElementById("sidebarArea")?.classList.toggle("showSidebar");
   };
   return (
-    <Navbar color="primary" dark expand="md" className="fix-header">
+    <Navbar color="secondary" dark expand="md" className="fix-header">
       <div className="d-flex align-items-center">
         <div className="d-lg-block d-none me-5 pe-3">
           <Logo />
         </div>
         <NavbarBrand href="/">
-          <LogoWhite className=" d-lg-none" />
+          <img src={atb} width="35" alt="logo ATB" className=" d-lg-none"/>
         </NavbarBrand>
         <Button
-          color="primary"
-          className=" d-lg-none"
+            color="secondary"
+            className=" d-lg-none"
           onClick={() => showMobilemenu()}
         >
           <i className="bi bi-list"></i>
@@ -48,7 +45,7 @@ const Header = () => {
       </div>
       <div className="hstack gap-2">
         <Button
-          color="primary"
+          color="secondary"
           size="sm"
           className="d-sm-block d-md-none"
           onClick={Handletoggle}
@@ -66,7 +63,7 @@ const Header = () => {
         <Dropdown isOpen={dropdownOpen} toggle={toggle}>
           <DropdownToggle color="transparent">
             <img
-              src={user1}
+              src={profile}
               alt="profile"
               className="rounded-circle"
               width="30"

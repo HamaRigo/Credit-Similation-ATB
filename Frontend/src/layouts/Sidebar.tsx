@@ -1,9 +1,7 @@
 import { Button, Nav, NavItem } from "reactstrap";
 import { Link, useLocation } from "react-router-dom";
-// @ts-ignore
-import user1 from "../assets/images/users/user4.jpg";
-// @ts-ignore
-import probg from "../assets/images/bg/download.jpg";
+import profile from "../assets/images/users/profile.png";
+import probg from "../assets/images/bg/bg_banking.avif";
 import React from "react";
 
 const navigation = [
@@ -46,8 +44,7 @@ const navigation = [
 
 const Sidebar = () => {
   const showMobilemenu = () => {
-    // @ts-ignore
-    document.getElementById("sidebarArea").classList.toggle("showSidebar");
+    document.getElementById("sidebarArea")?.classList.toggle("showSidebar");
   };
   let location = useLocation();
 
@@ -59,7 +56,7 @@ const Sidebar = () => {
         style={{ background: `url(${probg}) no-repeat` }}
       >
         <div className="p-3 d-flex">
-          <img src={user1} alt="user" width="50" className="rounded-circle" />
+          <img src={profile} style={{color: 'white'}} alt="user" width="50" className="rounded-circle" />
           <Button
             color="white"
             className="ms-auto text-white d-lg-none"
@@ -68,7 +65,7 @@ const Sidebar = () => {
             <i className="bi bi-x"></i>
           </Button>
         </div>
-        <div className="bg-dark text-white p-2 opacity-75">Steave Rojer</div>
+        <div className="bg-dark text-white p-2 opacity-75">User X</div>
       </div>
       <div className="p-3 mt-2">
         <Nav vertical className="sidebarNav">
