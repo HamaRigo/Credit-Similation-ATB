@@ -24,10 +24,18 @@ public class ClientService {
         return clients.stream().map(ToDtoConverter::clientToDto).collect(Collectors.toList());
     }
 
-    public ClientDTO getClientById(final String id) {
+    public ClientDTO getClientById(final Long id) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
         return ToDtoConverter.clientToDto(client);
+    }
+
+    public Boolean clientAlreadyExists(final String numeroDocument) {
+        Client client = clientRepository.findByNumeroDocument(numeroDocument);
+        if(client == null) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
     }
 
     public ClientDTO createClient(final Client client) {
@@ -39,12 +47,12 @@ public class ClientService {
     }
 
     public ClientDTO updateClient(final Client client) {
-        clientRepository.findById(client.getNumeroDocument())
+        clientRepository.findById(client.getId())
                 .orElseThrow(() -> new RuntimeException("Client not found"));
         return ToDtoConverter.clientToDto(clientRepository.save(client));
     }
 
-    public void deleteClient(final String id) {
+    public void deleteClient(final Long id) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
         clientRepository.delete(client);

@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @EnableJpaRepositories
-public interface ClientRepository extends JpaRepository<Client, String> {
+public interface ClientRepository extends JpaRepository<Client, Long> {
+    Client findByNumeroDocument(String numeroDocument);
 }

@@ -17,7 +17,10 @@ import java.util.List;
 @NoArgsConstructor
 public class Client {
     @Id
-    @Column(nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String numeroDocument;
 
     @NotNull

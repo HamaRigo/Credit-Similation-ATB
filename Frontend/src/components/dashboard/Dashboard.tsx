@@ -1,11 +1,11 @@
 import { Col, Row } from "reactstrap";
-import SalesChart from "../components/dashboard/SalesChart";
-import Feeds from "../components/dashboard/Feeds";
+import SalesChart from "./SalesChart";
+import Feeds from "./Feeds";
 
-import bg1 from "../assets/images/bg/bg1.jpg";
-import bg2 from "../assets/images/bg/bg2.jpg";
-import bg3 from "../assets/images/bg/bg3.jpg";
-import bg4 from "../assets/images/bg/bg4.jpg";
+import bg1 from "../../assets/images/bg/bg1.jpg";
+import bg2 from "../../assets/images/bg/bg2.jpg";
+import bg3 from "../../assets/images/bg/bg3.jpg";
+import bg4 from "../../assets/images/bg/bg4.jpg";
 import React from "react";
 
 const BlogData = [

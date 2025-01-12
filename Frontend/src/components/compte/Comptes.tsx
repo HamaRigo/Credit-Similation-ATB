@@ -1,111 +1,158 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-    TableProps,
+    Alert,
+    Badge,
+    Button,
     Form,
     Input,
+    InputNumber,
+    Modal,
     Popconfirm,
-    Table,
-    Typography,
     Select,
     Space,
+    Switch,
+    Table,
+    TableProps,
     Tag,
-    Button,
-    Modal,
-    Alert,
+    Typography,
 } from 'antd';
 
-import ClientService from '../../services/ClientService';
-import { ClientType } from "../../types/ClientType";
-import { QuestionCircleOutlined, UserAddOutlined } from "@ant-design/icons";
+import { CompteType } from "../../types/CompteType";
+import {CheckOutlined, CloseOutlined, QuestionCircleOutlined, UserAddOutlined, WalletOutlined} from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import EditableCell from "../shared/EditableCell";
 import ErrorResult from "../shared/ErrorResult";
-import { TypeDocumentEnum } from "../../types/TypeDocumentEnum";
+import CompteService from "../../services/CompteService";
+import ClientService from "../../services/ClientService";
+import { TypeCompteEnum } from "../../types/TypeCompteEnum";
+import { ClientType } from "../../types/ClientType";
 import { PageHeader } from "@ant-design/pro-layout";
 
-const documentTypes = Object.values(TypeDocumentEnum);
+const comptesTypes = Object.values(TypeCompteEnum);
 
-const Clients = () => {
-    const [data, setData] = useState<ClientType[]>(null);
+const Comptes = () => {
+    const [data, setData] = useState<CompteType[]>(null);
+    const [clients, setClients] = useState<ClientType[]>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     let addForm: FormInstance = null;
+    const [selectedType, setSelectedType] = useState<TypeCompteEnum>(null);
     const [errorsAdd, setErrorsAdd] = React.useState<string>('');
-    const initialAddValues: ClientType = {
-        typeDocument: null,
-        numeroDocument: '',
-        nom: '',
-        prenom: '',
-        adresse: '',
-        telephone: '',
+    const initialAddValues: CompteType = {
+        typeCompte: null,
+        numeroCompte: '',
+        solde: 0.0,
+        tauxInteret: 0.0,
+        soldeMinimum: 0.0,
+        activated: true,
+        client: null,
     };
     const [editForm] = Form.useForm();
     const [editingKey, setEditingKey] = useState<number>(null);
-    const isEditing = (record: ClientType) => record.id === editingKey;
+    const isEditing = (record: CompteType) => record.id === editingKey;
     const columns = [
         {
             title: 'Type',
-            dataIndex: 'typeDocument',
+            dataIndex: 'typeCompte',
             editable: true,
             inputType: 'select',
-            width: '15%',
-            filters: documentTypes.map((item) => (
+            selectValues: comptesTypes,
+            filters: comptesTypes.map((item) => (
                 { text: item, value: item }
             )),
-            onFilter: (value: string, record: ClientType) => record.typeDocument == value,
-            render: (_, {typeDocument}) => {
+            onFilter: (value: string, record: CompteType) => record.typeCompte == value,
+            render: (_, {typeCompte}) => {
                 let color;
-                switch (typeDocument) {
-                    case TypeDocumentEnum.PERMIS:
+                switch (typeCompte) {
+                    case TypeCompteEnum.EPARGNE:
                         color = 'geekblue';
                         break;
-                    case TypeDocumentEnum.PASSEPORT:
+                    case TypeCompteEnum.COURANT:
                         color = 'purple';
                         break;
                     default:
                         color = 'default';
                 }
-                return <Tag color={color} key={typeDocument}>{typeDocument}</Tag>;
+                return <Tag color={color} key={typeCompte}>{typeCompte}</Tag>;
             },
         },
         {
             title: 'Document',
-            dataIndex: 'numeroDocument',
+            dataIndex: 'numeroCompte',
             editable: true,
-            sorter: (a, b) => a.numeroDocument - b.numeroDocument,
+            sorter: (a, b) => a.numeroCompte - b.numeroCompte,
         },
         {
-            title: 'Firstname',
-            dataIndex: 'nom',
+            title: 'Client',
+            dataIndex: 'client',
             editable: true,
-            sorter: (a, b) => a.nom.length - b.nom.length,
+            inputType: 'select',
+            selectValues: clients,
+            showSearch: true,
+            width: '14%',
+            sorter: (a, b) => a.client.length - b.client.length,
+            render: (_, { client }) => {
+                return clients?.find(item => item.id == client).numeroDocument;
+            },
         },
         {
-            title: 'Lastname',
-            dataIndex: 'prenom',
+            title: 'Solde',
+            dataIndex: 'solde',
             editable: true,
-            sorter: (a, b) => a.prenom.length - b.prenom.length,
+            inputType: 'number',
+            sorter: (a, b) => a.solde - b.solde,
         },
         {
-            title: 'Address',
-            dataIndex: 'adresse',
+            title: 'Solde Minimum',
+            dataIndex: 'soldeMinimum',
             editable: true,
-            sorter: (a, b) => a.adresse.length - b.adresse.length,
+            inputType: 'number',
+            width: '14%',
+            sorter: (a, b) => a.soldeMinimum - b.soldeMinimum,
+            render: (_, record) => {
+                if (record.typeCompte == TypeCompteEnum.COURANT) {
+                    return record.soldeMinimum;
+                }
+            },
         },
         {
-            title: 'Phone',
-            dataIndex: 'telephone',
+            title: 'Taux Interet',
+            dataIndex: 'tauxInteret',
             editable: true,
-            inputType: 'phone',
-            sorter: (a, b) => a.telephone - b.telephone,
+            inputType: 'percent',
+            width: '12%',
+            sorter: (a, b) => a.tauxInteret - b.tauxInteret,
+            render: (_, record) => {
+                if (record.typeCompte == TypeCompteEnum.EPARGNE) {
+                    return record.tauxInteret * 100 + ' %';
+                }
+            },
+        },
+        {
+            title: 'Status',
+            dataIndex: 'activated',
+            editable: true,
+            inputType: 'switch',
+            width: '12%',
+            filters: ['1', '0'].map((item) => {
+                const text = item == '1' ? 'activated' : 'not activated';
+                return { text: text.toUpperCase(), value: item }
+            }),
+            onFilter: (value, record: CompteType) => record.activated == value,
+            render: (_, {activated}) => {
+                const status = activated ? 'success' : 'error';
+                const text = activated ? 'Activated' : 'Not Activated';
+                const color = activated ? 'green' : 'red';
+                return <Badge status={status} text={text} style={{color : color}} />;
+            },
         },
         {
             title: 'Actions',
             width: '12%',
-            render: (_: any, record: ClientType) => {
+            render: (_: any, record: CompteType) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <span>
@@ -135,32 +182,54 @@ const Clients = () => {
             },
         },
     ];
-    const mergedColumns: TableProps<ClientType>['columns'] = columns.map((col) => {
+    const mergedColumns: TableProps<CompteType>['columns'] = columns.map((col) => {
         if (!col.editable) {
             return col;
         }
+
         return {
             ...col,
-            onCell: (record: ClientType) => ({
+            onCell: (record: CompteType) => ({
                 record,
                 inputType: col.inputType ?? 'text',
                 dataIndex: col.dataIndex,
                 title: col.title,
                 editing: isEditing(record),
-                selectValues: col.dataIndex === 'typeDocument' ? documentTypes : null,
+                selectValues: col.selectValues ?? null,
+                showSearch: col.showSearch ?? false,
             }),
         };
     });
 
     // actions
+    const getComptes = () => {
+        setLoading(true);
+        CompteService.list_comptes()
+            .then((response) => {
+                if (response.data) {
+                    const data :CompteType[] = response.data?.map((item: CompteType) => (
+                        { ...item, client: item.client.id } // todo change
+                    ));
+                    setData(data);
+                }
+            })
+            .catch((error) => {
+                setError(error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
     const getClients = () => {
         setLoading(true);
         ClientService.list_clients()
             .then((response) => {
-                setData(response.data);
+                if (response.data) {
+                    setClients(response.data);
+                }
             })
             .catch((error) => {
-                setError(error);
+                console.log(error);
             })
             .finally(() => {
                 setLoading(false);
@@ -172,18 +241,21 @@ const Clients = () => {
         setIsModalOpen(true);
     }
     const handleAdd = async (values) => {
-        const formValues: ClientType = values;
-        const result = await ClientService.client_exists(formValues.numeroDocument);
+        const formValues = updateFormValues(values);
+        const result = await CompteService.compte_exists(formValues.numeroCompte);
+        console.log('handleAdd', result);
+        console.log('handleAdd', result.data);
         if (result.data) {
-            setErrorsAdd('Client with this document number already exists')
+            setErrorsAdd('Compte with this number already exists')
         } else {
             setErrorsAdd('');
-            ClientService.add_client(formValues)
+            CompteService.add_compte(formValues)
                 .then((response) => {
                     setLoading(true);
                     setIsModalOpen(false);
-                    const newRowData: ClientType = response.data;
-                    Notifications.openNotificationWithIcon('success', 'Client added successfully !');
+                    const newRowData: CompteType = response.data;
+                    newRowData.client = newRowData.client.id; //todo numeroDocument
+                    Notifications.openNotificationWithIcon('success', 'Compte added successfully !');
                     //delete data of form
                     addForm?.resetFields();
                     //add data to table
@@ -196,28 +268,30 @@ const Clients = () => {
         }
     };
     const cancelAdd = () => setIsModalOpen(false);
-    const toggleEdit = (record: ClientType) => {
+    const toggleEdit = (record: CompteType) => {
         editForm.setFieldsValue({ ...record });
         setEditingKey(record.id);
     };
     const cancelEdit = () => setEditingKey(null);
-    const saveEdit = async (record: ClientType) => {
+    const saveEdit = async (record: CompteType) => {
         try {
             const formValues = await editForm.validateFields();
             formValues.id = record.id
             let result
-            if (formValues.numeroDocument != record.numeroDocument) {
-                result = await ClientService.client_exists(formValues.numeroDocument);
+            if (formValues.numeroCompte != record.numeroCompte) {
+                result = await CompteService.compte_exists(formValues.numeroCompte);
             }
             if (result?.data) {
-                Notifications.openNotificationWithIcon('error', 'Client with this document number already exists')
+                Notifications.openNotificationWithIcon('error', 'Compte with this number already exists')
             } else {
-                ClientService.edit_client(formValues)
+                updateFormValues(formValues);
+                CompteService.edit_compte(formValues)
                     .then((response) => {
-                        const newRowData: ClientType = response.data;
+                        const newRowData: CompteType = response.data;
                         const newData = [...data];
                         const index = newData.findIndex((item) => record.id === item.id);
                         if (index > -1 && newRowData != undefined) {
+                            newRowData.client = newRowData.client.id;
                             const item = newData[index];
                             newData.splice(index, 1, {
                                 ...item,
@@ -226,7 +300,7 @@ const Clients = () => {
                             setData(newData);
                             cancelEdit();
                         }
-                        Notifications.openNotificationWithIcon('success', 'Client updated successfully !');
+                        Notifications.openNotificationWithIcon('success', 'Compte updated successfully !');
                     })
                     .catch((error) => {
                         Notifications.openNotificationWithIcon('error', error.message);
@@ -238,7 +312,7 @@ const Clients = () => {
     };
     const handleDelete = (id: number) => {
         setLoading(true);
-        ClientService.delete_client(id)
+        CompteService.delete_compte(id)
             .then((_) => {
                 const newData = [...data];
                 // update item
@@ -247,7 +321,7 @@ const Clients = () => {
                     const updatedData = newData.filter((item) => item.id != id);
                     setLoading(false);
                     setData(updatedData);
-                    Notifications.openNotificationWithIcon('success', 'Client deleted successfully !');
+                    Notifications.openNotificationWithIcon('success', 'Compte deleted successfully !');
                 }
             })
             .catch((error) => {
@@ -257,9 +331,18 @@ const Clients = () => {
                 setLoading(false);
             });
     };
+    const updateFormValues = (formValues) => {
+        if (formValues.tauxInteret) {
+            formValues.tauxInteret = formValues.tauxInteret / 100;
+        }
+        formValues.client = {'id' : formValues.client};
+
+        return formValues;
+    }
 
     useEffect(() => {
         //Runs only on the first render
+        getComptes();
         getClients();
     }, []);
 
@@ -270,15 +353,15 @@ const Clients = () => {
     return (
         <>
             <PageHeader
-                title={'Clients'}
+                title={'Comptes'}
                 extra={[
-                    <Button size="large" icon={<UserAddOutlined/>} onClick={toggleAdd}>
-                        Add Client
+                    <Button size="large" icon={<WalletOutlined />} onClick={toggleAdd}>
+                        Add Compte
                     </Button>,
                 ]}
             />
             <Modal
-                title="Add Client"
+                title="Add Compte"
                 open={isModalOpen}
                 onOk={handleAdd}
                 onCancel={cancelAdd}
@@ -290,7 +373,12 @@ const Clients = () => {
                     layout="horizontal"
                     ref={(form: any) => (addForm = form)}
                     initialValues={initialAddValues}
-                    onValuesChange={() => setErrorsAdd('')}
+                    onValuesChange={(changedValues) => {
+                        if (changedValues.typeCompte) {
+                            setSelectedType(changedValues.typeCompte);
+                        }
+                        setErrorsAdd('');
+                    }}
                     labelCol={{span: 8}}
                     wrapperCol={{span: 16}}
                     onFinish={handleAdd}
@@ -307,51 +395,68 @@ const Clients = () => {
                             />
                         )}
                         <Form.Item
-                            label="Document Type"
-                            name="typeDocument"
+                            label="Compte Type"
+                            name="typeCompte"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
                             <Select>
-                                {documentTypes.map(item => <Select.Option value={item} key={item}>{item}</Select.Option>)}
+                                {comptesTypes.map(item => <Select.Option value={item} key={item}>{item}</Select.Option>)}
                             </Select>
                         </Form.Item>
                         <Form.Item
-                            label="Document Number"
-                            name="numeroDocument"
+                            label="Compte Number"
+                            name="numeroCompte"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
                             <Input/>
                         </Form.Item>
                         <Form.Item
-                            label="Firstname"
-                            name="nom"
+                            label="Client"
+                            name="client"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
-                            <Input/>
+                            <Select showSearch>
+                                {clients?.map(item => <Select.Option value={item.id}>{item.numeroDocument}</Select.Option>)}
+                            </Select>
                         </Form.Item>
                         <Form.Item
-                            label="Lastname"
-                            name="prenom"
+                            label="Solde"
+                            name="solde"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
-                            <Input/>
+                            <InputNumber />
                         </Form.Item>
-                        <Form.Item
-                            label="Address"
-                            name="adresse"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Phone"
-                            name="telephone"
-                            rules={[
-                                {required: true, message: 'Please enter input value'},
-                                {pattern: /^\d{8}$/, message: 'Phone must be exactly 8 digits!'},
-                            ]}
-                        >
-                            <Input showCount maxLength={8}/>
+
+                        {selectedType === TypeCompteEnum.EPARGNE && (
+                            <Form.Item
+                                label="Taux interet"
+                                name="tauxInteret"
+                                rules={[{required: true, message: 'Please enter input value'}]}
+                            >
+                                <InputNumber<number>
+                                    min={0}
+                                    max={100}
+                                    formatter={(value) => `${value} %`}
+                                    parser={(value) => value?.replace('%', '') as unknown as number}
+                                />
+                            </Form.Item>
+                        )}
+
+                        {selectedType === TypeCompteEnum.COURANT && (
+                            <Form.Item
+                                label="Solde Minimum"
+                                name="soldeMinimum"
+                                rules={[{required: true, message: 'Please enter input value'}]}
+                            >
+                                <InputNumber />
+                            </Form.Item>
+                        )}
+                        <Form.Item label="Status" name="activated">
+                            <Switch
+                                checkedChildren={<CheckOutlined />}
+                                unCheckedChildren={<CloseOutlined />}
+                                defaultChecked
+                            />
                         </Form.Item>
                         <div className="ant-modal-footer">
                             <Button type="default" onClick={cancelAdd}>
@@ -381,4 +486,4 @@ const Clients = () => {
     );
 };
 
-export default Clients;
+export default Comptes;

@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class CompteDTO {
+    private Long id;
     private String typeCompte;
     private String numeroCompte;
     private double solde;

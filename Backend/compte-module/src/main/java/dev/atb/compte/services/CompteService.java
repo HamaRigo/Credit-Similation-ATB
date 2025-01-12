@@ -36,10 +36,18 @@ public class CompteService {
         return comptes.stream().map(ToDtoConverter::compteToDto).collect(Collectors.toList());
     }
 
-    public CompteDTO findById(final String numeroCompte) {
-        Compte compte = compteRepository.findById(numeroCompte)
+    public CompteDTO findById(final Long id) {
+        Compte compte = compteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Compte not found"));
         return ToDtoConverter.compteToDto(compte);
+    }
+
+    public Boolean compteAlreadyExists(final String numeroCompte) {
+        Compte compte = compteRepository.findByNumeroCompte(numeroCompte);
+        if(compte == null) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
     }
 
     public CompteDTO createCurrentCompte(final CompteCourant compte) {
@@ -59,19 +67,19 @@ public class CompteService {
     }
 
     public CompteDTO updateCurrentCompte(final CompteCourant compte) {
-        compteRepository.findById(compte.getNumeroCompte())
+        compteRepository.findById(compte.getId())
                 .orElseThrow(() -> new RuntimeException("Compte courant not found"));
         return ToDtoConverter.compteToDto(compteRepository.save(compte));
     }
 
     public CompteDTO updateSavingCompte(final CompteEpargne compte) {
-        compteRepository.findById(compte.getNumeroCompte())
+        compteRepository.findById(compte.getId())
                 .orElseThrow(() -> new RuntimeException("Compte epargne not found"));
         return ToDtoConverter.compteToDto(compteRepository.save(compte));
     }
 
-    public void deleteById(final String numeroCompte) {
-        Compte compte = compteRepository.findById(numeroCompte)
+    public void deleteById(final Long id) {
+        Compte compte = compteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Compte not found"));
         compteRepository.delete(compte);
     }

@@ -1,7 +1,9 @@
+import { TypeDocumentEnum } from "./TypeDocumentEnum";
+
 export type ClientType = {
-    key?: string;
+    id?: number;
     numeroDocument?: string;
-    typeDocument?: string;
+    typeDocument?: TypeDocumentEnum;
     nom?: string;
     prenom?: string;
     adresse?: string;

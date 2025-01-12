@@ -17,7 +17,10 @@ import java.util.List;
 @DiscriminatorColumn(name = "type_compte")
 public abstract class Compte {
     @Id
-    @Column(nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String numeroCompte;
 
     @Formula("type_compte") // Exposes the discriminator column

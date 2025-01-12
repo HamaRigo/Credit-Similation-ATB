@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class ClientDTO {
+    private Long id;
     private DocumentType typeDocument;
     private String numeroDocument;
     private String nom;

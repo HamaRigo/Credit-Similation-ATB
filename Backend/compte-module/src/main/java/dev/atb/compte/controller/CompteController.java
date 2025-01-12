@@ -2,7 +2,6 @@ package dev.atb.compte.controller;
 
 import dev.atb.compte.services.CompteService;
 import dev.atb.dto.CompteDTO;
-import dev.atb.models.Compte;
 import dev.atb.models.CompteCourant;
 import dev.atb.models.CompteEpargne;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +34,18 @@ public class CompteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCompteById(@PathVariable final String id) {
+    public ResponseEntity<?> getCompteById(@PathVariable final Long id) {
         try {
             return new ResponseEntity<>(compteService.findById(id), HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/exists/{numeroCompte}")
+    public ResponseEntity<?> compteAlreadyExists(@PathVariable final String numeroCompte) {
+        try {
+            return new ResponseEntity<>(compteService.compteAlreadyExists(numeroCompte), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -84,7 +92,7 @@ public class CompteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCompte(@PathVariable final String id) {
+    public ResponseEntity<Void> deleteCompte(@PathVariable final Long id) {
         try {
             compteService.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

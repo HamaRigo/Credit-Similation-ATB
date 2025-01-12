@@ -23,9 +23,18 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getClientById(@PathVariable final String id) {
+    public ResponseEntity<?> getClientById(@PathVariable final Long id) {
         try {
             return new ResponseEntity<>(clientService.getClientById(id), HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/exists/{numeroDocument}")
+    public ResponseEntity<?> clientAlreadyExists(@PathVariable final String numeroDocument) {
+        try {
+            return new ResponseEntity<>(clientService.clientAlreadyExists(numeroDocument), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -52,7 +61,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClient(@PathVariable final String id) {
+    public ResponseEntity<Void> deleteClient(@PathVariable final Long id) {
         try {
             clientService.deleteClient(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
