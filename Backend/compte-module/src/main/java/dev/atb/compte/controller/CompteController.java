@@ -1,6 +1,8 @@
 package dev.atb.compte.controller;
 
 import dev.atb.compte.services.CompteService;
+import dev.atb.dto.CompteCountByStatusDTO;
+import dev.atb.dto.CompteCountByTypeDTO;
 import dev.atb.dto.CompteDTO;
 import dev.atb.models.CompteCourant;
 import dev.atb.models.CompteEpargne;
@@ -21,6 +23,16 @@ public class CompteController {
     @GetMapping
     public ResponseEntity<List<CompteDTO>> getAllComptes() {
         return new ResponseEntity<>(compteService.findAll(), HttpStatus.OK);
+    }
+
+    @GetMapping("/countByType")
+    public ResponseEntity<List<CompteCountByTypeDTO>> getComptesCountByType() {
+        return new ResponseEntity<>(compteService.findComptesCountByType(), HttpStatus.OK);
+    }
+
+    @GetMapping("/countByStatus")
+    public ResponseEntity<List<CompteCountByStatusDTO>> getComptesCountByStatus() {
+        return new ResponseEntity<>(compteService.findComptesCountByStatus(), HttpStatus.OK);
     }
 
     @GetMapping("/current")

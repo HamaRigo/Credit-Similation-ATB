@@ -51,6 +51,7 @@ const Clients = () => {
             dataIndex: 'typeDocument',
             editable: true,
             inputType: 'select',
+            selectValues: documentTypes,
             width: '15%',
             filters: documentTypes.map((item) => (
                 { text: item, value: item }
@@ -79,15 +80,15 @@ const Clients = () => {
         },
         {
             title: 'Firstname',
-            dataIndex: 'nom',
-            editable: true,
-            sorter: (a, b) => a.nom.length - b.nom.length,
-        },
-        {
-            title: 'Lastname',
             dataIndex: 'prenom',
             editable: true,
             sorter: (a, b) => a.prenom.length - b.prenom.length,
+        },
+        {
+            title: 'Lastname',
+            dataIndex: 'nom',
+            editable: true,
+            sorter: (a, b) => a.nom.length - b.nom.length,
         },
         {
             title: 'Address',
@@ -103,9 +104,16 @@ const Clients = () => {
             sorter: (a, b) => a.telephone - b.telephone,
         },
         {
+            title: 'Comptes',
+            dataIndex: 'compteCount',
+            editable: false,
+            width: '10%',
+            sorter: (a, b) => a.compteCount - b.compteCount,
+        },
+        {
             title: 'Actions',
             width: '12%',
-            render: (_: any, record: ClientType) => {
+            render: (_, record: ClientType) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <span>
@@ -147,7 +155,7 @@ const Clients = () => {
                 dataIndex: col.dataIndex,
                 title: col.title,
                 editing: isEditing(record),
-                selectValues: col.dataIndex === 'typeDocument' ? documentTypes : null,
+                selectValues: col.selectValues ?? null,
             }),
         };
     });
@@ -324,14 +332,14 @@ const Clients = () => {
                         </Form.Item>
                         <Form.Item
                             label="Firstname"
-                            name="nom"
+                            name="prenom"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
                             <Input/>
                         </Form.Item>
                         <Form.Item
                             label="Lastname"
-                            name="prenom"
+                            name="nom"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
                             <Input/>

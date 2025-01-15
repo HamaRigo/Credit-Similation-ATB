@@ -6,12 +6,16 @@ class ClientService {
         return axios.get(apiRoutes.CLIENT_URL);
     }
 
+    count_clients() {
+        return axios.get(apiRoutes.CLIENT_URL + `/count`);
+    }
+
     get_client(id: number) {
-        return axios.get(apiRoutes.CLIENT_URL+ `/${id}`);
+        return axios.get(apiRoutes.CLIENT_URL + `/${id}`);
     }
 
     client_exists(numeroDocument: string) {
-        return axios.get(apiRoutes.CLIENT_URL+ `/exists/${numeroDocument}`);
+        return axios.get(apiRoutes.CLIENT_URL + `/exists/${numeroDocument}`);
     }
 
     add_client(data: object) {

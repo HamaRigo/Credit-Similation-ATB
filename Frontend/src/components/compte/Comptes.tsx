@@ -52,12 +52,13 @@ const Comptes = () => {
     };
     const [editForm] = Form.useForm();
     const [editingKey, setEditingKey] = useState<number>(null);
+    const [editingType, setEditingType] = useState<TypeCompteEnum>(null);
     const isEditing = (record: CompteType) => record.id === editingKey;
     const columns = [
         {
             title: 'Type',
             dataIndex: 'typeCompte',
-            editable: true,
+            editable: false,
             inputType: 'select',
             selectValues: comptesTypes,
             filters: comptesTypes.map((item) => (
@@ -108,7 +109,7 @@ const Comptes = () => {
         {
             title: 'Solde Minimum',
             dataIndex: 'soldeMinimum',
-            editable: true,
+            editable: editingType == TypeCompteEnum.COURANT,
             inputType: 'number',
             width: '14%',
             sorter: (a, b) => a.soldeMinimum - b.soldeMinimum,
@@ -121,7 +122,7 @@ const Comptes = () => {
         {
             title: 'Taux Interet',
             dataIndex: 'tauxInteret',
-            editable: true,
+            editable: editingType == TypeCompteEnum.EPARGNE,
             inputType: 'percent',
             width: '12%',
             sorter: (a, b) => a.tauxInteret - b.tauxInteret,
@@ -152,7 +153,7 @@ const Comptes = () => {
         {
             title: 'Actions',
             width: '12%',
-            render: (_: any, record: CompteType) => {
+            render: (_, record: CompteType) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <span>
@@ -208,7 +209,7 @@ const Comptes = () => {
             .then((response) => {
                 if (response.data) {
                     const data :CompteType[] = response.data?.map((item: CompteType) => (
-                        { ...item, client: item.client.id } // todo change
+                        { ...item, client: item.client.id }
                     ));
                     setData(data);
                 }
@@ -221,18 +222,11 @@ const Comptes = () => {
             });
     };
     const getClients = () => {
-        setLoading(true);
         ClientService.list_clients()
             .then((response) => {
                 if (response.data) {
                     setClients(response.data);
                 }
-            })
-            .catch((error) => {
-                console.log(error);
-            })
-            .finally(() => {
-                setLoading(false);
             });
     };
     const toggleAdd = () => {
@@ -243,8 +237,6 @@ const Comptes = () => {
     const handleAdd = async (values) => {
         const formValues = updateFormValues(values);
         const result = await CompteService.compte_exists(formValues.numeroCompte);
-        console.log('handleAdd', result);
-        console.log('handleAdd', result.data);
         if (result.data) {
             setErrorsAdd('Compte with this number already exists')
         } else {
@@ -254,7 +246,7 @@ const Comptes = () => {
                     setLoading(true);
                     setIsModalOpen(false);
                     const newRowData: CompteType = response.data;
-                    newRowData.client = newRowData.client.id; //todo numeroDocument
+                    newRowData.client = newRowData.client.id;
                     Notifications.openNotificationWithIcon('success', 'Compte added successfully !');
                     //delete data of form
                     addForm?.resetFields();
@@ -271,8 +263,12 @@ const Comptes = () => {
     const toggleEdit = (record: CompteType) => {
         editForm.setFieldsValue({ ...record });
         setEditingKey(record.id);
+        setEditingType(record.typeCompte);
     };
-    const cancelEdit = () => setEditingKey(null);
+    const cancelEdit = () => {
+        setEditingKey(null);
+        setEditingType(null);
+    }
     const saveEdit = async (record: CompteType) => {
         try {
             const formValues = await editForm.validateFields();
@@ -424,7 +420,7 @@ const Comptes = () => {
                             name="solde"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
-                            <InputNumber />
+                            <InputNumber style={{ width: '100%' }} />
                         </Form.Item>
 
                         {selectedType === TypeCompteEnum.EPARGNE && (
@@ -448,7 +444,7 @@ const Comptes = () => {
                                 name="soldeMinimum"
                                 rules={[{required: true, message: 'Please enter input value'}]}
                             >
-                                <InputNumber />
+                                <InputNumber style={{ width: '100%' }} />
                             </Form.Item>
                         )}
                         <Form.Item label="Status" name="activated">

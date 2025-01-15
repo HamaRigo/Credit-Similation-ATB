@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles")
     List<User> findAllWithRoles();
 
-    @EntityGraph(attributePaths = "roles")
-    List<User> findAll();
+    @Query("SELECT COUNT(u) FROM User u")
+    Long countUsers();
 }

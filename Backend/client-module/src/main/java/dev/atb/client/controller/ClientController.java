@@ -22,6 +22,11 @@ public class ClientController {
         return new ResponseEntity<>(clientService.getAllClients(), HttpStatus.OK);
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> getClientsCount() {
+        return new ResponseEntity<>(clientService.getClientsCount(), HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getClientById(@PathVariable final Long id) {
         try {

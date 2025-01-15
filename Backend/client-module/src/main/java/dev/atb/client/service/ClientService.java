@@ -24,6 +24,10 @@ public class ClientService {
         return clients.stream().map(ToDtoConverter::clientToDto).collect(Collectors.toList());
     }
 
+    public Long getClientsCount() {
+        return clientRepository.countClients();
+    }
+
     public ClientDTO getClientById(final Long id) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found"));

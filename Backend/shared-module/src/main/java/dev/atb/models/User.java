@@ -36,6 +36,6 @@ public class User {
     @NotNull
     private String telephone;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles;
 }

@@ -1,5 +1,7 @@
 package dev.atb.compte.services;
 
+import dev.atb.dto.CompteCountByStatusDTO;
+import dev.atb.dto.CompteCountByTypeDTO;
 import dev.atb.dto.CompteDTO;
 import dev.atb.dto.ToDtoConverter;
 import dev.atb.models.Compte;
@@ -24,6 +26,20 @@ public class CompteService {
     public List<CompteDTO> findAll() {
         List<Compte> comptes = compteRepository.findAll();
         return comptes.stream().map(ToDtoConverter::compteToDto).collect(Collectors.toList());
+    }
+
+    public List<CompteCountByTypeDTO> findComptesCountByType() {
+        List<Object[]> comptesByType = compteRepository.countComptesByType();
+        return comptesByType.stream()
+                .map(row -> new CompteCountByTypeDTO((String) row[0], (Long) row[1]))
+                .collect(Collectors.toList());
+    }
+
+    public List<CompteCountByStatusDTO> findComptesCountByStatus() {
+        List<Object[]> comptesByStatus = compteRepository.countComptesByStatus();
+        return comptesByStatus.stream()
+                .map(row -> new CompteCountByStatusDTO((Boolean) row[0], (Long) row[1]))
+                .collect(Collectors.toList());
     }
 
     public List<CompteDTO> findAllCurrentComptes() {

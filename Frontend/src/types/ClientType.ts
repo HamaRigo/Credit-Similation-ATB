@@ -8,4 +8,5 @@ export type ClientType = {
     prenom?: string;
     adresse?: string;
     telephone?: string;
+    compteCount?: number;
 };

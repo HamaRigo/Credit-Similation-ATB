@@ -80,11 +80,11 @@ public class OcrService {
      *
      * @param imageFile     the image file to process
      * @param typeDocument  the type of document being processed (can be null)
-     * @param numeroCompteId the account ID associated with the document (can be null)
+     * @param id the account ID associated with the document (can be null)
      * @return an OcrDTO containing the results of the OCR processing
      * @throws OcrProcessingException if there is an error during processing
      */
-    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, String numeroCompteId) {
+    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, Long id) {
         File tempFile = null;
         File tempConvertedFile = null;
         try {
@@ -101,8 +101,8 @@ public class OcrService {
             Ocr ocr = new Ocr();
             ocr.setResultatsReconnaissance(ocrResult);
             ocr.setTypeDocument(typeDocument);
-            if (numeroCompteId != null) {
-                compteRepository.findById(numeroCompteId).ifPresent(ocr::setCompte);
+            if (id != null) {
+                compteRepository.findById(id).ifPresent(ocr::setCompte);
             }
 
             ocrRepository.save(ocr);

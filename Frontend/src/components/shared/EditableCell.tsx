@@ -1,12 +1,13 @@
 import React from "react";
-import { Form, Input, InputNumber, Select, Switch } from "antd";
+import { Form, Input, InputNumber, Select, SelectProps, Switch } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
     dataIndex: string;
     title: any;
-    inputType: 'select' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
+    inputType: 'select' | 'selectMultiple' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
+    dataType: any;
     record: any;
     index: number;
     selectValues : any;
@@ -21,11 +22,12 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                                                                                 index,
                                                                                 children,
                                                                                 selectValues,
+                                                                                dataType,
                                                                                 showSearch,
                                                                                 ...restProps
                                                                             }) => {
 
-    const phonePattern = dataIndex == 'telephone'
+    const phonePattern = inputType == 'phone'
     let inputNode;
     switch (inputType) {
         case 'number':
@@ -35,8 +37,8 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
         case 'money':
             inputNode = (
                 <InputNumber
-                formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value?.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                    formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/\$\s?|(,*)/g, '') as unknown as number}
                 />
             );
             break;
@@ -66,6 +68,20 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
             inputNode = <Input showCount maxLength={8} />;
             break;
 
+        case 'selectMultiple':
+            inputNode = (
+                <Select
+                    mode="multiple"
+                    allowClear
+                    style={{ width: '100%' }}
+                    defaultValue={record.roles?.map(item => item.id)}
+                    options={selectValues?.map((item) => (
+                        { label: item.name, value: item.id }
+                    ))}
+                />
+            );
+        break;
+
         case 'select':
             inputNode = (
                 <Select showSearch={showSearch}>
@@ -93,8 +109,14 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                     rules={[
                         {
                             required: true,
-                            message: `Please enter ${title}!`,
+                            message: `Please enter ${title} !`,
                         },
+                        // type: 'number', min: 0, max: 99
+                        // type: 'email'
+                        dataType ? {
+                            type: dataType,
+                            message: `Please enter a valid ${dataType} !`,
+                        } : null,
                         phonePattern ? { pattern: /^\d{8}$/, message: `${title} must be exactly 8 digits!` } : null,
                     ]}
                 >

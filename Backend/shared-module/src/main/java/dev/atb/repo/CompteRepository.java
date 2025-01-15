@@ -20,4 +20,10 @@ public interface CompteRepository extends JpaRepository<Compte, Long> {
 
     @Query("SELECT c FROM Compte c WHERE TYPE(c) = CompteEpargne")
     List<CompteEpargne> findAllSavingComptes();
+
+    @Query("SELECT c.typeCompte as type, COUNT(c) as count FROM Compte c GROUP BY TYPE(c)")
+    List<Object[]> countComptesByType();
+
+    @Query("SELECT c.activated, COUNT(c) FROM Compte c GROUP BY c.activated")
+    List<Object[]> countComptesByStatus();
 }

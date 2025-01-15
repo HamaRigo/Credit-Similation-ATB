@@ -21,7 +21,6 @@ import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import EditableCell from "../shared/EditableCell";
 import ErrorResult from "../shared/ErrorResult";
-import UserService from "../../services/UserService";
 
 const Roles = () => {
     const [data, setData] = useState<RoleType[]>(null);
@@ -44,9 +43,16 @@ const Roles = () => {
             sorter: (a, b) => a.name.length - b.name.length,
         },
         {
+            title: 'Users',
+            dataIndex: 'userCount',
+            editable: false,
+            width: '30%',
+            sorter: (a, b) => a.userCount - b.userCount,
+        },
+        {
             title: 'Actions',
             width: '12%',
-            render: (_: any, record: RoleType) => {
+            render: (_, record: RoleType) => {
                 const editable = isEditing(record);
                 return editable ? (
                     <span>
@@ -95,13 +101,6 @@ const Roles = () => {
     // actions
     const getRoles = () => {
         setLoading(true);
-        UserService.list_users()
-            .then((response) => {
-                console.log('response', response.data)
-            })
-            .catch((error) => {
-                console.log('error', error.message)
-            })
         RoleService.list_roles()
             .then((response) => {
                 setData(response.data);

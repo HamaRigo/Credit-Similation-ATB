@@ -1,12 +1,10 @@
 package dev.atb.user.service;
 
-import dev.atb.dto.RoleDTO;
 import dev.atb.dto.ToDtoConverter;
 import dev.atb.dto.UserDTO;
-import dev.atb.models.Role;
 import dev.atb.models.User;
-import dev.atb.repo.RoleRepository;
 import dev.atb.repo.UserRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +18,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
     private final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAllWithRoles();
         return users.stream().map(ToDtoConverter::userToDto).collect(Collectors.toList());
+    }
+
+    public Long getUsersCount() {
+        return userRepository.countUsers();
     }
 
     public UserDTO getUserById(final Long id) {
@@ -36,9 +35,13 @@ public class UserService {
         return ToDtoConverter.userToDto(user);
     }
 
+    @Transactional
     public UserDTO createUser(final User user) {
         try {
-            return ToDtoConverter.userToDto(userRepository.save(user));
+            User savedUser = userRepository.save(user);
+            savedUser.getRoles().size(); // Force initialization of the lazy-loaded `roles`
+            return ToDtoConverter.userToDto(savedUser);
+            //return ToDtoConverter.userToDto(userRepository.save(user));
         } catch (Exception e) {
             throw new RuntimeException("Error saving user", e);
         }
@@ -54,36 +57,5 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
-    }
-
-    public List<RoleDTO> getAllRoles() {
-        List<Role> roles = roleRepository.findAll();
-        return roles.stream().map(ToDtoConverter::roleToDto).collect(Collectors.toList());
-    }
-
-    public RoleDTO getRoleById(final Long id) {
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        return ToDtoConverter.roleToDto(role);
-    }
-
-    public RoleDTO createRole(final Role role) {
-        try {
-            return ToDtoConverter.roleToDto(roleRepository.save(role));
-        } catch (Exception e) {
-            throw new RuntimeException("Error saving role", e);
-        }
-    }
-
-    public RoleDTO updateRole(final Role role) {
-        roleRepository.findById(role.getId())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        return ToDtoConverter.roleToDto(roleRepository.save(role));
-    }
-
-    public void deleteRole(final Long id) {
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        roleRepository.delete(role);
     }
 }

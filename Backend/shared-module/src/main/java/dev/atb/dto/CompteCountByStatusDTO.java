@@ -7,8 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class RoleDTO {
-    private Long id;
-    private String name;
-    private int userCount;
+public class CompteCountByStatusDTO {
+    private boolean activated;
+    private Long count;
 }

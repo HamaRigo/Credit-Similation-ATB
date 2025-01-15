@@ -1,8 +1,8 @@
 package dev.atb.user.controller;
 
-import dev.atb.user.service.UserService;
-import dev.atb.dto.UserDTO;
-import dev.atb.models.User;
+import dev.atb.dto.RoleDTO;
+import dev.atb.models.Role;
+import dev.atb.user.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,43 +12,38 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
-@RequestMapping("/users")
-public class UserController {
+@RequestMapping("/roles")
+public class RoleController {
     @Autowired
-    private UserService userService;
+    private RoleService roleService;
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
-    }
-
-    @GetMapping("/count")
-    public ResponseEntity<Long> getUsersCount() {
-        return new ResponseEntity<>(userService.getUsersCount(), HttpStatus.OK);
+    public ResponseEntity<List<RoleDTO>> getAllRoles() {
+        return new ResponseEntity<>(roleService.getAllRoles(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable final Long id) {
+    public ResponseEntity<?> getRoleById(@PathVariable final Long id) {
         try {
-            return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
+            return new ResponseEntity<>(roleService.getRoleById(id), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody final User user) {
+    public ResponseEntity<RoleDTO> createRole(@RequestBody final Role role) {
         try {
-            return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+            return new ResponseEntity<>(roleService.createRole(role), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping
-    public ResponseEntity<UserDTO> updateUser(@RequestBody final User user) {
+    public ResponseEntity<RoleDTO> updateRole(@RequestBody final Role role) {
         try {
-            return new ResponseEntity<>(userService.updateUser(user), HttpStatus.OK);
+            return new ResponseEntity<>(roleService.updateRole(role), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -57,9 +52,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable final Long id) {
+    public ResponseEntity<Void> deleteRole(@PathVariable final Long id) {
         try {
-            userService.deleteUser(id);
+            roleService.deleteRole(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

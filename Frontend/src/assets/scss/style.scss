@@ -9,6 +9,17 @@
   color: darkblue !important;
 }
 
+.change-pwd-btn {
+  color: grey !important;
+}
+
 .delete-btn {
   color: #cd0f0f !important;
+}
+
+.center-spin {
+  display: flex !important;
+  justify-content: center !important;
+  align-content: center !important;
+  height: 100vh !important;
 }

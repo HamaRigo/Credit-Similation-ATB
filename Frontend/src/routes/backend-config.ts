@@ -6,5 +6,5 @@ export const apiRoutes = {
     CLIENT_URL: API_URL + ':4444/clients',
     COMPTE_URL: API_URL + ':5555/comptes',
     USER_URL: API_URL + ':7777/users',
-    ROLE_URL: API_URL + ':7777/users/roles',
+    ROLE_URL: API_URL + ':7777/roles',
 }

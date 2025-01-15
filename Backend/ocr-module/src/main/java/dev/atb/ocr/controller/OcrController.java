@@ -25,9 +25,9 @@ public class OcrController {
     @PostMapping("/upload")
     public ResponseEntity<OcrDTO> uploadImage(@RequestParam("file") MultipartFile file,
                                               @RequestParam("typeDocument") String typeDocument,
-                                              @RequestParam(value = "numeroCompteId", required = false) String numeroCompteId) {
+                                              @RequestParam(value = "id", required = false) Long id) {
         try {
-            OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, numeroCompteId);
+            OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, id);
             return ResponseEntity.status(HttpStatus.CREATED).body(ocrDTO);
         } catch (OcrProcessingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -41,9 +41,9 @@ public class OcrController {
     @PostMapping("/analyze")
     public ResponseEntity<OcrDTO> analyzeImage(@RequestParam("file") MultipartFile file,
                                                @RequestParam(value = "typeDocument", required = false) String typeDocument,
-                                               @RequestParam(value = "numeroCompteId", required = false) String numeroCompteId) {
+                                               @RequestParam(value = "id", required = false) Long id) {
         try {
-            OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, numeroCompteId);
+            OcrDTO ocrDTO = ocrService.analyzeAndSaveImage(file, typeDocument, id);
             return ResponseEntity.ok(ocrDTO);
         } catch (OcrProcessingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

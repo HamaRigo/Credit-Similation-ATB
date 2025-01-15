@@ -8,15 +8,11 @@ import java.util.List;
 
 public final class ToDtoConverter {
     public static ClientDTO clientToDto(final Client client) {
-        return new ClientDTO(
-                client.getId(),
-                client.getTypeDocument(),
-                client.getNumeroDocument(),
-                client.getNom(),
-                client.getPrenom(),
-                client.getAdresse(),
-                client.getTelephone()
-        );
+        ClientDTO clientDTO = new ClientDTO();
+        BeanUtils.copyProperties(client, clientDTO);
+        clientDTO.setCompteCount(client.getComptes().size());
+
+        return clientDTO;
     }
 
     public static CompteDTO compteToDto(final Compte compte) {
@@ -81,9 +77,10 @@ public final class ToDtoConverter {
     }
 
     public static RoleDTO roleToDto(final Role role) {
-        return new RoleDTO(
-          role.getId(),
-          role.getName()
-        );
+        RoleDTO roleDTO = new RoleDTO();
+        BeanUtils.copyProperties(role, roleDTO);
+        roleDTO.setUserCount(role.getUsers().size());
+
+        return roleDTO;
     }
 }
