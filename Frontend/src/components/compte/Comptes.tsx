@@ -19,7 +19,7 @@ import {
 } from 'antd';
 
 import { CompteType } from "../../types/CompteType";
-import {CheckOutlined, CloseOutlined, QuestionCircleOutlined, UserAddOutlined, WalletOutlined} from "@ant-design/icons";
+import {CheckOutlined, CloseOutlined, QuestionCircleOutlined, WalletOutlined} from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import EditableCell from "../shared/EditableCell";
@@ -29,6 +29,7 @@ import ClientService from "../../services/ClientService";
 import { TypeCompteEnum } from "../../types/TypeCompteEnum";
 import { ClientType } from "../../types/ClientType";
 import { PageHeader } from "@ant-design/pro-layout";
+import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
 
 const comptesTypes = Object.values(TypeCompteEnum);
 
@@ -85,6 +86,7 @@ const Comptes = () => {
             dataIndex: 'numeroCompte',
             editable: true,
             sorter: (a, b) => a.numeroCompte - b.numeroCompte,
+            ...EditableTableColumnSearch('numeroCompte'),
         },
         {
             title: 'Client',
@@ -98,6 +100,7 @@ const Comptes = () => {
             render: (_, { client }) => {
                 return clients?.find(item => item.id == client).numeroDocument;
             },
+            //...EditableTableColumnSearch('client'), // todo check
         },
         {
             title: 'Solde',
@@ -183,7 +186,7 @@ const Comptes = () => {
             },
         },
     ];
-    const mergedColumns: TableProps<CompteType>['columns'] = columns.map((col) => {
+    const mergedColumns: any = columns.map((col) => {
         if (!col.editable) {
             return col;
         }
@@ -197,7 +200,7 @@ const Comptes = () => {
                 title: col.title,
                 editing: isEditing(record),
                 selectValues: col.selectValues ?? null,
-                showSearch: col.showSearch ?? false,
+                showSearch: col.dataIndex == 'client',
             }),
         };
     });
@@ -420,7 +423,7 @@ const Comptes = () => {
                             name="solde"
                             rules={[{required: true, message: 'Please enter input value'}]}
                         >
-                            <InputNumber style={{ width: '100%' }} />
+                            <InputNumber style={{ width: '100%' }} suffix={'DT'} />
                         </Form.Item>
 
                         {selectedType === TypeCompteEnum.EPARGNE && (
@@ -432,7 +435,8 @@ const Comptes = () => {
                                 <InputNumber<number>
                                     min={0}
                                     max={100}
-                                    formatter={(value) => `${value} %`}
+                                    suffix={'%'}
+                                    //formatter={(value) => `${value} %`}
                                     parser={(value) => value?.replace('%', '') as unknown as number}
                                 />
                             </Form.Item>
@@ -444,7 +448,7 @@ const Comptes = () => {
                                 name="soldeMinimum"
                                 rules={[{required: true, message: 'Please enter input value'}]}
                             >
-                                <InputNumber style={{ width: '100%' }} />
+                                <InputNumber style={{ width: '100%' }} suffix={'DT'} />
                             </Form.Item>
                         )}
                         <Form.Item label="Status" name="activated">

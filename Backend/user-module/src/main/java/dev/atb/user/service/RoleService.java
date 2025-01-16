@@ -43,6 +43,7 @@ public class RoleService {
     public void deleteRole(final Long id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
+        role.removeUsers();
         roleRepository.delete(role);
     }
 }

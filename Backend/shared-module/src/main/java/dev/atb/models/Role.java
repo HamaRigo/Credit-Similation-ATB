@@ -20,4 +20,12 @@ public class Role {
 
     @ManyToMany(mappedBy = "roles")
     private List<User> users;
+
+    // Remove association with users
+    public void removeUsers() {
+        for (User user : users) {
+            user.getRoles().remove(this);
+        }
+        users.clear();
+    }
 }

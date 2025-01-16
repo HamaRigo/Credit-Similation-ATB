@@ -21,15 +21,18 @@ const Dashboard = () => {
   const [users, setUsers] = useState<number>(null);
   const [roles, setRoles] = useState<RoleType[]>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>(null);
   const data = {
       labels: roles?.map(item => item.name),
       datasets: [{
             data: roles?.map(item => item.userCount),
             backgroundColor: [
-                'rgba(255,188,52,0.7)',
+                //'rgba(255,188,52,0.7)',
                 'rgb(186,15,15, 0.7)',
                 'rgba(13,46,83,0.7)',
                 'rgba(52,58,64,0.7)',
+                'rgba(136,149,158,0.7)',
+                'rgba(184,192,198,0.7)',
             ],
             borderWidth: 1,
     }],
@@ -44,29 +47,46 @@ const Dashboard = () => {
                 const result = { 'active': activatedCount, 'inactive' : inactivatedCount }
                 setComptesByStatus(result);
             }
+        })
+        .catch((error) => {
+            setError(error);
         });
 
       CompteService.count_comptes_by_type()
           .then((response) => {
               setComptesByType(response.data);
+          })
+          .catch((error) => {
+              setError(error);
           });
   }
   const getCountClients = () => {
     ClientService.count_clients()
         .then((response) => {
           setClients(response.data);
+        })
+        .catch((error) => {
+            setError(error);
         });
   }
   const getCountUsers = () => {
     UserService.count_users()
         .then((response) => {
             setUsers(response.data);
+        })
+        .catch((error) => {
+            setError(error);
         });
   }
   const getRoles = () => {
     RoleService.list_roles()
         .then((response) => {
             setRoles(response.data);
+        })
+        .catch((error) => {
+            setError(error);
+        })
+        .finally(() => {
             setIsLoading(false);
         });
   }

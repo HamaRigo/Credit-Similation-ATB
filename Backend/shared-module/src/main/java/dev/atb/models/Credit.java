@@ -24,7 +24,7 @@ public class Credit {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private CreditStatus statut;
+    private CreditStatus status;
 
     @NotNull
     private double tauxInteret;

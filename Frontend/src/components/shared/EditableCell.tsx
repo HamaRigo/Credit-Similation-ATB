@@ -1,12 +1,13 @@
 import React from "react";
-import { Form, Input, InputNumber, Select, SelectProps, Switch } from "antd";
+import {DatePicker, Form, Input, InputNumber, Select, Switch} from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
     dataIndex: string;
     title: any;
-    inputType: 'select' | 'selectMultiple' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
+inputType: 'select' | 'selectMultiple' | 'datePicker' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
     dataType: any;
     record: any;
     index: number;
@@ -94,6 +95,19 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                 </Select>
             );
             break;
+
+        case 'datePicker':
+            /*const dateFormat = 'DD-MM-YYYY'
+            const parsedDate = dayjs(record[dataIndex]);
+            if (parsedDate.isValid()) {
+                inputNode = (
+                    <DatePicker
+                        defaultValue={parsedDate}
+                        format={dateFormat}
+                    />
+                )
+                break;
+            }*/
 
         default:
             inputNode = <Input />;

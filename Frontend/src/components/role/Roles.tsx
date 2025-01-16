@@ -21,6 +21,7 @@ import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import EditableCell from "../shared/EditableCell";
 import ErrorResult from "../shared/ErrorResult";
+import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
 
 const Roles = () => {
     const [data, setData] = useState<RoleType[]>(null);
@@ -41,6 +42,7 @@ const Roles = () => {
             dataIndex: 'name',
             editable: true,
             sorter: (a, b) => a.name.length - b.name.length,
+            ...EditableTableColumnSearch('name'),
         },
         {
             title: 'Users',
@@ -82,7 +84,7 @@ const Roles = () => {
             },
         },
     ];
-    const mergedColumns: TableProps<RoleType>['columns'] = columns.map((col) => {
+    const mergedColumns: any = columns.map((col) => {
         if (!col.editable) {
             return col;
         }

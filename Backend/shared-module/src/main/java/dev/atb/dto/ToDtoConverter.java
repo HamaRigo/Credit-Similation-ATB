@@ -10,7 +10,7 @@ public final class ToDtoConverter {
     public static ClientDTO clientToDto(final Client client) {
         ClientDTO clientDTO = new ClientDTO();
         BeanUtils.copyProperties(client, clientDTO);
-        clientDTO.setCompteCount(client.getComptes().size());
+        //clientDTO.setCompteCount(client.getComptes().size());
 
         return clientDTO;
     }
@@ -39,7 +39,7 @@ public final class ToDtoConverter {
         return new CreditDTO(
                 credit.getId(),
                 credit.getType(),
-                credit.getStatut(),
+                credit.getStatus(),
                 credit.getTauxInteret(),
                 credit.getMontant(),
                 credit.getDateDebut(),
@@ -79,7 +79,7 @@ public final class ToDtoConverter {
     public static RoleDTO roleToDto(final Role role) {
         RoleDTO roleDTO = new RoleDTO();
         BeanUtils.copyProperties(role, roleDTO);
-        roleDTO.setUserCount(role.getUsers().size());
+        //roleDTO.setUserCount(role.getUsers().size());
 
         return roleDTO;
     }

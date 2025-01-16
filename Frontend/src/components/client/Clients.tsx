@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-    TableProps,
     Form,
     Input,
     Popconfirm,
@@ -17,13 +16,14 @@ import {
 
 import ClientService from '../../services/ClientService';
 import { ClientType } from "../../types/ClientType";
-import { QuestionCircleOutlined, UserAddOutlined } from "@ant-design/icons";
+import {QuestionCircleOutlined, UserAddOutlined} from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import EditableCell from "../shared/EditableCell";
 import ErrorResult from "../shared/ErrorResult";
 import { TypeDocumentEnum } from "../../types/TypeDocumentEnum";
 import { PageHeader } from "@ant-design/pro-layout";
+import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
 
 const documentTypes = Object.values(TypeDocumentEnum);
 
@@ -77,18 +77,21 @@ const Clients = () => {
             dataIndex: 'numeroDocument',
             editable: true,
             sorter: (a, b) => a.numeroDocument - b.numeroDocument,
+            ...EditableTableColumnSearch('numeroDocument'),
         },
         {
             title: 'Firstname',
             dataIndex: 'prenom',
             editable: true,
             sorter: (a, b) => a.prenom.length - b.prenom.length,
+            ...EditableTableColumnSearch('prenom'),
         },
         {
             title: 'Lastname',
             dataIndex: 'nom',
             editable: true,
             sorter: (a, b) => a.nom.length - b.nom.length,
+            ...EditableTableColumnSearch('nom'),
         },
         {
             title: 'Address',
@@ -102,6 +105,7 @@ const Clients = () => {
             editable: true,
             inputType: 'phone',
             sorter: (a, b) => a.telephone - b.telephone,
+            ...EditableTableColumnSearch('telephone'),
         },
         {
             title: 'Comptes',
@@ -143,7 +147,7 @@ const Clients = () => {
             },
         },
     ];
-    const mergedColumns: TableProps<ClientType>['columns'] = columns.map((col) => {
+    const mergedColumns: any = columns.map((col) => {
         if (!col.editable) {
             return col;
         }
@@ -165,6 +169,9 @@ const Clients = () => {
         setLoading(true);
         ClientService.list_clients()
             .then((response) => {
+                /*const result :ClientType[] = response.data?.map((item: ClientType) => (
+                    { ...item, key: item.numeroDocument }
+                ));*/
                 setData(response.data);
             })
             .catch((error) => {

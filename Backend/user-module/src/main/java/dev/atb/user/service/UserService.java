@@ -38,10 +38,7 @@ public class UserService {
     @Transactional
     public UserDTO createUser(final User user) {
         try {
-            User savedUser = userRepository.save(user);
-            savedUser.getRoles().size(); // Force initialization of the lazy-loaded `roles`
-            return ToDtoConverter.userToDto(savedUser);
-            //return ToDtoConverter.userToDto(userRepository.save(user));
+            return ToDtoConverter.userToDto(userRepository.save(user));
         } catch (Exception e) {
             throw new RuntimeException("Error saving user", e);
         }

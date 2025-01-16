@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 
 import {
-    TableProps,
     Form,
     Input,
     Popconfirm,
@@ -31,6 +30,7 @@ import { UserType } from "../../types/UserType";
 import RoleService from '../../services/RoleService';
 import { RoleType } from "../../types/RoleType";
 import ChangePassword from "./ChangePassword";
+import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
 
 const Users = () => {
     const [data, setData] = useState<UserType[]>(null);
@@ -62,6 +62,7 @@ const Users = () => {
             dataIndex: 'username',
             editable: true,
             sorter: (a, b) => a.username.length - b.username.length,
+            ...EditableTableColumnSearch('username'),
         },
         {
             title: 'Email',
@@ -69,18 +70,7 @@ const Users = () => {
             editable: true,
             dataType: 'email',
             sorter: (a, b) => a.email.length - b.email.length,
-        },
-        {
-            title: 'Firstname',
-            dataIndex: 'prenom',
-            editable: true,
-            sorter: (a, b) => a.prenom.length - b.prenom.length,
-        },
-        {
-            title: 'Lastname',
-            dataIndex: 'nom',
-            editable: true,
-            sorter: (a, b) => a.nom.length - b.nom.length,
+            ...EditableTableColumnSearch('email'),
         },
         {
             title: 'Phone',
@@ -88,6 +78,7 @@ const Users = () => {
             editable: true,
             inputType: 'phone',
             sorter: (a, b) => a.telephone.length - b.telephone.length,
+            ...EditableTableColumnSearch('telephone'),
         },
         {
             title: 'Roles',
@@ -99,7 +90,9 @@ const Users = () => {
             filters: roles?.map((role) => (
                 { text: role.name, value: role.id }
             )),
-            onFilter: (value: string, record: UserType) => value in record.roles,
+            onFilter: (id: number, record: UserType) => {
+                return record.roles.find(role => role.id == id);
+            },
             render: (_, { roles }) => {
                 return <>
                     {roles?.map((role: RoleType) => {
@@ -174,7 +167,7 @@ const Users = () => {
             },
         },
     ];
-    const mergedColumns: TableProps<UserType>['columns'] = columns.map((col) => {
+    const mergedColumns: any = columns.map((col) => {
         if (!col.editable) {
             return col;
         }
@@ -185,9 +178,8 @@ const Users = () => {
                 inputType: col.inputType ?? 'text',
                 dataIndex: col.dataIndex,
                 title: col.title,
-                //editing: isEditing(record),
                 selectValues: col.selectValues ?? null,
-                dataType: col.dataType ?? null,
+                dataType: col.dataIndex == 'email' ? 'email' : null,
             }),
         };
     });
