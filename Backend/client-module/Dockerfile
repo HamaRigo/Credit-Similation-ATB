@@ -1,6 +1,9 @@
-FROM openjdk:17-jdk-slim
-VOLUME /tmp
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-EXPOSE 4440
+FROM openjdk:17-jdk-slim as builder
+WORKDIR /app
+COPY . .
+RUN ./mvnw package -DskipTests
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/target/client-module.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

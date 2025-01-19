@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: client
+  datasource:
+    url: jdbc:mysql://shared_database:3306/shared_database
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:8761/eureka
+
+app:
+  eureka-server: eureka
+
+server:
+  port: 4444
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+
+logging:
+  level:
+    org.springframework: DEBUG
+    org.hibernate: DEBUG
+    org.web.servlet.DispatcherServlet: DEBUG
