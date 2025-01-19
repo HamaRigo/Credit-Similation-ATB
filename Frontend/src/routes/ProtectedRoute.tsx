@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useKeycloak } from "@react-keycloak/web";
 import { Navigate } from "react-router-dom";
 
@@ -9,18 +9,34 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
     const { keycloak } = useKeycloak();
+    const [isReady, setIsReady] = useState(false);
+
+    // Ensure Keycloak initialization before rendering
+    useEffect(() => {
+        if (keycloak.authenticated !== undefined) {
+            setIsReady(true);
+        }
+    }, [keycloak]);
+
+    if (!isReady) {
+        return <div>Loading...</div>;
+    }
 
     const isLoggedIn = keycloak.authenticated;
 
-    /*const isAuthorized = roles
+    const isAuthorized = roles
         ? roles.some((role) => keycloak.hasRealmRole(role))
         : true;
 
-    if (!isAuthorized) {
-        return <Navigate to="/unauthorized" />;
-    }*/
+    if (!isLoggedIn) {
+        return <Navigate to="/login" />;
+    }
 
-    return isLoggedIn ? children : null;
+    if (!isAuthorized) {
+        return <Navigate to="/unauthorized" />; // Redirect unauthorized users
+    }
+
+    return children;
 };
 
 export default ProtectedRoute;

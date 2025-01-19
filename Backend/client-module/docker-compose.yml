@@ -1,0 +1,18 @@
+services:
+  client:
+    build: .Backend/client-module/src/main/java/dev/atb/client/ClientApplication.java
+    container_name: client
+    ports:
+      - "4444:4444"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/shared_database
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge

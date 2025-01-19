@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 @EnableJpaRepositories
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles")
     List<User> findAllWithRoles();
 

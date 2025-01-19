@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class UserDTO {
-    private Long id;
+    private String id;
     private String username;
     private String email;
     private String nom;

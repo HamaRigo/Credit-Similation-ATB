@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable final Long id) {
+    public ResponseEntity<?> getUserById(@PathVariable final String id) {
         try {
             return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
         } catch (RuntimeException e) {
@@ -54,7 +54,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable final Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable final String id) {
         try {
             userService.deleteUser(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -69,7 +69,7 @@ public class UserController {
     }
 
     @GetMapping("/roles/{id}")
-    public ResponseEntity<?> getRoleById(@PathVariable final Long id) {
+    public ResponseEntity<?> getRoleById(@PathVariable final String id) {
         try {
             return new ResponseEntity<>(userService.getRoleById(id), HttpStatus.OK);
         } catch (RuntimeException e) {
@@ -98,7 +98,7 @@ public class UserController {
     }
 
     @DeleteMapping("/roles/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable final Long id) {
+    public ResponseEntity<Void> deleteRole(@PathVariable final String id) {
         try {
             userService.deleteRole(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

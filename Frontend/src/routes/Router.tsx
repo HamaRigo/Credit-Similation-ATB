@@ -27,7 +27,10 @@ const ThemeRoutes = [
       </Suspense>
     ),
     children: [
-      { path: "/", element: <Navigate to="/dashboard" /> },
+      // Redirect root to /dashboard
+      { path: "/", element: <Navigate to="/dashboard" replace /> },
+
+      // Dashboard route
       {
         path: "/dashboard",
         element: (
@@ -38,6 +41,8 @@ const ThemeRoutes = [
           </ProtectedRoute>
         ),
       },
+
+      // Clients route
       {
         path: "/clients",
         element: (

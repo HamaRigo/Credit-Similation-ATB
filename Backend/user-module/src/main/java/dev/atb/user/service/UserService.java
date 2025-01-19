@@ -30,7 +30,7 @@ public class UserService {
         return users.stream().map(ToDtoConverter::userToDto).collect(Collectors.toList());
     }
 
-    public UserDTO getUserById(final Long id) {
+    public UserDTO getUserById(final String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ToDtoConverter.userToDto(user);
@@ -50,7 +50,7 @@ public class UserService {
         return ToDtoConverter.userToDto(userRepository.save(user));
     }
 
-    public void deleteUser(final Long id) {
+    public void deleteUser(final String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
@@ -61,7 +61,7 @@ public class UserService {
         return roles.stream().map(ToDtoConverter::roleToDto).collect(Collectors.toList());
     }
 
-    public RoleDTO getRoleById(final Long id) {
+    public RoleDTO getRoleById(final String id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         return ToDtoConverter.roleToDto(role);
@@ -81,7 +81,7 @@ public class UserService {
         return ToDtoConverter.roleToDto(roleRepository.save(role));
     }
 
-    public void deleteRole(final Long id) {
+    public void deleteRole(final String id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         roleRepository.delete(role);
