@@ -30,6 +30,8 @@ import { TypeCompteEnum } from "../../types/TypeCompteEnum";
 import { ClientType } from "../../types/ClientType";
 import { PageHeader } from "@ant-design/pro-layout";
 import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
+import axios from "axios";
+import {apiRoutes} from "../../routes/backend-config";
 
 const comptesTypes = Object.values(TypeCompteEnum);
 
@@ -131,7 +133,7 @@ const Comptes = () => {
             sorter: (a, b) => a.tauxInteret - b.tauxInteret,
             render: (_, record) => {
                 if (record.typeCompte == TypeCompteEnum.EPARGNE) {
-                    return record.tauxInteret * 100 + ' %';
+                    return record.tauxInteret + ' %';
                 }
             },
         },
@@ -284,6 +286,7 @@ const Comptes = () => {
                 Notifications.openNotificationWithIcon('error', 'Compte with this number already exists')
             } else {
                 updateFormValues(formValues);
+                console.log(formValues);
                 CompteService.edit_compte(formValues)
                     .then((response) => {
                         const newRowData: CompteType = response.data;
@@ -331,11 +334,10 @@ const Comptes = () => {
             });
     };
     const updateFormValues = (formValues) => {
-        if (formValues.tauxInteret) {
-            formValues.tauxInteret = formValues.tauxInteret / 100;
+        if (editingType) {
+            formValues.typeCompte = editingType;
         }
         formValues.client = {'id' : formValues.client};
-
         return formValues;
     }
 

@@ -31,6 +31,11 @@ public class RoleController {
         }
     }
 
+    @GetMapping("/exists/{name}")
+    public ResponseEntity<Boolean> clientAlreadyExists(@PathVariable final String name) {
+        return new ResponseEntity<>(roleService.roleAlreadyExists(name), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<RoleDTO> createRole(@RequestBody final Role role) {
         try {

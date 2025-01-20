@@ -2,17 +2,19 @@ import React from "react";
 import {DatePicker, Form, Input, InputNumber, Select, Switch} from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import {TypeDocumentEnum} from "../../types/TypeDocumentEnum";
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
     dataIndex: string;
     title: any;
-inputType: 'select' | 'selectMultiple' | 'datePicker' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
+    inputType: 'select' | 'selectMultiple' | 'datePicker' | 'money' | 'phone' | 'number' | 'text' | 'switch' | 'percent';
     dataType: any;
     record: any;
     index: number;
     selectValues : any;
     showSearch: boolean;
+    documentNumberPattern : any;
 }
 const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                                                                                 editing,
@@ -25,6 +27,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                                                                                 selectValues,
                                                                                 dataType,
                                                                                 showSearch,
+                                                                                documentNumberPattern,
                                                                                 ...restProps
                                                                             }) => {
 
@@ -132,6 +135,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                             message: `Please enter a valid ${dataType} !`,
                         } : null,
                         phonePattern ? { pattern: /^\d{8}$/, message: `${title} must be exactly 8 digits!` } : null,
+                        documentNumberPattern ?? null,
                     ]}
                 >
                     {inputNode}

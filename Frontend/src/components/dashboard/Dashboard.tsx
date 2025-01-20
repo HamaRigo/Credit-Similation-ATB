@@ -11,6 +11,7 @@ import ClientService from "../../services/ClientService";
 import UserService from "../../services/UserService";
 import RoleService from "../../services/RoleService";
 import {RoleType} from "../../types/RoleType";
+import ErrorResult from "../shared/ErrorResult";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -22,12 +23,11 @@ const Dashboard = () => {
   const [roles, setRoles] = useState<RoleType[]>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>(null);
-  const data = {
-      labels: roles?.map(item => item.name),
+  const data = roles != null && roles?.find(item => item.userCount > 0) > 0 ? {
+      labels: roles.map(item => item.name),
       datasets: [{
-            data: roles?.map(item => item.userCount),
+            data: roles.map(item => item.userCount),
             backgroundColor: [
-                //'rgba(255,188,52,0.7)',
                 'rgb(186,15,15, 0.7)',
                 'rgba(13,46,83,0.7)',
                 'rgba(52,58,64,0.7)',
@@ -36,7 +36,7 @@ const Dashboard = () => {
             ],
             borderWidth: 1,
     }],
-  };
+  } : null;
 
   const getCountComptes = () => {
     CompteService.count_comptes_by_status()
@@ -99,32 +99,23 @@ const Dashboard = () => {
       getRoles();
   }, []);
 
-  if (isLoading) {
-      return (
-          <div style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100vh",
-              }}>
-              <Spin size="large"/>
-          </div>
-      );
-  }
+    if (error) {
+        return <ErrorResult error={error} />;
+    }
 
     return (
         <Space direction="vertical" size="middle" style={{display: 'flex'}}>
             <Row gutter={16}>
-                {comptesByStatus != null ? <Col span={6}>
+                {comptesByStatus ? <Col span={comptesByType?.length > 0 ? 6 : 12}>
                     <Card bordered={false}>
                         <Statistic
                             title="Active Comptes"
                             value={comptesByStatus['active']}
                             valueStyle={{color: '#3f8600'}}
-                    />
-                </Card>
-            </Col> : null}
-                {comptesByStatus != null ? <Col span={6}>
+                        />
+                    </Card>
+                </Col> : null}
+                {comptesByStatus ? <Col span={comptesByType?.length > 0 ? 6 : 12}>
                     <Card bordered={false}>
                       <Statistic
                           title="Inactive Comptes"
@@ -165,12 +156,12 @@ const Dashboard = () => {
                 <Col span={12}><Feeds /></Col>
             </Row>
             <Row justify="space-around" align="middle" gutter={16}>
-              <Col span={16}>
+              <Col span={data ? 16 : 24}>
                 <SalesChart />
               </Col>
-                <Col span={8}>
+                {data ? <Col span={8}>
                     <Pie data={data} />
-                </Col>
+                </Col> : null}
             </Row>
       </Space>
   );

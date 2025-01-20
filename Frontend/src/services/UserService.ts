@@ -14,6 +14,15 @@ class UserService {
         return axios.get(apiRoutes.USER_URL + `/${id}`);
     }
 
+    user_exists(username: string, email: string) {
+        return axios.get(apiRoutes.USER_URL + `/exists`, {
+            params: {
+                username: username,
+                email: email,
+            },
+        });
+    }
+
     add_user(data: object) {
         return axios.post(apiRoutes.USER_URL, data);
     }

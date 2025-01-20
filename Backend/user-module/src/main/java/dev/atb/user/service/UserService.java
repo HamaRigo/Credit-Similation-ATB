@@ -4,6 +4,7 @@ import dev.atb.dto.ToDtoConverter;
 import dev.atb.dto.UserDTO;
 import dev.atb.models.User;
 import dev.atb.repo.UserRepository;
+import dev.atb.user.PasswordUtils;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +36,19 @@ public class UserService {
         return ToDtoConverter.userToDto(user);
     }
 
+    public boolean userExistByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean userExistByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     @Transactional
     public UserDTO createUser(final User user) {
         try {
+            String hashedPassword = PasswordUtils.hashPassword(user.getPassword());
+            user.setPassword(hashedPassword);
             return ToDtoConverter.userToDto(userRepository.save(user));
         } catch (Exception e) {
             throw new RuntimeException("Error saving user", e);
@@ -47,6 +58,8 @@ public class UserService {
     public UserDTO updateUser(final User user) {
         userRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        //String hashedPassword = PasswordUtils.hashPassword(user.getPassword());
+        //user.setPassword(hashedPassword);
         return ToDtoConverter.userToDto(userRepository.save(user));
     }
 

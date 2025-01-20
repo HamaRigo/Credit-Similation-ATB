@@ -8,5 +8,6 @@ export type UserType = {
     nom?: string;
     prenom?: string;
     telephone?: string;
+    activated?: boolean;
     roles?: RoleType[];
 };

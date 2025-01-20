@@ -37,12 +37,8 @@ public class ClientController {
     }
 
     @GetMapping("/exists/{numeroDocument}")
-    public ResponseEntity<?> clientAlreadyExists(@PathVariable final String numeroDocument) {
-        try {
-            return new ResponseEntity<>(clientService.clientAlreadyExists(numeroDocument), HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Boolean> clientAlreadyExists(@PathVariable final String numeroDocument) {
+        return new ResponseEntity<>(clientService.clientAlreadyExists(numeroDocument), HttpStatus.OK);
     }
 
     @PostMapping

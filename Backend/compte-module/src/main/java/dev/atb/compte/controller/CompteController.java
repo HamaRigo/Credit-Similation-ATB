@@ -55,12 +55,8 @@ public class CompteController {
     }
 
     @GetMapping("/exists/{numeroCompte}")
-    public ResponseEntity<?> compteAlreadyExists(@PathVariable final String numeroCompte) {
-        try {
-            return new ResponseEntity<>(compteService.compteAlreadyExists(numeroCompte), HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Boolean> compteAlreadyExists(@PathVariable final String numeroCompte) {
+        return new ResponseEntity<>(compteService.compteAlreadyExists(numeroCompte), HttpStatus.OK);
     }
 
     @PostMapping("/current")

@@ -12,10 +12,11 @@ import {
     Alert,
     Tag,
     Dropdown,
-    Select,
+    Select, Badge, Switch,
 } from 'antd';
 
 import {
+    CheckOutlined, CloseOutlined,
     IdcardOutlined,
     MoreOutlined,
     QuestionCircleOutlined
@@ -48,6 +49,7 @@ const Users = () => {
         prenom: '',
         telephone: '',
         roles: null,
+        activated: true,
     };
     const [editFormOld] = Form.useForm();
     const editForm = useRef<FormInstance>(null);
@@ -79,6 +81,24 @@ const Users = () => {
             inputType: 'phone',
             sorter: (a, b) => a.telephone.length - b.telephone.length,
             ...EditableTableColumnSearch('telephone'),
+        },
+        {
+            title: 'Status',
+            dataIndex: 'activated',
+            editable: true,
+            inputType: 'switch',
+            width: '12%',
+            filters: ['1', '0'].map((item) => {
+                const text = item == '1' ? 'activated' : 'not activated';
+                return { text: text.toUpperCase(), value: item }
+            }),
+            onFilter: (value, record: UserType) => record.activated == value,
+            render: (_, {activated}) => {
+                const status = activated ? 'success' : 'error';
+                const text = activated ? 'Activated' : 'Not Activated';
+                const color = activated ? 'green' : 'red';
+                return <Badge status={status} text={text} style={{color : color}} />;
+            },
         },
         {
             title: 'Roles',
@@ -213,10 +233,18 @@ const Users = () => {
     }
     const handleAdd = async (values) => {
         const formValues = updateFormValues(values);
-        /*const result = await CompteService.compte_exists(formValues.numeroCompte);
-        if (result.data) {
-            setErrorsModal('User with this username already exists')
-        } else {*/
+        const result = await UserService.user_exists(formValues.username, formValues.email);
+        if (result.data.existsByUsername || result.data.existsByEmail) {
+            let error = null
+            if (result.data.existsByUsername) {
+                error = 'User with this username'
+            }
+            if (result.data.existsByEmail) {
+                error += error ? ' and this email ' : 'User with this email '
+            }
+            error += 'already exists'
+            setErrorsModal(error)
+        } else {
             setErrorsModal('');
             UserService.add_user(formValues)
                 .then((response) => {
@@ -233,7 +261,7 @@ const Users = () => {
                 .catch((error) => {
                     setErrorsModal(error.message);
                 });
-        //}
+        }
     };
     const cancelAdd = () => setIsModalOpen(false);
     const toggleEdit = (record: UserType) => {
@@ -310,8 +338,10 @@ const Users = () => {
             });
     };
     const updateFormValues = (formValues) => {
-        const roles: RoleType[] = formValues.roles?.map((role) => ({ id: role }));
-        formValues.roles = roles;
+        if (formValues.roles) {
+            const roles: RoleType[] = formValues.roles?.map((role) => ({ id: role }));
+            formValues.roles = roles;
+        }
 
         return formValues;
     }
@@ -391,20 +421,6 @@ const Users = () => {
                             <Input/>
                         </Form.Item>
                         <Form.Item
-                            label="Firstname"
-                            name="prenom"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Lastname"
-                            name="nom"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
                             label="Phone"
                             name="telephone"
                             rules={[
@@ -414,6 +430,12 @@ const Users = () => {
                         >
                             <Input showCount maxLength={8}/>
                         </Form.Item>
+                        <Form.Item label="Firstname" name="prenom">
+                            <Input/>
+                        </Form.Item>
+                        <Form.Item label="Lastname" name="nom">
+                            <Input/>
+                        </Form.Item>
                         <Form.Item label="Roles" name="roles">
                             <Select
                                 mode="multiple"
@@ -422,6 +444,13 @@ const Users = () => {
                                 options={roles?.map(role => (
                                     { label: role.name, value: role.id }
                                 ))}
+                            />
+                        </Form.Item>
+                        <Form.Item label="Status" name="activated">
+                            <Switch
+                                checkedChildren={<CheckOutlined />}
+                                unCheckedChildren={<CloseOutlined />}
+                                defaultChecked
                             />
                         </Form.Item>
                         <div className="ant-modal-footer">

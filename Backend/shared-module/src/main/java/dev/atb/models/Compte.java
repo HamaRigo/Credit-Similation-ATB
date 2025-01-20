@@ -26,9 +26,11 @@ public abstract class Compte {
     @Formula("type_compte") // Exposes the discriminator column
     private String typeCompte;
 
+    @Column(nullable = false)
     private double solde;
 
-    private boolean activated;
+    @Column(nullable = false)
+    private boolean activated = true;
 
     @JsonIgnoreProperties("comptes")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

@@ -1,7 +1,6 @@
 package dev.atb.repo;
 
 import dev.atb.models.User;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -17,4 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u")
     Long countUsers();
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
 }

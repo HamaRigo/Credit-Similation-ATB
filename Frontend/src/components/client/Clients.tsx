@@ -33,6 +33,7 @@ const Clients = () => {
     const [error, setError] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     let addForm: FormInstance = null;
+    const [selectedType, setSelectedType] = useState<TypeDocumentEnum>(null);
     const [errorsAdd, setErrorsAdd] = React.useState<string>('');
     const initialAddValues: ClientType = {
         typeDocument: null,
@@ -160,6 +161,8 @@ const Clients = () => {
                 title: col.title,
                 editing: isEditing(record),
                 selectValues: col.selectValues ?? null,
+                /*documentNumberPattern: col.dataIndex == 'numeroDocument' ?
+                    getDocumentNumberPattern(record.typeDocument) : null,*/
             }),
         };
     });
@@ -181,6 +184,18 @@ const Clients = () => {
                 setLoading(false);
             });
     };
+    const getDocumentNumberPattern = (type : TypeDocumentEnum) => {
+        return type == TypeDocumentEnum.CIN ? {
+            pattern: /^[0-9]{8}$/,
+            message: "CIN must be exactly 8 numeric digits",
+        } : type == TypeDocumentEnum.PASSEPORT ? {
+            pattern: /^[A-Z0-9]{6,9}$/,
+            message: "Passport must be 6 to 9 alphanumeric characters",
+        } : type == TypeDocumentEnum.PERMIS ? {
+            pattern: /^[A-Z0-9\- ]{6,16}$/,
+            message: "Permis must be 6 to 16 alphanumeric characters",
+        } : null
+    }
     const toggleAdd = () => {
         addForm?.resetFields();
         setErrorsAdd('');
@@ -305,7 +320,12 @@ const Clients = () => {
                     layout="horizontal"
                     ref={(form: any) => (addForm = form)}
                     initialValues={initialAddValues}
-                    onValuesChange={() => setErrorsAdd('')}
+                    onValuesChange={(changedValues) => {
+                        if (changedValues.typeDocument) {
+                            setSelectedType(changedValues.typeDocument);
+                        }
+                        setErrorsAdd('');
+                    }}
                     labelCol={{span: 8}}
                     wrapperCol={{span: 16}}
                     onFinish={handleAdd}
@@ -333,7 +353,12 @@ const Clients = () => {
                         <Form.Item
                             label="Document Number"
                             name="numeroDocument"
-                            rules={[{required: true, message: 'Please enter input value'}]}
+                            rules={[
+                                {required: true,
+                                    message: 'Please enter input value'
+                                },
+                                {...getDocumentNumberPattern(selectedType)}
+                            ]}
                         >
                             <Input/>
                         </Form.Item>

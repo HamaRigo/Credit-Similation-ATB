@@ -2,7 +2,6 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,20 +22,20 @@ public class Client {
     @Column(nullable = false, unique = true)
     private String numeroDocument;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DocumentType typeDocument;
 
-    @NotNull
+    @Column(nullable = false)
     private String nom;
 
-    @NotNull
+    @Column(nullable = false)
     private String prenom;
 
-    @NotNull
+    @Column(nullable = false)
     private String adresse;
 
-    @NotNull
+    @Column(nullable = false)
     private String telephone;
 
     @JsonIgnoreProperties("client")

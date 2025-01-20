@@ -195,6 +195,7 @@ const Credits = () => {
                         </Popconfirm>
                   </span>
                 ) : (
+                    record.status == StatusCreditEnum.PENDING ?
                     <Space size="middle">
                         <Typography.Link className="edit-btn" disabled={editingKey !== null} onClick={() => toggleEdit(record)}>
                             Edit
@@ -208,7 +209,7 @@ const Credits = () => {
                                 Delete
                             </Typography.Link>
                         </Popconfirm>
-                    </Space>
+                    </Space> : null
                 );
             },
         },

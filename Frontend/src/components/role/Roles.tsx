@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
 import {
-    TableProps,
     Form,
     Input,
     Popconfirm,
@@ -121,22 +120,27 @@ const Roles = () => {
     }
     const handleAdd = async (values) => {
         const formValues: RoleType = values;
-        setErrorsAdd('');
-        RoleService.add_role(formValues)
-            .then((response) => {
-                setLoading(true);
-                setIsModalOpen(false);
-                const newRowData: RoleType = response.data;
-                Notifications.openNotificationWithIcon('success', 'Role added successfully !');
-                //delete data of form
-                addForm?.resetFields();
-                //add data to table
-                setLoading(false);
-                setData([...data, newRowData]);
-            })
-            .catch((error) => {
-                setErrorsAdd(error.message);
-            });
+        const result = await RoleService.role_exists(formValues.name);
+        if (result.data) {
+            setErrorsAdd('Role with this name already exists')
+        } else {
+            setErrorsAdd('');
+            RoleService.add_role(formValues)
+                .then((response) => {
+                    setLoading(true);
+                    setIsModalOpen(false);
+                    const newRowData: RoleType = response.data;
+                    Notifications.openNotificationWithIcon('success', 'Role added successfully !');
+                    //delete data of form
+                    addForm?.resetFields();
+                    //add data to table
+                    setLoading(false);
+                    setData([...data, newRowData]);
+                })
+                .catch((error) => {
+                    setErrorsAdd(error.message);
+                });
+        }
     };
     const cancelAdd = () => setIsModalOpen(false);
     const toggleEdit = (record: RoleType) => {
@@ -148,25 +152,33 @@ const Roles = () => {
         try {
             const formValues = await editForm.validateFields();
             formValues.id = record.id
-            RoleService.edit_role(formValues)
-                .then((response) => {
-                    const newRowData: RoleType = response.data;
-                    const newData = [...data];
-                    const index = newData.findIndex((item) => record.id === item.id);
-                    if (index > -1 && newRowData != undefined) {
-                        const item = newData[index];
-                        newData.splice(index, 1, {
-                            ...item,
-                            ...newRowData,
-                        });
-                        setData(newData);
-                        cancelEdit();
-                    }
-                    Notifications.openNotificationWithIcon('success', 'Role updated successfully !');
-                })
-                .catch((error) => {
-                    Notifications.openNotificationWithIcon('error', error.message);
-                });
+            let result
+            if (formValues.name != record.name) {
+                result = await RoleService.role_exists(formValues.name);
+            }
+            if (result?.data) {
+                Notifications.openNotificationWithIcon('error', 'Role with this name already exists')
+            } else {
+                RoleService.edit_role(formValues)
+                    .then((response) => {
+                        const newRowData: RoleType = response.data;
+                        const newData = [...data];
+                        const index = newData.findIndex((item) => record.id === item.id);
+                        if (index > -1 && newRowData != undefined) {
+                            const item = newData[index];
+                            newData.splice(index, 1, {
+                                ...item,
+                                ...newRowData,
+                            });
+                            setData(newData);
+                            cancelEdit();
+                        }
+                        Notifications.openNotificationWithIcon('success', 'Role updated successfully !');
+                    })
+                    .catch((error) => {
+                        Notifications.openNotificationWithIcon('error', error.message);
+                    });
+            }
         } catch (errInfo) {
             Notifications.openNotificationWithIcon('error', errInfo.message);
         }

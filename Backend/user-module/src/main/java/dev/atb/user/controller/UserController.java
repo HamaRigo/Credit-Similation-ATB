@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
@@ -34,6 +36,20 @@ public class UserController {
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/exists")
+    public ResponseEntity<?> checkUserExistence(@RequestParam String username, @RequestParam String email) {
+        Map<String, Boolean> response = new HashMap<>();
+        if (username != null) {
+            boolean existsByUsername = userService.userExistByUsername(username);
+            response.put("existsByUsername", existsByUsername);
+        }
+        if (email != null) {
+            boolean existsByEmail = userService.userExistByEmail(email);
+            response.put("existsByEmail", existsByEmail);
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping
