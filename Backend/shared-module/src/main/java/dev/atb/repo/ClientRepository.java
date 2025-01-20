@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @EnableJpaRepositories
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    Client findByNumeroDocument(String numeroDocument);
+    boolean existsByNumeroDocument(String numeroDocument);
 
     @Query("SELECT COUNT(c) FROM Client c")
     Long countClients();

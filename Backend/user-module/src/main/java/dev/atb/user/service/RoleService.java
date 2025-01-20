@@ -26,12 +26,8 @@ public class RoleService {
         return ToDtoConverter.roleToDto(role);
     }
 
-    public Boolean roleAlreadyExists(final String name) {
-        Role role = roleRepository.findByName(name);
-        if(role == null) {
-            return Boolean.FALSE;
-        }
-        return Boolean.TRUE;
+    public boolean roleAlreadyExists(final String name) {
+        return roleRepository.existsByName(name);
     }
 
     public RoleDTO createRole(final Role role) {

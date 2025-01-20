@@ -34,12 +34,8 @@ public class ClientService {
         return ToDtoConverter.clientToDto(client);
     }
 
-    public Boolean clientAlreadyExists(final String numeroDocument) {
-        Client client = clientRepository.findByNumeroDocument(numeroDocument);
-        if(client == null) {
-            return Boolean.FALSE;
-        }
-        return Boolean.TRUE;
+    public boolean clientAlreadyExists(final String numeroDocument) {
+        return clientRepository.existsByNumeroDocument(numeroDocument);
     }
 
     public ClientDTO createClient(final Client client) {

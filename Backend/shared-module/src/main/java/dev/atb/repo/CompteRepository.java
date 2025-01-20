@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 @EnableJpaRepositories
 public interface CompteRepository extends JpaRepository<Compte, Long> {
-    Compte findByNumeroCompte(String numeroCompte);
+    boolean existsByNumeroCompte(String numeroCompte);
 
     @Query("SELECT c FROM Compte c WHERE TYPE(c) = CompteCourant")
     List<CompteCourant> findAllCurrentComptes();

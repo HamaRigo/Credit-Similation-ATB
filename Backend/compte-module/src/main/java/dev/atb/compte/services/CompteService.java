@@ -58,12 +58,8 @@ public class CompteService {
         return ToDtoConverter.compteToDto(compte);
     }
 
-    public Boolean compteAlreadyExists(final String numeroCompte) {
-        Compte compte = compteRepository.findByNumeroCompte(numeroCompte);
-        if(compte == null) {
-            return Boolean.FALSE;
-        }
-        return Boolean.TRUE;
+    public boolean compteAlreadyExists(final String numeroCompte) {
+        return compteRepository.existsByNumeroCompte(numeroCompte);
     }
 
     public CompteDTO createCurrentCompte(final CompteCourant compte) {
