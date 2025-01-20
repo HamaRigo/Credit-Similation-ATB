@@ -1,14 +1,16 @@
 # Use official Python image as a base
 FROM python:3.8-slim
 
-# Install system dependencies required for building Python packages and OCR
+# Install system dependencies required for Python packages and Tesseract
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
     libhdf5-dev \
     tesseract-ocr \
     libtesseract-dev \
-    && rm -rf /var/lib/apt/lists/*  # Clean up apt cache to reduce image size
+    tesseract-ocr-fra \
+    tesseract-ocr-ara \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory inside the container
 WORKDIR /app
@@ -27,5 +29,5 @@ ENV FLASK_ENV=production
 # Expose the port Flask will run on
 EXPOSE 5005
 
-# Command to start the Flask application
+# Start the Flask application
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5005"]

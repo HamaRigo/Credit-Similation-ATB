@@ -1,0 +1,234 @@
+services:
+  # Shared Database
+  db:
+    image: mysql:8
+    container_name: shared_database
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shared_database
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306" # Expose MySQL
+    volumes:
+      - ./docker-volumes/db_data:/var/lib/mysql # Centralized persistent storage
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  # Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      DB_VENDOR: MYSQL
+      DB_ADDR: db
+      DB_DATABASE: shared_database
+      DB_USER: root
+      DB_PASSWORD: root
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8282:8080" # Expose Keycloak
+    volumes:
+      - ./docker-volumes/keycloak-realms:/opt/keycloak/data/import
+    depends_on:
+      - db
+    networks:
+      - shared-network
+
+  # Tesseract OCR
+  tesseract:
+    image: tesseractshadow/tesseract4re:4.0.0-rc1
+    container_name: tesseract-ocr
+    platform: linux/amd64
+    ports:
+      - "5006:5006"
+    volumes:
+      - ./docker-volumes/tessdata:/usr/share/tesseract-ocr/4.00/tessdata
+      - ./docker-volumes/tesseract/uploaded_files:/input
+      - ./docker-volumes/tesseract/resultats_reconnaissance:/output
+    environment:
+      TESSDATA_PREFIX: /usr/share/tesseract-ocr/4.00/tessdata
+      TESSERACT_LANGUAGE: ${TESSERACT_LANGUAGE:-fra+ar}
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: >
+      sh -c "flask run --host=0.0.0.0 --port=5006"
+
+  # Flask app (sign-service)
+  web:
+    build:
+      context: ../Backend/ocr-module/sign
+      dockerfile: Dockerfile
+    container_name: sign-service
+    ports:
+      - "5005:5005"
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=production
+    depends_on:
+      - kafka
+      - tesseract
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5005/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Zookeeper
+  zookeeper:
+    image: arm64v8/zookeeper  # Explicitly use arm64v8 image for compatibility
+    container_name: zookeeper-ocr
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+        - ./docker-volumes/zookeeper/zoo.cfg:/conf/zoo.cfg
+        - ./docker-volumes/zookeeper/data:/data
+        - ./docker-volumes/zookeeper/datalog:/datalog
+        - ./docker-volumes/zookeeper/logs:/logs
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    container_name: kafka-ocr
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ZOOKEEPER_PORT: 2181
+    depends_on:
+      - zookeeper
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'describe cluster' | kafka-console-producer --bootstrap-server kafka:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10  # Increased retries to ensure Kafka is fully up
+
+  # NGINX reverse proxy
+  nginx:
+      image: nginx:latest
+      container_name: nginx-proxy
+      ports:
+        - "87:80"
+        - "743:443"
+      volumes:
+        - ./docker-volumes/nginx/nginx.conf:/etc/nginx/nginx.conf
+      depends_on:
+        - web
+      networks:
+        - shared-network
+      platform: linux/arm64/v8  # ARM64 platform for NGINX as well
+      healthcheck:
+        test: [ "CMD-SHELL", "nginx -t || exit 1" ]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+
+  # Fluentd for Centralized Logging
+  fluentd:
+    build:
+      dockerfile: Dockerfile
+    container_name: fluentd
+    platform: linux/amd64
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./docker-volumes/fluentd/conf:/fluentd/etc
+      - ./docker-volumes/fluentd/logs:/fluentd/logs
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - shared-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://elasticsearch:9200 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Elasticsearch for Log Storage
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: elasticsearch
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./docker-volumes/elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9091:9090" # Prometheus Dashboard
+    volumes:
+      - ./docker-volumes/prometheus:/etc/prometheus
+    networks:
+      - shared-network
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000" # Grafana Dashboard
+    volumes:
+      - ./docker-volumes/grafana:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    networks:
+      - shared-network
+
+# Persistent volumes for data storage
+volumes:
+  db_data:
+  grafana_data:
+  mysql_data:
+  tessdata:
+  elasticsearch_data:
+  fluentd_logs:
+
+# Networks to ensure services communicate in isolation
+networks:
+  shared-network:
+    driver: bridge

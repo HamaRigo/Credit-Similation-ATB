@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Controller for OCR operations such as image uploading, analysis, and data retrieval.
+ * Controller for OCR operations like image upload, analysis, and data retrieval.
  */
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:9090"})
 @RestController
-@RequestMapping("/all")
+@RequestMapping("/ocr")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:9090"})
 public class OcrController {
 
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
@@ -32,12 +32,7 @@ public class OcrController {
     }
 
     /**
-     * Uploads and analyzes an image file for OCR, performs fraud detection, and saves the result.
-     *
-     * @param file           the image file to be analyzed
-     * @param typeDocument   the type of the document (e.g., cheque, effet)
-     * @param numeroCompteId the account number associated with the document
-     * @return the OCR analysis result
+     * Uploads and analyzes an image for OCR, including fraud detection.
      */
     @PostMapping("/upload")
     public CompletableFuture<ResponseEntity<OcrDTO>> uploadImageAsync(
@@ -45,105 +40,91 @@ public class OcrController {
             @RequestParam("typeDocument") @NotEmpty String typeDocument,
             @RequestParam("numeroCompteId") @NotEmpty String numeroCompteId) {
 
+        logger.info("Received file upload request. Document Type: {}, Account ID: {}", typeDocument, numeroCompteId);
+
         return CompletableFuture.supplyAsync(() -> {
             validateFile(file);
-        try {
-            byte[] fileBytes = file.getBytes();
-            String signatureBase64 = ocrService.generateSignatureBase64(fileBytes);
-
-            OcrDTO ocrDTO = ocrService.uploadAndAnalyzeImage(file, typeDocument, numeroCompteId, signatureBase64);
-            return ResponseEntity.status(HttpStatus.CREATED).body(ocrDTO);
-        } catch (OcrProcessingException e) {
-            return handleException("OCR processing failed", e);
-        } catch (IOException e) {
-            return handleException("File handling error", e);
-        } catch (Exception e) {
-            return handleException("Unknown error during image upload", e);
-        }
+            try {
+                byte[] fileBytes = file.getBytes();
+                String signatureBase64 = ocrService.generateSignatureBase64(fileBytes);
+                OcrDTO ocrDTO = ocrService.uploadAndAnalyzeImage(file, typeDocument, numeroCompteId, signatureBase64);
+                logger.info("OCR processing completed successfully for Account ID: {}", numeroCompteId);
+                return ResponseEntity.status(HttpStatus.CREATED).body(ocrDTO);
+            } catch (Exception e) {
+                return handleException("Error during OCR processing", e);
+            }
         });
     }
 
     /**
-     * Uploads an image file for OCR analysis and returns the OCR result along with a preview image in Base64 format.
-     *
-     * @param file         the image file to be uploaded
-     * @param typeDocument the type of the document (e.g., cheque, facture)
-     * @return the OCR result along with the preview image in Base64 format
+     * Uploads an image and provides OCR preview data.
      */
     @PostMapping("/upload-preview")
     public ResponseEntity<OcrDTO> uploadImageAndPreview(@RequestParam("file") MultipartFile file,
-            @RequestParam("typeDocument") @NotEmpty String typeDocument) {
-
+                                                        @RequestParam("typeDocument") @NotEmpty String typeDocument) {
         validateFile(file);
         try {
             OcrDTO ocrDTO = ocrService.uploadImageAndPreview(file, typeDocument);
             return ResponseEntity.status(HttpStatus.CREATED).body(ocrDTO);
-        } catch (OcrProcessingException e) {
-            return handleException("OCR processing failed", e);
         } catch (Exception e) {
-            return handleException("Unknown error during image upload", e);
+            return handleException("Error during preview generation", e);
         }
     }
+
     /**
      * Retrieves a specific OCR record by ID.
-     *
-     * @param id the OCR record ID
-     * @return the OCR record, if found
      */
     @GetMapping("/{id}")
     public ResponseEntity<OcrDTO> getOcrById(@PathVariable String id) {
+        logger.info("Fetching OCR record for ID: {}", id);
         OcrDTO ocrDTO = ocrService.getOcrById(id);
-        return ocrDTO != null ? ResponseEntity.ok(ocrDTO) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ocrDTO != null
+                ? ResponseEntity.ok(ocrDTO)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     /**
      * Retrieves all OCR records.
-     *
-     * @return list of all OCR records
      */
     @GetMapping("/all")
     public ResponseEntity<List<OcrDTO>> getAllOcrEntities() {
+        logger.info("Fetching all OCR records");
         List<OcrDTO> ocrList = ocrService.getAllOcrEntities();
         return ResponseEntity.ok(ocrList);
     }
 
     /**
      * Deletes a specific OCR record by ID.
-     *
-     * @param id the OCR record ID
-     * @return a response indicating success or failure
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOcr(@PathVariable String id) {
+        logger.info("Deleting OCR record for ID: {}", id);
         boolean deleted = ocrService.deleteOcr(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return deleted
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     /**
-     * Updates an existing OCR record.
-     *
-     * @param id           the OCR record ID
-     * @param newText      the new OCR text
-     * @param documentType the updated document type
-     * @return the updated OCR record
+     * Updates an OCR record.
      */
     @PutMapping("/{id}")
     public ResponseEntity<OcrDTO> updateOcr(@PathVariable String id,
                                             @RequestParam String newText,
                                             @RequestParam String documentType) {
+        logger.info("Updating OCR record ID: {}", id);
         try {
             OcrDTO updatedOcr = ocrService.updateOcr(id, newText, documentType);
-            return updatedOcr != null ? ResponseEntity.ok(updatedOcr) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return updatedOcr != null
+                    ? ResponseEntity.ok(updatedOcr)
+                    : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return handleException("Error updating OCR record", e);
         }
     }
 
     /**
-     * Generates a signature in Base64 format from an uploaded file.
-     *
-     * @param file the image file
-     * @return the Base64 encoded signature
+     * Generates a Base64 signature from a file.
      */
     @PostMapping("/signature")
     public ResponseEntity<String> generateSignature(@RequestParam("file") MultipartFile file) {
@@ -152,31 +133,18 @@ public class OcrController {
             byte[] fileBytes = file.getBytes();
             String signatureBase64 = ocrService.generateSignatureBase64(fileBytes);
             return ResponseEntity.ok(signatureBase64);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error generating signature: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unknown error generating signature");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error generating signature: " + e.getMessage());
         }
     }
 
-    /**
-     * Validates that the uploaded file is not null or empty.
-     *
-     * @param file the uploaded file
-     */
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file is empty or null.");
         }
     }
 
-    /**
-     * Handles exceptions with a standardized error message.
-     *
-     * @param message the custom error message
-     * @param e       the caught exception
-     * @return a ResponseEntity with error details
-     */
     private ResponseEntity<OcrDTO> handleException(String message, Exception e) {
         logger.error(message, e);
         OcrDTO errorResponse = new OcrDTO();
