@@ -38,6 +38,9 @@ public class Client {
     @Column(nullable = false)
     private String telephone;
 
+    @Column(nullable = false)
+    private String signature;
+
     @JsonIgnoreProperties("client")
     @OneToMany(mappedBy = "client", cascade = CascadeType.REMOVE)
     private List<Compte> comptes;

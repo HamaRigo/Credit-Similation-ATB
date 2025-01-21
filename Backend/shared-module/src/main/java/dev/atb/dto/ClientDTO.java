@@ -16,5 +16,6 @@ public class ClientDTO {
     private String prenom;
     private String adresse;
     private String telephone;
+    private String signature;
     private int compteCount;
 }

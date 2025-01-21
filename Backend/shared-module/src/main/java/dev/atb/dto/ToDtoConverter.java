@@ -51,10 +51,10 @@ public final class ToDtoConverter {
 
     public static OcrDTO ocrToDto(final Ocr ocr) {
         return new OcrDTO(
-                ocr.getId(),
+                ocr.getNumeroCompte(),
                 ocr.getTypeDocument(),
                 ocr.getResultatsReconnaissance(),
-                ocr.isFraude(),
+                ocr.isFraud(),
                 ocr.getImage(),
                 ocr.getModelUsed()
         );

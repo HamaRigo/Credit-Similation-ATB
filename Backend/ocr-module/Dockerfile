@@ -1,17 +1,12 @@
-FROM openjdk:17-jdk-slim
-
-# Set the working directory
+# Stage 1: Build the application
+FROM maven:3.8.3 AS build
 WORKDIR /app
+COPY . .
+RUN #./mvnw clean package -DskipTests
 
-# Copy the jar file and the OCR configuration file
-COPY target/ocr-module.jar /app/ocr-module.jar
-COPY src/main/resources/ocr.xml /app/ocr.xml
-
-# Set the environment variable for the OCR configuration path
-ENV OCR_CONFIG_PATH=/app/ocr.xml
-
-# Expose the required port
-EXPOSE 8088
-
-# Run the OCR module
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+#COPY --from=build /app/target/ocr-module-1.0-SNAPSHOT.jar /app/ocr-module.jar
+EXPOSE 8080
 CMD ["java", "-jar", "/app/ocr-module.jar"]

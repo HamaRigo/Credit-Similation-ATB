@@ -9,7 +9,7 @@ const Dashboard = lazy(() => import("../components/dashboard/Dashboard"));
 const Clients = lazy(() => import("../components/client/Clients"));
 const Comptes = lazy(() => import("../components/compte/Comptes"));
 const Credits = lazy(() => import("../components/credit/Credits"));
-const Ocrs = lazy(() => import("../components/ocr/Ocrs"));
+const Ocrs = lazy(() => import("../components/ocr/OcrList"));
 const Users = lazy(() => import("../components/user/Users"));
 const Roles = lazy(() => import("../components/role/Roles"));
 
