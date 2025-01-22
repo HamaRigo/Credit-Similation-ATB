@@ -33,5 +33,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
-/docker-volumes
+ocr-module/venv/
+docker-volumes/zookeeper/data
+docker-volumes/grafana/
+docker-volumes/fluentd/logs/
+docker-volumes/db_data
+docker-volumes/elasticsearch
