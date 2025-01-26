@@ -34,6 +34,14 @@ class UserService {
     delete_user(id: number) {
         return axios.delete(apiRoutes.USER_URL + `/${id}`);
     }
+
+    change_password(data: object, oldPassword: string) {
+        return axios.put(apiRoutes.USER_URL + '/password', data, {
+            params: {
+                oldPassword: oldPassword,
+            },
+        });
+    }
 }
 
 export default new UserService();

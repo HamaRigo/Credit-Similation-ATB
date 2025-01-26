@@ -3,6 +3,8 @@ package dev.atb.dto;
 import dev.atb.models.DocumentType;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -18,4 +20,7 @@ public class ClientDTO {
     private String telephone;
     private String signature;
     private int compteCount;
+    private int creditCount;
+    private List<CompteDTO> comptes;
+    private List<CreditDTO> credits;
 }

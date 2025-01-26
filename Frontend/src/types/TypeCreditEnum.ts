@@ -1,5 +1,9 @@
 export enum TypeCreditEnum {
-    PERSONAL = 'PERSONAL',
-    MORTGAGE = 'MORTGAGE',
-    AUTO = 'AUTO',
+    Sayara = 'Sayara',
+    Sakan = 'Sakan',
+    Mounassib = 'Mounassib',
+    Tahawel = 'Tahawel',
+    Renov = 'Renov',
+    Start = 'Start',
+    BienEtre = 'BienEtre',
 }

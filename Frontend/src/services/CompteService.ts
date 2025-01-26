@@ -20,7 +20,11 @@ class CompteService {
     }
 
     compte_exists(numeroCompte: string) {
-        return axios.get(apiRoutes.COMPTE_URL + `/exists/${numeroCompte}`);
+        return axios.get(apiRoutes.COMPTE_URL + '/exists', {
+            params: {
+                numeroCompte: numeroCompte,
+            },
+        });
     }
 
     add_compte(data: any) {

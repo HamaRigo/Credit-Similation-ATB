@@ -7,8 +7,7 @@ export type CreditType = {
     status?: StatusCreditEnum;
     tauxInteret?: number;
     montant?: number;
-    dateDebut?: Date;
-    dateFin?: Date;
+    period?: number;
     paiementMensuel?: number;
     client?: any;
 };

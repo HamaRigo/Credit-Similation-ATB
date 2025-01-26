@@ -1,5 +1,3 @@
-import { RoleType } from "./RoleType";
-
 export type UserType = {
     id?: number;
     username?: string;
@@ -9,5 +7,5 @@ export type UserType = {
     prenom?: string;
     telephone?: string;
     activated?: boolean;
-    roles?: RoleType[];
+    roles?: any[];
 };

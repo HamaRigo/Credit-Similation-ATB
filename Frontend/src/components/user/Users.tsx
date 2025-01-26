@@ -2,21 +2,18 @@ import React, {useEffect, useRef, useState} from 'react';
 
 import {
     Form,
-    Input,
     Popconfirm,
     Table,
     Typography,
     Space,
     Button,
     Modal,
-    Alert,
     Tag,
     Dropdown,
-    Select, Badge, Switch,
+    Badge,
 } from 'antd';
 
 import {
-    CheckOutlined, CloseOutlined,
     IdcardOutlined,
     MoreOutlined,
     QuestionCircleOutlined
@@ -30,8 +27,9 @@ import UserService from "../../services/UserService";
 import { UserType } from "../../types/UserType";
 import RoleService from '../../services/RoleService';
 import { RoleType } from "../../types/RoleType";
-import ChangePassword from "./ChangePassword";
+import ChangePasswordModal from "./ChangePasswordModal";
 import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
+import UserFormModal from "./UserFormModal";
 
 const Users = () => {
     const [data, setData] = useState<UserType[]>(null);
@@ -39,26 +37,14 @@ const Users = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    let addForm: FormInstance = null;
+    const [modalForm] = Form.useForm();
     const [errorsModal, setErrorsModal] = React.useState<string>('');
-    const initialAddValues: UserType = {
-        username: '',
-        password: '',
-        email: '',
-        nom: '',
-        prenom: '',
-        telephone: '',
-        roles: null,
-        activated: true,
-    };
-    const [editFormOld] = Form.useForm();
-    const editForm = useRef<FormInstance>(null);
-    const [editingKey, setEditingKey] = useState<number>(null);
+    const [editingRecord, setEditingRecord] = useState<UserType>(null);
     const [isModalPwdOpen, setIsModalPwdOpen] = useState(false);
     const pwdForm = useRef<FormInstance>(null);
     const [errorsPwd, setErrorsPwd] = React.useState<string>('');
 
-    const columns = [
+    const columns: any = [
         {
             title: 'Username',
             dataIndex: 'username',
@@ -135,14 +121,14 @@ const Users = () => {
                         label: <Typography.Link onClick={() => toggleEdit(record)}>
                             Edit
                         </Typography.Link>,
-                        disabled : editingKey !== null,
+                        disabled : editingRecord != null,
                     },
                     {
                         key: '2',
-                        label: <Typography.Link onClick={togglePasswordChanging}>
+                        label: <Typography.Link onClick={() => togglePasswordChanging(record)}>
                             Change password
                         </Typography.Link>,
-                        disabled: editingKey !== null,
+                        disabled: editingRecord != null,
                     },
                     {
                         key: '3',
@@ -167,42 +153,9 @@ const Users = () => {
                         </Dropdown>
                     </Space>
                 );
-                /*const editable = isEditing(record);
-                return editable ? (
-                    <span>
-                        <Typography.Link onClick={() => saveEdit(record)} style={{ marginInlineEnd: 8 }}>
-                          Save
-                        </Typography.Link>
-                        <Popconfirm title="Sure to cancel ?" onConfirm={cancelEdit}>
-                          <a>Cancel</a>
-                        </Popconfirm>
-                    </span>
-                ) : (
-                    <Space direction="vertical">
-                        <Dropdown menu={{ items }} placement="bottomLeft" arrow={{ pointAtCenter: true }}>
-                            <MoreOutlined />
-                        </Dropdown>
-                    </Space>
-                );*/
             },
         },
     ];
-    const mergedColumns: any = columns.map((col) => {
-        if (!col.editable) {
-            return col;
-        }
-        return {
-            ...col,
-            onCell: (record: UserType) => ({
-                record,
-                inputType: col.inputType ?? 'text',
-                dataIndex: col.dataIndex,
-                title: col.title,
-                selectValues: col.selectValues ?? null,
-                dataType: col.dataIndex == 'email' ? 'email' : null,
-            }),
-        };
-    });
 
     // actions
     const getUsers = () => {
@@ -227,94 +180,67 @@ const Users = () => {
             });
     };
     const toggleAdd = () => {
-        addForm?.resetFields();
-        setErrorsModal('');
-        setIsModalOpen(true);
+        modalForm.setFieldsValue({activated: true});
+        setErrorsModal('')
+        setIsModalOpen(true)
     }
     const handleAdd = async (values) => {
         const formValues = updateFormValues(values);
-        const result = await UserService.user_exists(formValues.username, formValues.email);
-        if (result.data.existsByUsername || result.data.existsByEmail) {
-            let error = null
-            if (result.data.existsByUsername) {
-                error = 'User with this username'
-            }
-            if (result.data.existsByEmail) {
-                error += error ? ' and this email ' : 'User with this email '
-            }
-            error += 'already exists'
-            setErrorsModal(error)
-        } else {
-            setErrorsModal('');
-            UserService.add_user(formValues)
-                .then((response) => {
-                    setLoading(true);
-                    setIsModalOpen(false);
-                    const newRowData: UserType = response.data;
-                    Notifications.openNotificationWithIcon('success', 'User added successfully !');
-                    //delete data of form
-                    addForm?.resetFields();
-                    //add data to table
-                    setLoading(false);
-                    setData([...data, newRowData]);
-                })
-                .catch((error) => {
-                    setErrorsModal(error.message);
-                });
-        }
+        setErrorsModal('');
+        UserService.add_user(formValues)
+            .then((response) => {
+                setLoading(true);
+                setIsModalOpen(false);
+                const newRowData: UserType = response.data;
+                Notifications.openNotificationWithIcon('success', 'User added successfully !');
+                //delete data of form
+                modalForm?.resetFields();
+                //add data to table
+                setLoading(false);
+                setData([...data, newRowData]);
+            })
+            .catch((error) => {
+                setErrorsModal(error.response.data != '' ? error.response.data : error.message);
+            });
     };
-    const cancelAdd = () => setIsModalOpen(false);
+    const cancelAdd = () => {
+        modalForm.resetFields();
+        setIsModalOpen(false);
+    }
     const toggleEdit = (record: UserType) => {
         setErrorsModal('');
-        editForm.current?.resetFields();
-        editForm.current?.setFieldsValue({ ...record });
-        setEditingKey(record.id);
+        modalForm.setFieldsValue({ ...record, roles: record.roles.map(role => role.id) });
+        setEditingRecord(record);
         setIsModalOpen(true);
     };
-    const togglePasswordChanging = () => {
-        pwdForm.current?.resetFields();
-        setErrorsPwd('');
-        setIsModalPwdOpen(true);
-    };
-    const handlePwdChanging = async (values) => {
-        console.log('form', values);
-    };
-    const cancelPwdChanging = () => setIsModalPwdOpen(false);
-
     const cancelEdit = () => {
+        modalForm.resetFields();
+        setEditingRecord(null);
         setIsModalOpen(false);
-        setEditingKey(null);
     }
-    const saveEdit = async () => {
-        try {
-            const formValues = await editForm.current?.validateFields();
-            console.log('editingKey', editingKey);
-            console.log('formValues', formValues);
-            /*
-            updateFormValues()....
-            formValues.id = record.id
-            UserService.edit_user(formValues)
-                .then((response) => {
-                    const newRowData: UserType = response.data;
-                    const newData = [...data];
-                    const index = newData.findIndex((item) => record.id === item.id);
-                    if (index > -1 && newRowData != undefined) {
-                        const item = newData[index];
-                        newData.splice(index, 1, {
-                            ...item,
-                            ...newRowData,
-                        });
-                        setData(newData);
-                        cancelEdit();
-                    }
-                    Notifications.openNotificationWithIcon('success', 'User updated successfully !');
-                })
-                .catch((error) => {
-                    Notifications.openNotificationWithIcon('error', error.message);
-                });*/
-        } catch (errInfo) {
-            Notifications.openNotificationWithIcon('error', errInfo.message);
-        }
+    const saveEdit = (values) => {
+        const formValues = updateFormValues(values)
+        const editingKey = editingRecord.id
+        formValues.id = editingKey
+        UserService.edit_user(formValues)
+            .then((response) => {
+                const newRowData: UserType = response.data;
+                const newData = [...data];
+                const index = newData.findIndex((item) => item.id == editingKey);
+                if (index > -1 && newRowData != undefined) {
+                    const item = newData[index];
+                    newData.splice(index, 1, {
+                        ...item,
+                        ...newRowData,
+                    });
+                    setData(newData);
+                    cancelEdit();
+                }
+                Notifications.openNotificationWithIcon('success', 'User updated successfully !');
+            })
+            .catch((error) => {
+                setErrorsModal(error.response.data != '' ? error.response.data : error.message);
+            });
     };
     const handleDelete = (id: number) => {
         setLoading(true);
@@ -322,7 +248,7 @@ const Users = () => {
             .then((_) => {
                 const newData = [...data];
                 // update item
-                const index = newData.findIndex((item) => id === item.id);
+                const index = newData.findIndex((item) => id == item.id);
                 if (index > -1) {
                     const updatedData = newData.filter((item) => item.id != id);
                     setLoading(false);
@@ -337,12 +263,34 @@ const Users = () => {
                 setLoading(false);
             });
     };
+    const togglePasswordChanging = (record: UserType) => {
+        setEditingRecord(record);
+        setErrorsPwd('');
+        setIsModalPwdOpen(true);
+    };
+    const handlePwdChanging = async (values) => {
+        setErrorsPwd('');
+        const oldPassword = values.oldPassword
+        editingRecord.password = values.password
+        UserService.change_password(editingRecord, oldPassword)
+            .then((_) => {
+                cancelPwdChanging();
+                Notifications.openNotificationWithIcon('success', 'User password changed successfully !');
+            })
+            .catch((error) => {
+                setErrorsPwd(error.response.data != '' ? error.response.data : error.message);
+            });
+    };
+    const cancelPwdChanging = () => {
+        setEditingRecord(null);
+        pwdForm.current?.resetFields();
+        setIsModalPwdOpen(false);
+    }
     const updateFormValues = (formValues) => {
         if (formValues.roles) {
-            const roles: RoleType[] = formValues.roles?.map((role) => ({ id: role }));
-            formValues.roles = roles;
+            const selectedRoleIds = formValues.roles
+            formValues.roles = roles.filter(role => selectedRoleIds.includes(role.id));
         }
-
         return formValues;
     }
 
@@ -366,135 +314,32 @@ const Users = () => {
                     </Button>,
                 ]}
             />
-            <Modal
-                title={editingKey ? 'Edit User' : 'Add User'}
-                open={isModalOpen}
-                onOk={editingKey ? saveEdit : handleAdd}
-                onCancel={editingKey ? cancelEdit : cancelAdd}
-                centered
-                footer={null}
-                maskClosable={true}
-            >
-                <Form
-                    layout="horizontal"
-                    ref={editForm}
-                    onValuesChange={() => setErrorsModal('')}
-                    labelCol={{span: 8}}
-                    wrapperCol={{span: 16}}
-                    onFinish={editingKey ? saveEdit : handleAdd}
-                    validateTrigger="onSubmit"
-                >
-                    <div style={{margin: '25px 0'}}>
-                        {errorsModal != '' && (
-                            <Alert
-                                type="error"
-                                className="alert-msg"
-                                message={errorsModal}
-                                showIcon
-                                style={{marginBottom: '20px'}}
-                            />
-                        )}
-                        <Form.Item
-                            label="Username"
-                            name="username"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        {editingKey ? null : (
-                            <Form.Item
-                            label="Password"
-                            name="password"
-                            rules={[{ required: true, message: 'Please input your password!' }]}
-                            >
-                                <Input.Password />
-                            </Form.Item>
-                        )}
-                        <Form.Item
-                            label="Email"
-                            name="email"
-                            rules={[
-                                {required: true, message: 'Please enter input value'},
-                                {type: 'email', message: 'Please enter a valid email'}
-                            ]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Phone"
-                            name="telephone"
-                            rules={[
-                                {required: true, message: 'Please enter input value'},
-                                {pattern: /^\d{8}$/, message: 'Phone must be exactly 8 digits!'},
-                            ]}
-                        >
-                            <Input showCount maxLength={8}/>
-                        </Form.Item>
-                        <Form.Item label="Firstname" name="prenom">
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item label="Lastname" name="nom">
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item label="Roles" name="roles">
-                            <Select
-                                mode="multiple"
-                                allowClear
-                                style={{ width: '100%' }}
-                                options={roles?.map(role => (
-                                    { label: role.name, value: role.id }
-                                ))}
-                            />
-                        </Form.Item>
-                        <Form.Item label="Status" name="activated">
-                            <Switch
-                                checkedChildren={<CheckOutlined />}
-                                unCheckedChildren={<CloseOutlined />}
-                                defaultChecked
-                            />
-                        </Form.Item>
-                        <div className="ant-modal-footer">
-                            <Button type="default" onClick={editingKey ? cancelEdit : cancelAdd}>
-                                Cancel
-                            </Button>
-                            <Button type="primary" htmlType="submit">
-                                {editingKey ? 'Edit' : 'Create'}
-                            </Button>
-                        </div>
-                    </div>
-                </Form>
-            </Modal>
-
-            <Modal
-                title="Change Password"
-                open={isModalPwdOpen}
-                onOk={handlePwdChanging}
-                onCancel={cancelPwdChanging}
-                centered
-                footer={null}
-                maskClosable={true}
-            >
-                <ChangePassword
-                    pwdForm={pwdForm}
-                    handlePwdChanging={handlePwdChanging}
-                    cancelPwdChanging={cancelPwdChanging}
-                    setErrorsPwd={setErrorsPwd}
-                    errorsPwd={errorsPwd}
-                />
-            </Modal>
-            {/*<Form form={editForm} component={false}>*/}
-                <Table
-                    loading={loading}
-                    columns={mergedColumns}
-                    dataSource={data}
-                    components={{
-                        body: { cell: EditableCell },
-                    }}
-                    rowClassName="editable-row"
-                    pagination={{ onChange: cancelEdit }}
-                    showSorterTooltip={{ target: 'sorter-icon' }}
-                />
-            {/*</Form>*/}
+            <UserFormModal
+                modalForm={modalForm}
+                isModalOpen={isModalOpen}
+                isEditing={editingRecord != null}
+                roles={roles}
+                onSave={editingRecord ? saveEdit : handleAdd}
+                onCancel={editingRecord ? cancelEdit : cancelAdd}
+                errorsModal={errorsModal}
+                setErrorsModal={setErrorsModal}
+            />
+            <ChangePasswordModal
+                pwdForm={pwdForm}
+                isModalOpen={isModalPwdOpen}
+                handlePwdChanging={handlePwdChanging}
+                cancelPwdChanging={cancelPwdChanging}
+                setErrorsPwd={setErrorsPwd}
+                errorsPwd={errorsPwd}
+            />
+            <Table
+                loading={loading}
+                columns={columns}
+                dataSource={data}
+                rowClassName="editable-row"
+                pagination={{ onChange: cancelEdit }}
+                showSorterTooltip={{ target: 'sorter-icon' }}
+            />
         </>
     );
 }

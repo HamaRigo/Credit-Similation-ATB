@@ -53,7 +53,7 @@ const OcrList: React.FC = () => {
 
     // Handle file upload
     const handleUpload = async () => {
-        if (fileList.length === 0) {
+        if (fileList.length == 0) {
             message.warning('Please select a file to upload.');
             return;
         }

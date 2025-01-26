@@ -4,8 +4,6 @@ import dev.atb.models.CreditStatus;
 import dev.atb.models.CreditType;
 import lombok.*;
 
-import java.util.Date;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,8 +15,7 @@ public class CreditDTO {
     private CreditStatus status;
     private double tauxInteret;
     private double montant;
-    private Date dateDebut;
-    private Date dateFin;
+    private int period;
     private double paiementMensuel;
     private ClientDTO client;
 }

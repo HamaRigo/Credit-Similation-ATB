@@ -1,7 +1,11 @@
 package dev.atb.models;
 
 public enum CreditType {
-    PERSONAL,
-    MORTGAGE,
-    AUTO,
+    Sayara,
+    Sakan,
+    Mounassib,
+    Tahawel,
+    Renov,
+    Start,
+    BienEtre,
 }

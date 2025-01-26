@@ -22,6 +22,16 @@ public class CreditController {
         return new ResponseEntity<>(creditService.getAllCredits(), HttpStatus.OK);
     }
 
+    @GetMapping("/countByType")
+    public ResponseEntity<?> getCreditsCountByType() {
+        return new ResponseEntity<>(creditService.findCreditsCountByType(), HttpStatus.OK);
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<?> getCreditsTypes() {
+        return new ResponseEntity<>(creditService.getCreditTypes(), HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getCreditById(@PathVariable final Long id) {
         try {

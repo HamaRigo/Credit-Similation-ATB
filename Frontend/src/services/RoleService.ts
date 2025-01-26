@@ -7,7 +7,11 @@ class RoleService {
     }
 
     role_exists(name: string) {
-        return axios.get(apiRoutes.ROLE_URL + `/exists/${name}`);
+        return axios.get(apiRoutes.ROLE_URL + '/exists', {
+            params: {
+                name: name,
+            },
+        });
     }
 
     add_role(data: object) {

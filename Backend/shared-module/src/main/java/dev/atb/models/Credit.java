@@ -2,7 +2,8 @@ package dev.atb.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -32,11 +33,13 @@ public class Credit {
     @Column(nullable = false)
     private double montant;
 
-    @Column(nullable = false)
-    private Date dateDebut;
+    @Column(nullable = true)
+    private Date startDate;
 
+    @Min(value = 1, message = "Period must be at least 1")
+    @Max(value = 20, message = "Period must be at most 20")
     @Column(nullable = false)
-    private Date dateFin;
+    private int period;
 
     @Column(nullable = false)
     private double paiementMensuel;

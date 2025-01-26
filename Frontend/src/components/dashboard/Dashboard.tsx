@@ -23,20 +23,7 @@ const Dashboard = () => {
   const [roles, setRoles] = useState<RoleType[]>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>(null);
-  const data = roles != null && roles?.find(item => item.userCount > 0) > 0 ? {
-      labels: roles.map(item => item.name),
-      datasets: [{
-            data: roles.map(item => item.userCount),
-            backgroundColor: [
-                'rgb(186,15,15, 0.7)',
-                'rgba(13,46,83,0.7)',
-                'rgba(52,58,64,0.7)',
-                'rgba(136,149,158,0.7)',
-                'rgba(184,192,198,0.7)',
-            ],
-            borderWidth: 1,
-    }],
-  } : null;
+  const [rolesChartData, setRolesChartData] = useState(null);
 
   const getCountComptes = () => {
     CompteService.count_comptes_by_status()
@@ -81,7 +68,26 @@ const Dashboard = () => {
   const getRoles = () => {
     RoleService.list_roles()
         .then((response) => {
-            setRoles(response.data);
+            const result = response.data
+            if (result) {
+                setRoles(result);
+                const chartData = {
+                    labels: result.map(item => item.name),
+                    datasets: [{
+                        data: result.map(item => item.userCount),
+                        backgroundColor: [
+                            'rgb(186,15,15, 0.7)',
+                            'rgba(13,46,83,0.7)',
+                            'rgba(52,58,64,0.7)',
+                            'rgba(136,149,158,0.7)',
+                            'rgba(184,192,198,0.7)',
+                        ],
+                        borderWidth: 1,
+                    }],
+                };
+                setRolesChartData(chartData);
+            }
+
         })
         .catch((error) => {
             setError(error);
@@ -103,13 +109,14 @@ const Dashboard = () => {
         return <ErrorResult error={error} />;
     }
 
+    // @ts-ignore
     return (
         <Space direction="vertical" size="middle" style={{display: 'flex'}}>
             <Row gutter={16}>
                 {comptesByStatus ? <Col span={comptesByType?.length > 0 ? 6 : 12}>
                     <Card bordered={false}>
                         <Statistic
-                            title="Active Comptes"
+                            title={"Active Accounts".toUpperCase()}
                             value={comptesByStatus['active']}
                             valueStyle={{color: '#3f8600'}}
                         />
@@ -118,7 +125,7 @@ const Dashboard = () => {
                 {comptesByStatus ? <Col span={comptesByType?.length > 0 ? 6 : 12}>
                     <Card bordered={false}>
                       <Statistic
-                          title="Inactive Comptes"
+                          title={"Inactive Accounts".toUpperCase()}
                           value={comptesByStatus['inactive']}
                           valueStyle={{ color: '#cfa913' }}
                       />
@@ -127,7 +134,7 @@ const Dashboard = () => {
                 {comptesByType?.map((item: any) => (<Col span={6}>
                     <Card bordered={false}>
                         <Statistic
-                            title={"Comptes " + item.typeCompte.toLowerCase()}
+                            title={item.typeCompte.toUpperCase() + " ACCOUNTS"}
                             value={item.count}
                         />
                     </Card>
@@ -137,7 +144,7 @@ const Dashboard = () => {
                 <Col span={12}>
                     {clients != null ? <Card bordered={false}>
                             <Statistic
-                                title="Clients"
+                                title={"Clients".toUpperCase()}
                                 value={clients}
                                 prefix={<UsergroupAddOutlined />}
                                 valueStyle={{ color: '#191b8f' }}
@@ -146,7 +153,7 @@ const Dashboard = () => {
                     <Divider />
                     {users != null ? <Card bordered={false}>
                             <Statistic
-                                title="Users"
+                                title={"Users".toUpperCase()}
                                 value={users}
                                 prefix={<IdcardOutlined />}
                                 valueStyle={{ color: 'darkgrey' }}
@@ -156,11 +163,11 @@ const Dashboard = () => {
                 <Col span={12}><Feeds /></Col>
             </Row>
             <Row justify="space-around" align="middle" gutter={16}>
-              <Col span={data ? 16 : 24}>
+              <Col span={16}>
                 <SalesChart />
               </Col>
-                {data ? <Col span={8}>
-                    <Pie data={data} />
+                {rolesChartData ? <Col span={8}>
+                    <Pie data={rolesChartData} />
                 </Col> : null}
             </Row>
       </Space>

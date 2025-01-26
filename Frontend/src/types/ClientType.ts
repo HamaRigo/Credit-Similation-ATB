@@ -1,4 +1,6 @@
 import { TypeDocumentEnum } from "./TypeDocumentEnum";
+import {CompteType} from "./CompteType";
+import {CreditType} from "./CreditType";
 
 export type ClientType = {
     id?: number;
@@ -8,5 +10,9 @@ export type ClientType = {
     prenom?: string;
     adresse?: string;
     telephone?: string;
+    signature?: string;
     compteCount?: number;
+    creditCount?: number;
+    comptes?: CompteType[];
+    credits?: CreditType[];
 };

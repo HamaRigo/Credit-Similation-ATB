@@ -11,11 +11,34 @@ public final class ToDtoConverter {
         ClientDTO clientDTO = new ClientDTO();
         BeanUtils.copyProperties(client, clientDTO);
         clientDTO.setCompteCount(client.getComptes() != null ? client.getComptes().size() : 0);
+        clientDTO.setCreditCount(client.getCredits() != null ? client.getCredits().size() : 0);
+
+        List<CompteDTO> compteDTOList = new ArrayList<>();
+        if (client.getComptes() != null) {
+            for (Compte compte : client.getComptes()) {
+                CompteDTO compteDTO = compteToDto(compte, true);
+                compteDTOList.add(compteDTO);
+            }
+            clientDTO.setComptes(compteDTOList);
+        }
+
+        List<CreditDTO> creditDTOList = new ArrayList<>();
+        if (client.getCredits() != null) {
+            for (Credit credit : client.getCredits()) {
+                CreditDTO creditDTO = creditToDto(credit, true);
+                creditDTOList.add(creditDTO);
+            }
+            clientDTO.setCredits(creditDTOList);
+        }
 
         return clientDTO;
     }
 
     public static CompteDTO compteToDto(final Compte compte) {
+        return compteToDto(compte, false);
+    }
+
+    public static CompteDTO compteToDto(final Compte compte, boolean withoutClient) {
         CompteDTO compteDTO = new CompteDTO();
         BeanUtils.copyProperties(compte, compteDTO);
 
@@ -27,7 +50,8 @@ public final class ToDtoConverter {
             }
             compteDTO.setOcrs(ocrDTOList);
         }
-        if (compte.getClient() != null) {
+
+        if (!withoutClient && compte.getClient() != null) {
             ClientDTO clientDTO = clientToDto(compte.getClient());
             compteDTO.setClient(clientDTO);
         }
@@ -36,16 +60,19 @@ public final class ToDtoConverter {
     }
 
     public static CreditDTO creditToDto(final Credit credit) {
+        return creditToDto(credit, false);
+    }
+
+    public static CreditDTO creditToDto(final Credit credit, boolean withoutClient) {
         return new CreditDTO(
                 credit.getId(),
                 credit.getType(),
                 credit.getStatus(),
                 credit.getTauxInteret(),
                 credit.getMontant(),
-                credit.getDateDebut(),
-                credit.getDateFin(),
+                credit.getPeriod(),
                 credit.getPaiementMensuel(),
-                clientToDto(credit.getClient())
+                withoutClient ? null : clientToDto(credit.getClient())
         );
     }
 

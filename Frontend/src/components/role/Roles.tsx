@@ -34,7 +34,7 @@ const Roles = () => {
     };
     const [editForm] = Form.useForm();
     const [editingKey, setEditingKey] = useState<number>(null);
-    const isEditing = (record: RoleType) => record.id === editingKey;
+    const isEditing = (record: RoleType) => record.id == editingKey;
     const columns = [
         {
             title: 'Name',
@@ -66,7 +66,7 @@ const Roles = () => {
                   </span>
                 ) : (
                     <Space size="middle">
-                        <Typography.Link className="edit-btn" disabled={editingKey !== null} onClick={() => toggleEdit(record)}>
+                        <Typography.Link className="edit-btn" disabled={editingKey != null} onClick={() => toggleEdit(record)}>
                             Edit
                         </Typography.Link>
                         <Popconfirm
@@ -114,7 +114,6 @@ const Roles = () => {
             });
     };
     const toggleAdd = () => {
-        addForm?.resetFields();
         setErrorsAdd('');
         setIsModalOpen(true);
     }
@@ -142,7 +141,10 @@ const Roles = () => {
                 });
         }
     };
-    const cancelAdd = () => setIsModalOpen(false);
+    const cancelAdd = () => {
+        addForm?.resetFields();
+        setIsModalOpen(false);
+    }
     const toggleEdit = (record: RoleType) => {
         editForm.setFieldsValue({ ...record });
         setEditingKey(record.id);
@@ -163,7 +165,7 @@ const Roles = () => {
                     .then((response) => {
                         const newRowData: RoleType = response.data;
                         const newData = [...data];
-                        const index = newData.findIndex((item) => record.id === item.id);
+                        const index = newData.findIndex((item) => record.id == item.id);
                         if (index > -1 && newRowData != undefined) {
                             const item = newData[index];
                             newData.splice(index, 1, {
@@ -189,7 +191,7 @@ const Roles = () => {
             .then((_) => {
                 const newData = [...data];
                 // update item
-                const index = newData.findIndex((item) => id === item.id);
+                const index = newData.findIndex((item) => id == item.id);
                 if (index > -1) {
                     const updatedData = newData.filter((item) => item.id != id);
                     setLoading(false);

@@ -8,9 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
@@ -38,33 +36,37 @@ public class UserController {
         }
     }
 
-    @GetMapping("/exists")
-    public ResponseEntity<?> checkUserExistence(@RequestParam String username, @RequestParam String email) {
-        Map<String, Boolean> response = new HashMap<>();
-        if (username != null) {
-            boolean existsByUsername = userService.userExistByUsername(username);
-            response.put("existsByUsername", existsByUsername);
-        }
-        if (email != null) {
-            boolean existsByEmail = userService.userExistByEmail(email);
-            response.put("existsByEmail", existsByEmail);
-        }
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody final User user) {
+    public ResponseEntity<?> createUser(@RequestBody final User user) {
         try {
             return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+        }  catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping
-    public ResponseEntity<UserDTO> updateUser(@RequestBody final User user) {
+    public ResponseEntity<?> updateUser(@RequestBody final User user) {
         try {
             return new ResponseEntity<>(userService.updateUser(user), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<?> updateUserPassword(@RequestBody final User user, @RequestParam final String oldPassword) {
+        try {
+            userService.updateUserPassword(user, oldPassword);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {

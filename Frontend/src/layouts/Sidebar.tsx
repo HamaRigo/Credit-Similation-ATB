@@ -12,32 +12,32 @@ const navigation = [
   },
   {
     title: "Clients",
-    href: "/Clients",
+    href: "/clients",
     icon: "bi bi-people",
   },
   {
     title: "Comptes",
-    href: "/Comptes",
+    href: "/comptes",
     icon: "bi bi-archive",
   },
   {
     title: "Credits",
-    href: "/Credits",
+    href: "/credits",
     icon: "bi bi-hdd",
   },
   {
     title: "OCR",
-    href: "/Ocrs",
+    href: "/ocrs",
     icon: "bi bi-file-earmark-check",
   },
   {
     title: "Users",
-    href: "/Users",
+    href: "/users",
     icon: "bi bi-person-lock",
   },
   {
     title: "Roles",
-    href: "/Roles",
+    href: "/roles",
     icon: "bi bi-shield-lock",
   },
 ];
@@ -74,7 +74,7 @@ const Sidebar = () => {
               <Link
                 to={navi.href}
                 className={
-                  location.pathname === navi.href
+                  location.pathname === navi.href || location.pathname.startsWith(navi.href)
                     ? "active nav-link py-3"
                     : "nav-link text-secondary py-3"
                 }

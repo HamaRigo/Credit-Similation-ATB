@@ -1,29 +1,16 @@
 import React, { useEffect, useState } from 'react';
 
-import {
-    Form,
-    Input,
-    Popconfirm,
-    Table,
-    Typography,
-    Select,
-    Space,
-    Tag,
-    Button,
-    Modal,
-    Alert,
-} from 'antd';
+import {Form, Button} from 'antd';
 
 import ClientService from '../../services/ClientService';
 import { ClientType } from "../../types/ClientType";
-import {QuestionCircleOutlined, UserAddOutlined} from "@ant-design/icons";
+import {UserAddOutlined} from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
-import { FormInstance } from "antd/lib/form";
-import EditableCell from "../shared/EditableCell";
 import ErrorResult from "../shared/ErrorResult";
 import { TypeDocumentEnum } from "../../types/TypeDocumentEnum";
 import { PageHeader } from "@ant-design/pro-layout";
-import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
+import ClientFormModal from "./ClientFormModal";
+import ClientList from "./ClientList";
 
 const documentTypes = Object.values(TypeDocumentEnum);
 
@@ -32,140 +19,9 @@ const Clients = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    let addForm: FormInstance = null;
-    const [selectedType, setSelectedType] = useState<TypeDocumentEnum>(null);
-    const [errorsAdd, setErrorsAdd] = React.useState<string>('');
-    const initialAddValues: ClientType = {
-        typeDocument: null,
-        numeroDocument: '',
-        nom: '',
-        prenom: '',
-        adresse: '',
-        telephone: '',
-    };
-    const [editForm] = Form.useForm();
-    const [editingKey, setEditingKey] = useState<number>(null);
-    const isEditing = (record: ClientType) => record.id === editingKey;
-    const columns = [
-        {
-            title: 'Type',
-            dataIndex: 'typeDocument',
-            editable: true,
-            inputType: 'select',
-            selectValues: documentTypes,
-            width: '15%',
-            filters: documentTypes.map((item) => (
-                { text: item, value: item }
-            )),
-            onFilter: (value: string, record: ClientType) => record.typeDocument == value,
-            render: (_, {typeDocument}) => {
-                let color;
-                switch (typeDocument) {
-                    case TypeDocumentEnum.PERMIS:
-                        color = 'geekblue';
-                        break;
-                    case TypeDocumentEnum.PASSEPORT:
-                        color = 'purple';
-                        break;
-                    default:
-                        color = 'default';
-                }
-                return <Tag color={color} key={typeDocument}>{typeDocument}</Tag>;
-            },
-        },
-        {
-            title: 'Document',
-            dataIndex: 'numeroDocument',
-            editable: true,
-            sorter: (a, b) => a.numeroDocument - b.numeroDocument,
-            ...EditableTableColumnSearch('numeroDocument'),
-        },
-        {
-            title: 'Firstname',
-            dataIndex: 'prenom',
-            editable: true,
-            sorter: (a, b) => a.prenom.length - b.prenom.length,
-            ...EditableTableColumnSearch('prenom'),
-        },
-        {
-            title: 'Lastname',
-            dataIndex: 'nom',
-            editable: true,
-            sorter: (a, b) => a.nom.length - b.nom.length,
-            ...EditableTableColumnSearch('nom'),
-        },
-        {
-            title: 'Address',
-            dataIndex: 'adresse',
-            editable: true,
-            sorter: (a, b) => a.adresse.length - b.adresse.length,
-        },
-        {
-            title: 'Phone',
-            dataIndex: 'telephone',
-            editable: true,
-            inputType: 'phone',
-            sorter: (a, b) => a.telephone - b.telephone,
-            ...EditableTableColumnSearch('telephone'),
-        },
-        {
-            title: 'Comptes',
-            dataIndex: 'compteCount',
-            editable: false,
-            width: '10%',
-            sorter: (a, b) => a.compteCount - b.compteCount,
-        },
-        {
-            title: 'Actions',
-            width: '12%',
-            render: (_, record: ClientType) => {
-                const editable = isEditing(record);
-                return editable ? (
-                    <span>
-                        <Typography.Link onClick={() => saveEdit(record)} style={{ marginInlineEnd: 8 }}>
-                          Save
-                        </Typography.Link>
-                        <Popconfirm title="Sure to cancel ?" onConfirm={cancelEdit}>
-                          <a>Cancel</a>
-                        </Popconfirm>
-                  </span>
-                ) : (
-                    <Space size="middle">
-                        <Typography.Link className="edit-btn" disabled={editingKey !== null} onClick={() => toggleEdit(record)}>
-                            Edit
-                        </Typography.Link>
-                        <Popconfirm
-                            title={'Sure to delete ?'}
-                            icon={<QuestionCircleOutlined />}
-                            onConfirm={() => handleDelete(record.id)}
-                        >
-                            <Typography.Link className="delete-btn">
-                                Delete
-                            </Typography.Link>
-                        </Popconfirm>
-                    </Space>
-                );
-            },
-        },
-    ];
-    const mergedColumns: any = columns.map((col) => {
-        if (!col.editable) {
-            return col;
-        }
-        return {
-            ...col,
-            onCell: (record: ClientType) => ({
-                record,
-                inputType: col.inputType ?? 'text',
-                dataIndex: col.dataIndex,
-                title: col.title,
-                editing: isEditing(record),
-                selectValues: col.selectValues ?? null,
-                /*documentNumberPattern: col.dataIndex == 'numeroDocument' ?
-                    getDocumentNumberPattern(record.typeDocument) : null,*/
-            }),
-        };
-    });
+    const [modalForm] = Form.useForm();
+    const [errorsModal, setErrorsModal] = React.useState<string>('');
+    const [editingRecord, setEditingRecord] = useState<ClientType>(null);
 
     // actions
     const getClients = () => {
@@ -184,30 +40,18 @@ const Clients = () => {
                 setLoading(false);
             });
     };
-    const getDocumentNumberPattern = (type : TypeDocumentEnum) => {
-        return type == TypeDocumentEnum.CIN ? {
-            pattern: /^[0-9]{8}$/,
-            message: "CIN must be exactly 8 numeric digits",
-        } : type == TypeDocumentEnum.PASSEPORT ? {
-            pattern: /^[A-Z0-9]{6,9}$/,
-            message: "Passport must be 6 to 9 alphanumeric characters",
-        } : type == TypeDocumentEnum.PERMIS ? {
-            pattern: /^[A-Z0-9\- ]{6,16}$/,
-            message: "Permis must be 6 to 16 alphanumeric characters",
-        } : null
-    }
+
     const toggleAdd = () => {
-        addForm?.resetFields();
-        setErrorsAdd('');
-        setIsModalOpen(true);
+        setErrorsModal('')
+        setIsModalOpen(true)
     }
     const handleAdd = async (values) => {
-        const formValues: ClientType = values;
+        const formValues: ClientType = updateFormValues(values);
         const result = await ClientService.client_exists(formValues.numeroDocument);
         if (result.data) {
-            setErrorsAdd('Client with this document number already exists')
+            setErrorsModal('Client with this document number already exists')
         } else {
-            setErrorsAdd('');
+            setErrorsModal('');
             ClientService.add_client(formValues)
                 .then((response) => {
                     setLoading(true);
@@ -215,78 +59,68 @@ const Clients = () => {
                     const newRowData: ClientType = response.data;
                     Notifications.openNotificationWithIcon('success', 'Client added successfully !');
                     //delete data of form
-                    addForm?.resetFields();
+                    modalForm?.resetFields();
                     //add data to table
                     setLoading(false);
                     setData([...data, newRowData]);
                 })
                 .catch((error) => {
-                    setErrorsAdd(error.message);
+                    setErrorsModal(error.message);
                 });
         }
     };
-    const cancelAdd = () => setIsModalOpen(false);
+    const cancelAdd = () => {
+        modalForm.resetFields();
+        setIsModalOpen(false);
+    }
+
     const toggleEdit = (record: ClientType) => {
-        editForm.setFieldsValue({ ...record });
-        setEditingKey(record.id);
+        setErrorsModal('');
+        modalForm.setFieldsValue({ ...record });
+        setEditingRecord(record);
+        setIsModalOpen(true);
     };
-    const cancelEdit = () => setEditingKey(null);
-    const saveEdit = async (record: ClientType) => {
-        try {
-            const formValues = await editForm.validateFields();
-            formValues.id = record.id
-            let result
-            if (formValues.numeroDocument != record.numeroDocument) {
-                result = await ClientService.client_exists(formValues.numeroDocument);
-            }
-            if (result?.data) {
-                Notifications.openNotificationWithIcon('error', 'Client with this document number already exists')
-            } else {
-                ClientService.edit_client(formValues)
-                    .then((response) => {
-                        const newRowData: ClientType = response.data;
-                        const newData = [...data];
-                        const index = newData.findIndex((item) => record.id === item.id);
-                        if (index > -1 && newRowData != undefined) {
-                            const item = newData[index];
-                            newData.splice(index, 1, {
-                                ...item,
-                                ...newRowData,
-                            });
-                            setData(newData);
-                            cancelEdit();
-                        }
-                        Notifications.openNotificationWithIcon('success', 'Client updated successfully !');
-                    })
-                    .catch((error) => {
-                        Notifications.openNotificationWithIcon('error', error.message);
-                    });
-            }
-        } catch (errInfo) {
-            Notifications.openNotificationWithIcon('error', errInfo.message);
+    const cancelEdit = () => {
+        modalForm.resetFields();
+        setEditingRecord(null);
+        setIsModalOpen(false);
+    }
+    const saveEdit = async (values) => {
+        const formValues = updateFormValues(values)
+        formValues.id = editingRecord.id
+        let result
+        if (formValues.numeroDocument != editingRecord.numeroDocument) {
+            result = await ClientService.client_exists(formValues.numeroDocument);
+        }
+        if (result?.data) {
+            Notifications.openNotificationWithIcon('error', 'Client with this document number already exists')
+        } else {
+            ClientService.edit_client(formValues)
+                .then((response) => {
+                    const newRowData: ClientType = response.data;
+                    const newData = [...data];
+                    const index = newData.findIndex((item) => editingRecord.id == item.id);
+                    if (index > -1 && newRowData != undefined) {
+                        const item = newData[index];
+                        newData.splice(index, 1, {
+                            ...item,
+                            ...newRowData,
+                        });
+                        setData(newData);
+                        cancelEdit();
+                    }
+                    Notifications.openNotificationWithIcon('success', 'Client updated successfully !');
+                })
+                .catch((error) => {
+                    setErrorsModal(error.message);
+                });
         }
     };
-    const handleDelete = (id: number) => {
-        setLoading(true);
-        ClientService.delete_client(id)
-            .then((_) => {
-                const newData = [...data];
-                // update item
-                const index = newData.findIndex((item) => id === item.id);
-                if (index > -1) {
-                    const updatedData = newData.filter((item) => item.id != id);
-                    setLoading(false);
-                    setData(updatedData);
-                    Notifications.openNotificationWithIcon('success', 'Client deleted successfully !');
-                }
-            })
-            .catch((error) => {
-                Notifications.openNotificationWithIcon('error', error.message);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
+
+    const updateFormValues = (formValues) => {
+        formValues.signature = ''
+        return formValues;
+    }
 
     useEffect(() => {
         //Runs only on the first render
@@ -307,116 +141,24 @@ const Clients = () => {
                     </Button>,
                 ]}
             />
-            <Modal
-                title="Add Client"
-                open={isModalOpen}
-                onOk={handleAdd}
-                onCancel={cancelAdd}
-                centered
-                footer={null}
-                maskClosable={true}
-            >
-                <Form
-                    layout="horizontal"
-                    ref={(form: any) => (addForm = form)}
-                    initialValues={initialAddValues}
-                    onValuesChange={(changedValues) => {
-                        if (changedValues.typeDocument) {
-                            setSelectedType(changedValues.typeDocument);
-                        }
-                        setErrorsAdd('');
-                    }}
-                    labelCol={{span: 8}}
-                    wrapperCol={{span: 16}}
-                    onFinish={handleAdd}
-                    validateTrigger="onSubmit"
-                >
-                    <div style={{margin: '25px 0'}}>
-                        {errorsAdd != '' && (
-                            <Alert
-                                type="error"
-                                className="alert-msg"
-                                message={errorsAdd}
-                                showIcon
-                                style={{marginBottom: '20px'}}
-                            />
-                        )}
-                        <Form.Item
-                            label="Document Type"
-                            name="typeDocument"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Select>
-                                {documentTypes.map(item => <Select.Option value={item} key={item}>{item}</Select.Option>)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item
-                            label="Document Number"
-                            name="numeroDocument"
-                            rules={[
-                                {required: true,
-                                    message: 'Please enter input value'
-                                },
-                                {...getDocumentNumberPattern(selectedType)}
-                            ]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Firstname"
-                            name="prenom"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Lastname"
-                            name="nom"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Address"
-                            name="adresse"
-                            rules={[{required: true, message: 'Please enter input value'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-                        <Form.Item
-                            label="Phone"
-                            name="telephone"
-                            rules={[
-                                {required: true, message: 'Please enter input value'},
-                                {pattern: /^\d{8}$/, message: 'Phone must be exactly 8 digits!'},
-                            ]}
-                        >
-                            <Input showCount maxLength={8}/>
-                        </Form.Item>
-                        <div className="ant-modal-footer">
-                            <Button type="default" onClick={cancelAdd}>
-                                Cancel
-                            </Button>
-                            <Button type="primary" htmlType="submit">
-                                Create
-                            </Button>
-                        </div>
-                    </div>
-                </Form>
-            </Modal>
-            <Form form={editForm} component={false}>
-                <Table
-                    loading={loading}
-                    columns={mergedColumns}
-                    dataSource={data}
-                    components={{
-                        body: { cell: EditableCell },
-                    }}
-                    rowClassName="editable-row"
-                    pagination={{ onChange: cancelEdit }}
-                    showSorterTooltip={{ target: 'sorter-icon' }}
-                />
-            </Form>
+            <ClientFormModal
+                modalForm={modalForm}
+                documentTypes={documentTypes}
+                isModalOpen={isModalOpen}
+                isEditing={editingRecord != null}
+                onSave={editingRecord ? saveEdit : handleAdd}
+                onCancel={editingRecord ? cancelEdit : cancelAdd}
+                errorsModal={errorsModal}
+                setErrorsModal={setErrorsModal}
+            />
+            <ClientList
+                data={data}
+                setData={setData}
+                loading={loading}
+                setLoading={setLoading}
+                documentTypes={documentTypes}
+                toggleEdit={toggleEdit}
+            />
         </>
     );
 };

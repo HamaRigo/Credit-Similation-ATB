@@ -31,8 +31,8 @@ public class RoleController {
         }
     }
 
-    @GetMapping("/exists/{name}")
-    public ResponseEntity<Boolean> clientAlreadyExists(@PathVariable final String name) {
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> clientAlreadyExists(@RequestParam final String name) {
         return new ResponseEntity<>(roleService.roleAlreadyExists(name), HttpStatus.OK);
     }
 

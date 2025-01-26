@@ -82,7 +82,7 @@ const EditableTableColumnSearch = (dataIndex: string) => {
                 }
             },
         },
-        render: (text) => searchedColumn === dataIndex ? (
+        render: (text) => searchedColumn == dataIndex ? (
             <Highlighter
                 highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
                 searchWords={[searchText]}

@@ -7,7 +7,7 @@ class ClientService {
     }
 
     count_clients() {
-        return axios.get(apiRoutes.CLIENT_URL + `/count`);
+        return axios.get(apiRoutes.CLIENT_URL + '/count');
     }
 
     get_client(id: number) {
@@ -15,7 +15,11 @@ class ClientService {
     }
 
     client_exists(numeroDocument: string) {
-        return axios.get(apiRoutes.CLIENT_URL + `/exists/${numeroDocument}`);
+        return axios.get(apiRoutes.CLIENT_URL + '/exists', {
+            params: {
+                numeroDocument: numeroDocument,
+            },
+        });
     }
 
     add_client(data: object) {

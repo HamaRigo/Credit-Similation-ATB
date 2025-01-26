@@ -40,8 +40,8 @@ public class ClientController {
         }
     }
 
-    @GetMapping("/exists/{numeroDocument}")
-    public ResponseEntity<Boolean> clientAlreadyExists(@PathVariable final String numeroDocument) {
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> clientAlreadyExists(@RequestParam final String numeroDocument) {
         return new ResponseEntity<>(clientService.clientAlreadyExists(numeroDocument), HttpStatus.OK);
     }
 

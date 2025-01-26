@@ -1,8 +1,6 @@
 import React from "react";
-import {DatePicker, Form, Input, InputNumber, Select, Switch} from "antd";
+import {Form, Input, InputNumber, Select, Switch} from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import {TypeDocumentEnum} from "../../types/TypeDocumentEnum";
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;
@@ -41,8 +39,10 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
         case 'money':
             inputNode = (
                 <InputNumber
-                    formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value?.replace(/\$\s?|(,*)/g, '') as unknown as number}
+                    suffix={'DT'}
+                    style={{ width: '100%' }}
+                    min={dataIndex == 'paiementMensuel' ? 50 : dataIndex == 'montant' ? 1000 : null}
                 />
             );
             break;
@@ -50,9 +50,9 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
         case 'percent':
             inputNode = (
                <InputNumber<number>
-                    min={0}
+                    min={1}
                     max={100}
-                    formatter={(value) => `${value} %`}
+                    suffix={'%'}
                     parser={(value) => value?.replace('%', '') as unknown as number}
                 />
             );
