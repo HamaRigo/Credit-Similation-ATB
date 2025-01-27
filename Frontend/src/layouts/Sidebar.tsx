@@ -16,7 +16,7 @@ const navigation = [
     icon: "bi bi-people",
   },
   {
-    title: "Comptes",
+    title: "Accounts",
     href: "/comptes",
     icon: "bi bi-archive",
   },
@@ -65,7 +65,7 @@ const Sidebar = () => {
             <i className="bi bi-x"></i>
           </Button>
         </div>
-        <div className="bg-dark text-white p-2 opacity-75">User X</div>
+        <div className="bg-dark text-white p-2 opacity-75">Administrateur X</div>
       </div>
       <div className="p-3 mt-2">
         <Nav vertical className="sidebarNav">
