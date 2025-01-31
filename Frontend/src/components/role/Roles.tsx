@@ -168,6 +168,7 @@ const Roles = () => {
                         const index = newData.findIndex((item) => record.id == item.id);
                         if (index > -1 && newRowData != undefined) {
                             const item = newData[index];
+                            newRowData.userCount = item.userCount;
                             newData.splice(index, 1, {
                                 ...item,
                                 ...newRowData,

@@ -7,7 +7,6 @@ import Notifications from "../shared/Notifications";
 import { FormInstance } from "antd/lib/form";
 import ErrorResult from "../shared/ErrorResult";
 import { PageHeader } from "@ant-design/pro-layout";
-import { TypeCreditEnum } from "../../types/TypeCreditEnum";
 import { StatusCreditEnum } from "../../types/StatusCreditEnum";
 import { CreditType } from "../../types/CreditType";
 import { ClientType } from "../../types/ClientType";
@@ -16,12 +15,14 @@ import CreditService from "../../services/CreditService";
 import CreditFormModal from "./CreditFormModal";
 import CreditSimulationModal from "./CreditSimulationModal";
 import CreditList from "./CreditList";
+import {TypeCredit} from "../../types/TypeCredit";
+import dayjs from "dayjs";
 
-const creditTypes = Object.values(TypeCreditEnum);
 const creditPeriods = Array.from({ length: 20 }, (_, index) => index + 1);
 
 const Credits = () => {
     const [data, setData] = useState<CreditType[]>(null);
+    const [creditTypes, setCreditTypes] = useState<TypeCredit[]>(null);
     const [clients, setClients] = useState<ClientType[]>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<any>(null);
@@ -57,6 +58,19 @@ const Credits = () => {
                 }
             });
     };
+    const getCreditTypes = () => {
+        CreditService.list_types()
+            .then((response) => {
+                if (response.data) {
+                    const colors = ["cyan", "magenta", "geekblue", "orange", "blue", "purple", "red", "green", "volcano", "gold"];
+                    const data: TypeCredit[] = response.data.map((item: string, index: number) => ({
+                        name: item,
+                        color: colors[index % colors.length],
+                    }));
+                    setCreditTypes(data);
+                }
+            });
+    };
     const toggleAdd = () => {
         setErrorsAdd('');
         setIsModalOpen(true);
@@ -88,6 +102,11 @@ const Credits = () => {
     }
     const updateFormValues = (formValues) => {
         formValues.client = {'id' : formValues.client};
+        if (formValues.startDate) {
+            const pattern = 'YYYY-MM-DD'
+            formValues.startDate = dayjs(formValues.startDate).format(pattern);
+        }
+
         return formValues;
     }
     const toggleSimulation = () => {
@@ -97,13 +116,14 @@ const Credits = () => {
     useEffect(() => {
         //Runs only on the first render
         getCredits();
+        getCreditTypes();
         getClients();
     }, []);
 
     if (error) {
         return <ErrorResult error={error} />;
     }
-    
+
     return (
         <>
             <PageHeader
@@ -122,7 +142,7 @@ const Credits = () => {
                 isModalOpen={isModalOpen}
                 clients={clients}
                 creditPeriods={creditPeriods}
-                creditTypes={creditTypes}
+                creditTypes={creditTypes?.map(item => item.name)}
                 errorsModal={errorsAdd}
                 onSave={handleAdd}
                 onCancel={cancelAdd}
@@ -135,6 +155,7 @@ const Credits = () => {
                 data={data}
                 setData={setData}
                 clients={clients}
+                creditTypes={creditTypes}
                 loading={loading}
                 setLoading={setLoading}
                 updateFormValues={updateFormValues}

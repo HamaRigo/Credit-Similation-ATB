@@ -1,9 +1,6 @@
 package dev.atb.compte.services;
 
-import dev.atb.dto.CompteCountByStatusDTO;
-import dev.atb.dto.CompteCountByTypeDTO;
-import dev.atb.dto.CompteDTO;
-import dev.atb.dto.ToDtoConverter;
+import dev.atb.dto.*;
 import dev.atb.models.Compte;
 import dev.atb.models.CompteCourant;
 import dev.atb.models.CompteEpargne;
@@ -13,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +38,36 @@ public class CompteService {
         return comptesByStatus.stream()
                 .map(row -> new CompteCountByStatusDTO((Boolean) row[0], (Long) row[1]))
                 .collect(Collectors.toList());
+    }
+
+    public List<CompteCountByMonthDTO> findComptesCountByYear(final int year) {
+        List<Object[]> comptesByMonth = compteRepository.countComptesByMonth(year);
+        List<CompteCountByMonthDTO> compteCountList = new ArrayList<>();
+        String[] months = {
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+        };
+        for (int i = 0; i < 12; i++) {
+            compteCountList.add(new CompteCountByMonthDTO(months[i], 0L));
+        }
+
+        comptesByMonth.forEach(compte -> {
+            int monthIndex = ((int) compte[0]) - 1;
+            Long count = (Long) compte[1];
+            compteCountList.set(monthIndex, new CompteCountByMonthDTO(months[monthIndex], count));
+        });
+
+        return compteCountList;
     }
 
     public List<CompteDTO> findAllCurrentComptes() {

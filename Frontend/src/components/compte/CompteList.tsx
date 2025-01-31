@@ -87,7 +87,7 @@ const CompteList: React.FC<React.PropsWithChildren<CompteListProps>> = ({
             selectValues: clients,
             showSearch: true,
             width: '14%',
-            sorter: (a, b) => a.client.length - b.client.length,
+            sorter: (a, b) => a.client - b.client,
             render: (_, { client }) => {
                 const clientDocument = clients?.find(item => item.id == client)?.numeroDocument
                 return (displayOnly ? clientDocument : (
@@ -231,7 +231,7 @@ const CompteList: React.FC<React.PropsWithChildren<CompteListProps>> = ({
             if (result?.data) {
                 Notifications.openNotificationWithIcon('error', 'Compte with this number already exists')
             } else {
-                updateFormValues(formValues);
+                updateFormValues(formValues, editingType);
                 CompteService.edit_compte(formValues)
                     .then((response) => {
                         const newRowData: CompteType = response.data;

@@ -6,6 +6,10 @@ class CreditService {
         return axios.get(apiRoutes.CREDIT_URL);
     }
 
+    list_types() {
+        return axios.get(apiRoutes.CREDIT_URL + '/types');
+    }
+
     count_credits_by_type() {
         return axios.get(apiRoutes.CREDIT_URL + `/countByType`);
     }

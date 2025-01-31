@@ -65,7 +65,7 @@ const Users = () => {
             dataIndex: 'telephone',
             editable: true,
             inputType: 'phone',
-            sorter: (a, b) => a.telephone.length - b.telephone.length,
+            sorter: (a, b) => a.telephone - b.telephone,
             ...EditableTableColumnSearch('telephone'),
         },
         {

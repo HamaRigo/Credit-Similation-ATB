@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Upload, message, Empty } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import {Table, Button, Modal, Upload, message, Empty, Typography, Popconfirm} from 'antd';
+import {FileSearchOutlined, QuestionCircleOutlined, UploadOutlined} from '@ant-design/icons';
 import {
     getAllOcrEntities,
     deleteOcrById,
     analyzeAndSaveImage,
 } from '../../services/ocrService';
+import {PageHeader} from "@ant-design/pro-layout";
 
 // Define the OcrEntity interface
 interface OcrEntity {
@@ -96,14 +97,15 @@ const OcrList: React.FC = () => {
             title: 'Actions',
             key: 'actions',
             render: (_: any, record: OcrEntity) => (
-                <Button
-                    type="primary"
-                    danger
-                    onClick={() => handleDelete(record.id)}
-                    style={{ marginRight: '8px' }}
+                <Popconfirm
+                    title={'Sure to delete ?'}
+                    icon={<QuestionCircleOutlined />}
+                    onConfirm={() => handleDelete(record.id)}
                 >
-                    Delete
-                </Button>
+                    <Typography.Link className="delete-btn">
+                        Delete
+                    </Typography.Link>
+                </Popconfirm>
             ),
         },
     ];
@@ -115,14 +117,14 @@ const OcrList: React.FC = () => {
 
     return (
         <div style={{ padding: '24px' }}>
-            <h1>OCR List</h1>
-            <Button
-                type="primary"
-                onClick={() => setUploadModalVisible(true)}
-                style={{ marginBottom: '16px' }}
-            >
-                Upload New File
-            </Button>
+            <PageHeader
+                title={'OCR'}
+                extra={[
+                    <Button size="large" icon={<FileSearchOutlined />} onClick={() => setUploadModalVisible(true)}>
+                        Process Ocr
+                    </Button>,
+                ]}
+            />
             <Table
                 dataSource={ocrEntities}
                 columns={columns}

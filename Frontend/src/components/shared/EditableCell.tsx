@@ -1,6 +1,7 @@
 import React from "react";
-import {Form, Input, InputNumber, Select, Switch} from "antd";
+import {DatePicker, Form, Input, InputNumber, Select, Switch} from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     editing: boolean;

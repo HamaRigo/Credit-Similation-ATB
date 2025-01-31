@@ -15,6 +15,14 @@ class CompteService {
         return axios.get(apiRoutes.COMPTE_URL + `/countByType`);
     }
 
+    count_comptes_by_month(year: string) {
+        return axios.get(apiRoutes.COMPTE_URL + `/countByMonth`, {
+            params: {
+                year: year,
+            },
+        });
+    }
+
     get_compte(id: number) {
         return axios.get(apiRoutes.COMPTE_URL + `/${id}`);
     }
@@ -38,7 +46,9 @@ class CompteService {
         if (data.typeCompte == TypeCompteEnum.COURANT) {
             return axios.put(apiRoutes.COMPTE_URL + '/current', data);
         }
-        return axios.put(apiRoutes.COMPTE_URL + '/saving', data);
+        else if(data.typeCompte == TypeCompteEnum.EPARGNE) {
+            return axios.put(apiRoutes.COMPTE_URL + '/saving', data);
+        }
     }
 
     delete_compte(id: number) {

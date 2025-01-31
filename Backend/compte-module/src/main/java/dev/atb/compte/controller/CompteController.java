@@ -1,6 +1,7 @@
 package dev.atb.compte.controller;
 
 import dev.atb.compte.services.CompteService;
+import dev.atb.dto.CompteCountByMonthDTO;
 import dev.atb.dto.CompteCountByStatusDTO;
 import dev.atb.dto.CompteCountByTypeDTO;
 import dev.atb.dto.CompteDTO;
@@ -33,6 +34,11 @@ public class CompteController {
     @GetMapping("/countByStatus")
     public ResponseEntity<List<CompteCountByStatusDTO>> getComptesCountByStatus() {
         return new ResponseEntity<>(compteService.findComptesCountByStatus(), HttpStatus.OK);
+    }
+
+    @GetMapping("/countByMonth")
+    public ResponseEntity<List<CompteCountByMonthDTO>> getComptesCountByStatus(@RequestParam int year) {
+        return new ResponseEntity<>(compteService.findComptesCountByYear(year), HttpStatus.OK);
     }
 
     @GetMapping("/current")

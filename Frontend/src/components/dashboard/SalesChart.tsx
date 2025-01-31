@@ -1,8 +1,8 @@
-import { Card, CardBody, CardSubtitle, CardTitle } from "reactstrap";
-import Chart from "react-apexcharts";
 import React from "react";
+import {Card} from "antd";
+import Chart from "react-apexcharts";
 
-const SalesChart = () => {
+const SalesChart = ({data}) => {
   const options = {
     chart: {
       toolbar: {
@@ -30,17 +30,7 @@ const SalesChart = () => {
     },
     colors: ["#b8c0c6", "#911212", "#0e6fba"],
     xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        /*"Jun",
-        "Jul",
-        "Aug",
-        "Sep",*/
-      ],
+      categories: data?.map(item => item.month.substring(0, 3)),
     },
     responsive: [
       {
@@ -59,28 +49,22 @@ const SalesChart = () => {
   const series = [
     {
       name: "2023",
-      data: [20, 40, 50, 30, 40],//,50, 30, 30, 40],
+      data: [5, 10, 30, 10, 15, 5, 10, 30, 10, 15, 20, 30],
     },
     {
       name: "2024",
-      data: [10, 20, 40, 60, 20],//,40, 60, 60, 20],
+      data: [8, 5, 35, 30, 20, 25, 10, 25, 20, 10, 20, 40],
     },
     {
       name: "2025",
-      data: [25, 15],
+      data: data?.map(item => item.count),
     },
   ];
 
   return (
-    <Card>
-      <CardBody>
-        <CardTitle tag="h5">Comptes Summary</CardTitle>
-        <CardSubtitle className="text-muted" tag="h6">
-          Yearly Comptes Report
-        </CardSubtitle>
+      <Card title="Comptes Summary - Yearly Report">
         <Chart options={options} series={series} type="bar" height="379" />
-      </CardBody>
-    </Card>
+      </Card>
   );
 };
 

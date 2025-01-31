@@ -15,21 +15,23 @@ import {
 } from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
 import EditableCell from "../shared/EditableCell";
-import { TypeCreditEnum } from "../../types/TypeCreditEnum";
 import { StatusCreditEnum } from "../../types/StatusCreditEnum";
 import { CreditType } from "../../types/CreditType";
 import CreditService from "../../services/CreditService";
 import {useNavigate} from "react-router-dom";
 import {ClientType} from "../../types/ClientType";
+import {TypeCredit} from "../../types/TypeCredit";
+import dayjs from "dayjs";
 
-const creditTypes = Object.values(TypeCreditEnum);
 const creditPeriods = Array.from({ length: 20 }, (_, index) => index + 1);
 const creditStatus = Object.values(StatusCreditEnum);
+const dateFormat = 'DD-MM-YYYY';
 
 interface CreditListProps extends React.HTMLAttributes<HTMLElement> {
     data: CreditType[];
     setData?: (credits: CreditType[]) => void;
     clients?: ClientType[];
+    creditTypes?: TypeCredit[];
     loading?: boolean;
     setLoading?: (load: boolean) => void;
     updateFormValues?: any;
@@ -40,6 +42,7 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
                         data,
                         setData,
                         clients,
+                        creditTypes,
                         loading,
                         setLoading,
                         updateFormValues,
@@ -56,27 +59,14 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
             dataIndex: 'type',
             editable: true,
             inputType: 'select',
-            width: '12%',
-            selectValues: creditTypes,
-            filters: creditTypes.map((item) => (
-                { text: item, value: item }
+            width: '10%',
+            selectValues: creditTypes?.map(item => item.name),
+            filters: creditTypes?.map((item) => (
+                { text: item.name, value: item.name }
             )),
             onFilter: (value: string, record: CreditType) => record.type == value,
             render: (_, { type }) => {
-                let color;
-                switch (type) {
-                    case TypeCreditEnum.Sayara || TypeCreditEnum.Sakan:
-                        color = 'geekblue';
-                        break;
-                    case TypeCreditEnum.Mounassib || TypeCreditEnum.Tahawel:
-                        color = 'blue';
-                        break;
-                    case TypeCreditEnum.Renov || TypeCreditEnum.BienEtre:
-                        color = 'purple';
-                        break;
-                    default:
-                        color = 'default';
-                }
+                const color = creditTypes?.find(item => item.name == type)?.color ?? 'default';
                 return <Tag color={color} key={type}>{type}</Tag>;
             },
         },
@@ -87,8 +77,8 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
             inputType: 'select',
             selectValues: clients,
             showSearch: true,
-            width: '12%',
-            sorter: (a, b) => a.client.length - b.client.length,
+            width: '10%',
+            sorter: (a, b) => a.client - b.client,
             render: (_, { client }) => {
                 const clientDocument = clients?.find(item => item.id == client)?.numeroDocument
                 return (displayOnly ? clientDocument : (
@@ -99,11 +89,21 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
             },
         },
         {
+            title: 'Start Date',
+            dataIndex: 'startDate',
+            inputType: 'datePicker',
+            editable: false,
+            width: '13%',
+            render: (_, { startDate }) => {
+                return startDate ? dayjs(startDate).format(dateFormat) : null;
+            },
+        },
+        {
             title: 'Amount',
             dataIndex: 'montant',
             editable: true,
             inputType: 'money',
-            width: '15%',
+            width: '12%',
             sorter: (a, b) => a.montant - b.montant,
             render: (_, { montant }) => {
                 return montant + ' DT';
@@ -114,7 +114,7 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
             dataIndex: 'paiementMensuel',
             editable: true,
             inputType: 'money',
-            width: '15%',
+            width: '12%',
             sorter: (a, b) => a.paiementMensuel - b.paiementMensuel,
             render: (_, { paiementMensuel }) => {
                 return paiementMensuel + ' DT';
@@ -186,7 +186,7 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
         {
             title: 'Actions',
             dataIndex: 'actions',
-            width: '12%',
+            width: '13%',
             render: (_, record: CreditType) => {
                 const editable = isEditing(record);
                 return editable ? (
@@ -254,6 +254,7 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
         try {
             const formValues = await editForm.validateFields();
             formValues.id = record.id
+            formValues.startDate = record.startDate
             updateFormValues(formValues);
             CreditService.edit_credit(formValues)
                 .then((response) => {

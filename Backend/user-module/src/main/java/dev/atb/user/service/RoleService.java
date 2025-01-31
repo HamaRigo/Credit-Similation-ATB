@@ -1,9 +1,12 @@
 package dev.atb.user.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import dev.atb.dto.RoleDTO;
 import dev.atb.dto.ToDtoConverter;
 import dev.atb.models.Role;
 import dev.atb.repo.RoleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 public class RoleService {
     @Autowired
     private RoleRepository roleRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(RoleService.class);
 
     public List<RoleDTO> getAllRoles() {
         List<Role> roles = roleRepository.findAll();

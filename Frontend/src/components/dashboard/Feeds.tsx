@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Card,
-  CardBody,
-  CardTitle,
-  ListGroup,
-  CardSubtitle,
-  ListGroupItem,
-  Button,
-} from "reactstrap";
+import {Card} from "antd";
+import {ListGroup, ListGroupItem, Button} from "reactstrap";
 
 const FeedData = [
   {
@@ -38,16 +31,12 @@ const FeedData = [
 
 const Feeds = () => {
   return (
-    <Card>
-      <CardBody>
-        <CardTitle tag="h5">Feeds</CardTitle>
-        <ListGroup flush className="mt-4">
+    <Card title="Feeds">
+        <ListGroup flush>
           {FeedData.map((feed, index) => (
             <ListGroupItem
               key={index}
               action
-              href="/"
-              tag="a"
               className="d-flex align-items-center p-3 border-0"
             >
               <Button
@@ -64,7 +53,6 @@ const Feeds = () => {
             </ListGroupItem>
           ))}
         </ListGroup>
-      </CardBody>
     </Card>
   );
 };

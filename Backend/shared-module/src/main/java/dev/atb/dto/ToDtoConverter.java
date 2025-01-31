@@ -72,7 +72,8 @@ public final class ToDtoConverter {
                 credit.getMontant(),
                 credit.getPeriod(),
                 credit.getPaiementMensuel(),
-                withoutClient ? null : clientToDto(credit.getClient())
+                withoutClient ? null : clientToDto(credit.getClient()),
+                credit.getStartDate()
         );
     }
 

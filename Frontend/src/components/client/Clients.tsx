@@ -28,9 +28,6 @@ const Clients = () => {
         setLoading(true);
         ClientService.list_clients()
             .then((response) => {
-                /*const result :ClientType[] = response.data?.map((item: ClientType) => (
-                    { ...item, key: item.numeroDocument }
-                ));*/
                 setData(response.data);
             })
             .catch((error) => {
@@ -102,6 +99,8 @@ const Clients = () => {
                     const index = newData.findIndex((item) => editingRecord.id == item.id);
                     if (index > -1 && newRowData != undefined) {
                         const item = newData[index];
+                        newRowData.compteCount = item.compteCount
+                        newRowData.creditCount = item.creditCount
                         newData.splice(index, 1, {
                             ...item,
                             ...newRowData,

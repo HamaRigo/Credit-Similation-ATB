@@ -12,6 +12,6 @@ import java.util.List;
 @Repository
 @EnableJpaRepositories
 public interface CreditRepository extends JpaRepository<Credit, Long> {
-    @Query("SELECT c.type as type, COUNT(c) as count FROM Credit c GROUP BY TYPE(c)")
+    @Query("SELECT c.type as type, COUNT(c) as count FROM Credit c GROUP BY c.type")
     List<Object[]> countCreditsByType();
 }

@@ -26,4 +26,10 @@ public interface CompteRepository extends JpaRepository<Compte, Long> {
 
     @Query("SELECT c.activated, COUNT(c) FROM Compte c GROUP BY c.activated")
     List<Object[]> countComptesByStatus();
+
+    @Query("SELECT MONTH(c.createdAt) AS month, COUNT(c) AS count FROM Compte c " +
+            "WHERE YEAR(c.createdAt) = :year " +
+            "GROUP BY MONTH(c.createdAt) " +
+            "ORDER BY MONTH(c.createdAt)")
+    List<Object[]> countComptesByMonth(int year);
 }

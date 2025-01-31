@@ -2,7 +2,7 @@ import React from 'react';
 
 import {
     Alert,
-    Button,
+    Button, DatePicker,
     Form,
     InputNumber,
     Modal,
@@ -10,6 +10,7 @@ import {
 } from 'antd';
 
 import { CreditType } from "../../types/CreditType";
+import dayjs from "dayjs";
 
 const CreditFormModal = ({
                              modalForm,
@@ -28,6 +29,7 @@ const CreditFormModal = ({
         montant: null,
         paiementMensuel: null,
         client: null,
+        startDate: null,
     };
 
     return (
@@ -65,7 +67,7 @@ const CreditFormModal = ({
                         rules={[{required: true, message: 'Please enter input value'}]}
                     >
                         <Select>
-                            {creditTypes.map(item => <Select.Option value={item} key={item}>{item}</Select.Option>)}
+                            {creditTypes?.map(item => <Select.Option value={item} key={item}>{item}</Select.Option>)}
                         </Select>
                     </Form.Item>
                     <Form.Item
@@ -76,6 +78,17 @@ const CreditFormModal = ({
                         <Select showSearch>
                             {clients?.map(item => <Select.Option value={item.id}>{item.numeroDocument}</Select.Option>)}
                         </Select>
+                    </Form.Item>
+                    <Form.Item
+                        label="Start Date"
+                        name="startDate"
+                        rules={[{required: true, message: 'Please enter start date'}]}
+                    >
+                        <DatePicker
+                            format='DD-MM-YYYY'
+                            disabledDate={(current) => current && current < dayjs().startOf('day')}
+                            style={{ width: '100%' }}
+                        />
                     </Form.Item>
                     <Form.Item
                         label="Repayment period"
