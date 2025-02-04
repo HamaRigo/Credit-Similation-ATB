@@ -11,13 +11,12 @@ import java.util.List;
 
 @Repository
 @EnableJpaRepositories
-public interface OcrRepository extends JpaRepository<Ocr, String> {
+public interface OcrRepository extends JpaRepository<Ocr, Long> {
     // Custom query to find OCR records by document type
     List<Ocr> findByTypeDocument(String typeDocument);
 
     // Custom query to find OCR records marked as fraud
     List<Ocr> findByFraud(boolean fraud);
-
 
     // Custom query to find OCR records by account number
     List<Ocr> findByCompteNumeroCompte(@Param("compteId") String compteId);

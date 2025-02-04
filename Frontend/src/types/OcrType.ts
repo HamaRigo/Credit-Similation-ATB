@@ -1,6 +1,11 @@
+import {TypeOcrEnum} from "./TypeOcrEnum";
+
 export type OcrType = {
-    id?: string;
-    text?: string;
-    documentType?: string;
-    [key: string]: any;
+    id?: number;
+    typeDocument?: TypeOcrEnum;
+    resultatsReconnaissance?: string;
+    fraud?: boolean;
+    errorMessage?: string;
+    confidenceScore?: string;
+    compte?: any;
 }

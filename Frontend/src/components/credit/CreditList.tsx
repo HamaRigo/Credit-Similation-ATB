@@ -188,6 +188,10 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
             dataIndex: 'actions',
             width: '13%',
             render: (_, record: CreditType) => {
+                const updatableStatus = [
+                    StatusCreditEnum.PENDING,
+                    StatusCreditEnum.REJECTED
+                ]
                 const editable = isEditing(record);
                 return editable ? (
                     <span>
@@ -197,24 +201,22 @@ const CreditList: React.FC<React.PropsWithChildren<CreditListProps>> = ({
                     <Popconfirm title="Sure to cancel ?" onConfirm={cancelEdit}>
                       <a>Cancel</a>
                     </Popconfirm>
-              </span>
-                ) : (
-                    ![StatusCreditEnum.IN_PROGRESS, StatusCreditEnum.FINISHED].includes(record.status) ?
-                        <Space size="middle">
-                            <Typography.Link className="edit-btn" disabled={editingKey != null} onClick={() => toggleEdit(record)}>
-                                Edit
+                    </span>
+                ) : (updatableStatus.includes(record.status) ?
+                    <Space size="middle">
+                        <Typography.Link className="edit-btn" disabled={editingKey != null} onClick={() => toggleEdit(record)}>
+                            Edit
+                        </Typography.Link>
+                        <Popconfirm
+                            title={'Sure to delete ?'}
+                            icon={<QuestionCircleOutlined />}
+                            onConfirm={() => handleDelete(record.id)}
+                        >
+                            <Typography.Link className="delete-btn">
+                                Delete
                             </Typography.Link>
-                            <Popconfirm
-                                title={'Sure to delete ?'}
-                                icon={<QuestionCircleOutlined />}
-                                onConfirm={() => handleDelete(record.id)}
-                            >
-                                <Typography.Link className="delete-btn">
-                                    Delete
-                                </Typography.Link>
-                            </Popconfirm>
-                        </Space> : null
-                );
+                        </Popconfirm>
+                    </Space> : null);
             },
         },
     ];

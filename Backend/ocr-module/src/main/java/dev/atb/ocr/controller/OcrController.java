@@ -19,13 +19,33 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/ocrs")
 public class OcrController {
-
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
-    private final OcrService ocrService;
 
     @Autowired
-    public OcrController(OcrService ocrService) {
-        this.ocrService = ocrService;
+    private OcrService ocrService;
+
+    @GetMapping
+    public ResponseEntity<List<OcrDTO>> getAllOcrs() {
+        return new ResponseEntity<>(ocrService.findAll(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCompteById(@PathVariable final Long id) {
+        try {
+            return new ResponseEntity<>(ocrService.findById(id), HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCompte(@PathVariable final Long id) {
+        try {
+            ocrService.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -81,40 +101,6 @@ public class OcrController {
             return handleException("Unknown error during image upload", e);
         }
     }
-    /**
-     * Retrieves a specific OCR record by ID.
-     *
-     * @param id the OCR record ID
-     * @return the OCR record, if found
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<OcrDTO> getOcrById(@PathVariable String id) {
-        OcrDTO ocrDTO = ocrService.getOcrById(id);
-        return ocrDTO != null ? ResponseEntity.ok(ocrDTO) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    /**
-     * Retrieves all OCR records.
-     *
-     * @return list of all OCR records
-     */
-    @GetMapping
-    public ResponseEntity<List<OcrDTO>> getAllOcrEntities() {
-        List<OcrDTO> ocrList = ocrService.getAllOcrEntities();
-        return ResponseEntity.ok(ocrList);
-    }
-
-    /**
-     * Deletes a specific OCR record by ID.
-     *
-     * @param id the OCR record ID
-     * @return a response indicating success or failure
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOcr(@PathVariable String id) {
-        boolean deleted = ocrService.deleteOcr(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
 
     /**
      * Updates an existing OCR record.
@@ -125,7 +111,7 @@ public class OcrController {
      * @return the updated OCR record
      */
     @PutMapping("/{id}")
-    public ResponseEntity<OcrDTO> updateOcr(@PathVariable String id,
+    public ResponseEntity<OcrDTO> updateOcr(@PathVariable Long id,
                                             @RequestParam String newText,
                                             @RequestParam String documentType) {
         try {
@@ -177,7 +163,7 @@ public class OcrController {
     private ResponseEntity<OcrDTO> handleException(String message, Exception e) {
         logger.error(message, e);
         OcrDTO errorResponse = new OcrDTO();
-        errorResponse.setError(message + ": " + e.getMessage());
+        errorResponse.setErrorMessage(message + ": " + e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

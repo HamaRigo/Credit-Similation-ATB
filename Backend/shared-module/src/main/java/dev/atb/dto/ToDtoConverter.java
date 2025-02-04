@@ -16,7 +16,7 @@ public final class ToDtoConverter {
         List<CompteDTO> compteDTOList = new ArrayList<>();
         if (client.getComptes() != null) {
             for (Compte compte : client.getComptes()) {
-                CompteDTO compteDTO = compteToDto(compte, true);
+                CompteDTO compteDTO = compteToDto(compte, true, false);
                 compteDTOList.add(compteDTO);
             }
             clientDTO.setComptes(compteDTOList);
@@ -35,15 +35,15 @@ public final class ToDtoConverter {
     }
 
     public static CompteDTO compteToDto(final Compte compte) {
-        return compteToDto(compte, false);
+        return compteToDto(compte, false, false);
     }
 
-    public static CompteDTO compteToDto(final Compte compte, boolean withoutClient) {
+    public static CompteDTO compteToDto(final Compte compte, boolean withoutClient, boolean withoutOcrs) {
         CompteDTO compteDTO = new CompteDTO();
         BeanUtils.copyProperties(compte, compteDTO);
 
         List<OcrDTO> ocrDTOList = new ArrayList<>();
-        if (compte.getOcrs() != null) {
+        if (!withoutOcrs && compte.getOcrs() != null) {
             for (Ocr ocr : compte.getOcrs()) {
                 OcrDTO ocrDTO = ocrToDto(ocr);
                 ocrDTOList.add(ocrDTO);
@@ -78,14 +78,15 @@ public final class ToDtoConverter {
     }
 
     public static OcrDTO ocrToDto(final Ocr ocr) {
-        return new OcrDTO(
-                ocr.getNumeroCompte(),
-                ocr.getTypeDocument(),
-                ocr.getResultatsReconnaissance(),
-                ocr.isFraud(),
-                ocr.getImage(),
-                ocr.getModelUsed()
-        );
+        OcrDTO ocrDTO = new OcrDTO();
+        BeanUtils.copyProperties(ocr, ocrDTO);
+
+        if (ocr.getCompte() != null) {
+            CompteDTO compteDTO = compteToDto(ocr.getCompte(), true, true);
+            ocrDTO.setCompte(compteDTO);
+        }
+
+        return ocrDTO;
     }
 
     public static UserDTO userToDto(final User user) {

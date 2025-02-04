@@ -1,102 +1,93 @@
-import React, { useEffect, useState } from 'react';
-import {Table, Button, Modal, Upload, message, Empty, Typography, Popconfirm} from 'antd';
-import {FileSearchOutlined, QuestionCircleOutlined, UploadOutlined} from '@ant-design/icons';
-import {
-    getAllOcrEntities,
-    deleteOcrById,
-    analyzeAndSaveImage,
-} from '../../services/ocrService';
-import {PageHeader} from "@ant-design/pro-layout";
+import React from 'react';
+import {Table, Typography, Popconfirm, Tag, Badge} from 'antd';
+import { QuestionCircleOutlined } from "@ant-design/icons";
+import {OcrType} from "../../types/OcrType";
+import {TypeOcrEnum} from "../../types/TypeOcrEnum";
+import CompteService from "../../services/CompteService";
+import Notifications from "../shared/Notifications";
+import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
+import OcrService from "../../services/OcrService";
 
-// Define the OcrEntity interface
-interface OcrEntity {
-    id: string;
-    documentType: string;
-    text: string;
-    createdAt: string;
+interface OcrListProps extends React.HTMLAttributes<HTMLElement> {
+    data: OcrType[];
+    setData?: any;
+    loading?: boolean;
+    setLoading?: (load: boolean) => void;
+    documentTypes: string[];
 }
 
-const OcrList: React.FC = () => {
-    const [ocrEntities, setOcrEntities] = useState<OcrEntity[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [uploadModalVisible, setUploadModalVisible] = useState(false);
-    const [fileList, setFileList] = useState<any[]>([]);
-
-    // Fetch all OCR entities
-    const fetchOcrEntities = async () => {
-        setLoading(true);
-        try {
-            const data: any[] = await getAllOcrEntities();
-            const transformedData: OcrEntity[] = data.map((dto) => ({
-                id: dto.id || 'Unknown ID',
-                documentType: dto.documentType || 'Unknown Type',
-                text: dto.text || 'No Text Available',
-                createdAt: dto.createdAt || new Date().toISOString(),
-            }));
-            setOcrEntities(transformedData);
-        } catch (error) {
-            message.error('Failed to fetch OCR entities.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Delete an OCR entity
-    const handleDelete = async (id: string) => {
-        try {
-            await deleteOcrById(id);
-            message.success('OCR entity deleted successfully.');
-            fetchOcrEntities(); // Refresh list
-        } catch (error) {
-            message.error('Failed to delete OCR entity.');
-        }
-    };
-
-    // Handle file upload
-    const handleUpload = async () => {
-        if (fileList.length == 0) {
-            message.warning('Please select a file to upload.');
-            return;
-        }
-
-        try {
-            const file = fileList[0];
-            const typeDocument = 'defaultType'; // Change this as needed
-            await analyzeAndSaveImage(file, typeDocument);
-            message.success('File uploaded and analyzed successfully.');
-            fetchOcrEntities(); // Refresh list
-            setUploadModalVisible(false);
-            setFileList([]);
-        } catch (error) {
-            message.error('Failed to upload and analyze file.');
-        }
-    };
-
+const OcrList: React.FC<React.PropsWithChildren<OcrListProps>> = ({
+                               data,
+                               setData,
+                               loading,
+                               setLoading,
+                               documentTypes,
+                           }) => {
     // Table columns
-    const columns = [
+    const columns: any = [
         {
-            title: 'Document Type',
-            dataIndex: 'documentType',
-            key: 'documentType',
-            sorter: (a: OcrEntity, b: OcrEntity) =>
-                a.documentType.localeCompare(b.documentType),
+            title: 'Type',
+            dataIndex: 'typeDocument',
+            width: '18%',
+            filters: documentTypes?.map((item) => (
+                { text: item, value: item }
+            )),
+            onFilter: (value: string, record: OcrType) => record.typeDocument == value,
+            render: (_, {typeDocument}) => {
+                let color;
+                switch (typeDocument) {
+                    case TypeOcrEnum.check:
+                        color = 'orange';
+                        break;
+                    case TypeOcrEnum.commercial:
+                        color = 'geekblue';
+                        break;
+                    default:
+                        color = 'default';
+                }
+                return <Tag color={color} key={typeDocument}>{typeDocument}</Tag>;
+            },
         },
         {
-            title: 'Text',
-            dataIndex: 'text',
-            key: 'text',
+            title: 'Account',
+            dataIndex: 'compte',
+            sorter: (a, b) => a.compte.numeroCompte - b.compte.numeroCompte,
+            render: (_, { compte }) => {
+                return compte.numeroCompte;
+            },
         },
         {
-            title: 'Created At',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            sorter: (a: OcrEntity, b: OcrEntity) =>
-                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+            title: 'Score',
+            dataIndex: 'confidenceScore',
+            sorter: (a, b) => a.confidenceScore - b.confidenceScore,
+        },
+        {
+            title: 'Errors',
+            dataIndex: 'errorMessage',
+            width: '20%',
+            ...EditableTableColumnSearch('errorMessage'),
+        },
+        {
+            title: 'Status',
+            dataIndex: 'fraud',
+            width: '14%',
+            filters: ['1', '0'].map((item) => {
+                const text = item == '1' ? 'fraud' : 'not fraud';
+                return { text: text.toUpperCase(), value: item }
+            }),
+            onFilter: (value, record: OcrType) => record.fraud == value,
+            render: (_, {fraud}) => {
+                const status = !fraud ? 'success' : 'error';
+                const text = !fraud ? 'Not Fraud' : 'Fraud';
+                const color = !fraud ? 'green' : 'red';
+                return <Badge status={status} text={text} style={{color : color}} />;
+            },
         },
         {
             title: 'Actions',
-            key: 'actions',
-            render: (_: any, record: OcrEntity) => (
+            dataIndex: 'actions',
+            width: '12%',
+            render: (_: any, record: OcrType) => (
                 <Popconfirm
                     title={'Sure to delete ?'}
                     icon={<QuestionCircleOutlined />}
@@ -109,52 +100,35 @@ const OcrList: React.FC = () => {
             ),
         },
     ];
-
-    // Effect hook to fetch data on component mount
-    useEffect(() => {
-        fetchOcrEntities();
-    }, []);
+    const handleDelete = (id: number) => {
+        setLoading(true);
+        OcrService.delete_ocr(id)
+            .then((_) => {
+                const newData = [...data];
+                // update item
+                const index = newData.findIndex((item) => id == item.id);
+                if (index > -1) {
+                    const updatedData = newData.filter((item) => item.id != id);
+                    setLoading(false);
+                    setData(updatedData);
+                    Notifications.openNotificationWithIcon('success', 'Ocr deleted successfully !');
+                }
+            })
+            .catch((error) => {
+                Notifications.openNotificationWithIcon('error', error.message);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
 
     return (
-        <div style={{ padding: '24px' }}>
-            <PageHeader
-                title={'OCR'}
-                extra={[
-                    <Button size="large" icon={<FileSearchOutlined />} onClick={() => setUploadModalVisible(true)}>
-                        Process Ocr
-                    </Button>,
-                ]}
-            />
-            <Table
-                dataSource={ocrEntities}
-                columns={columns}
-                rowKey="id"
-                loading={loading}
-                bordered
-                locale={{
-                    emptyText: <Empty description="No OCR Records Found" />,
-                }}
-            />
-            <Modal
-                title="Upload and Analyze File"
-                visible={uploadModalVisible}
-                onOk={handleUpload}
-                onCancel={() => setUploadModalVisible(false)}
-                okText="Upload"
-                cancelText="Cancel"
-            >
-                <Upload
-                    beforeUpload={(file) => {
-                        setFileList([file]);
-                        return false; // Prevent auto-upload
-                    }}
-                    fileList={fileList}
-                    onRemove={() => setFileList([])}
-                >
-                    <Button icon={<UploadOutlined />}>Select File</Button>
-                </Upload>
-            </Modal>
-        </div>
+        <Table
+            loading={loading}
+            columns={columns}
+            dataSource={data}
+            showSorterTooltip={{ target: 'sorter-icon' }}
+        />
     );
 };
 

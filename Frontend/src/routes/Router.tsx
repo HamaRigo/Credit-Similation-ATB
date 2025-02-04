@@ -11,7 +11,7 @@ const Clients = lazy(() => import("../components/client/Clients"));
 const ClientDetails = lazy(() => import("../components/client/ClientDetails"));
 const Comptes = lazy(() => import("../components/compte/Comptes"));
 const Credits = lazy(() => import("../components/credit/Credits"));
-const Ocrs = lazy(() => import("../components/ocr/OcrList"));
+const Ocrs = lazy(() => import("../components/ocr/Ocrs"));
 const Users = lazy(() => import("../components/user/Users"));
 const Roles = lazy(() => import("../components/role/Roles"));
 const UnauthorizedPage = lazy(() => import("../views/UnauthorizedPage"));

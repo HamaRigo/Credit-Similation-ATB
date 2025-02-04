@@ -2,6 +2,7 @@ package dev.atb.ocr.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.atb.dto.OcrDTO;
+import dev.atb.dto.ToDtoConverter;
 import dev.atb.models.Client;
 import dev.atb.models.Compte;
 import dev.atb.ocr.Service.support.OcrRequest;
@@ -37,7 +38,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class OcrService {
-
     private static final Logger logger = LoggerFactory.getLogger(OcrService.class);
     private final OcrRepository ocrRepository;
     private final CompteRepository compteRepository;
@@ -58,6 +58,23 @@ public class OcrService {
         this.signatureService = signatureService;
         this.restTemplate = restTemplate;
         this.kafkaTemplate = kafkaTemplate;
+    }
+
+    public List<OcrDTO> findAll() {
+        List<Ocr> ocrs = ocrRepository.findAll();
+        return ocrs.stream().map(ToDtoConverter::ocrToDto).collect(Collectors.toList());
+    }
+
+    public OcrDTO findById(final Long id) {
+        Ocr ocr = ocrRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ocr not found"));
+        return ToDtoConverter.ocrToDto(ocr);
+    }
+
+    public void deleteById(final Long id) {
+        Ocr ocr = ocrRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ocr not found"));
+        ocrRepository.delete(ocr);
     }
 
     public OcrDTO uploadAndAnalyzeImage(MultipartFile imageFile, String typeDocument, Long id, String signatureBase64) {
@@ -148,11 +165,11 @@ public class OcrService {
 
     private void saveOcrResult(OcrDTO ocrDTO, Compte compte, boolean isFraud) {
         try {
-        Ocr ocr = new Ocr();
-            ocr.setNumeroCompte(compte.getNumeroCompte());
-        ocr.setTypeDocument(ocrDTO.getTypeDocument());
+            Ocr ocr = new Ocr();
+            ocr.setTypeDocument(ocrDTO.getTypeDocument());
             ocr.setResultatsReconnaissance(ocrDTO.getResultatsReconnaissance());
-        ocr.setFraud(isFraud);
+            ocr.setFraud(isFraud);
+            ocr.setCompte(compte);
             ocrRepository.save(ocr);
             logger.info("OCR result saved to database with fraud status: {}", isFraud);
         } catch (Exception e) {
@@ -220,28 +237,8 @@ public class OcrService {
         logger.info("Converted PDF to TIFF: {}", tiffFile.getAbsolutePath());
         return tiffFile;
     }
-    // CRUD Methods for handling OCR records
-    // Get OCR by ID
-    public OcrDTO getOcrById(String id) {
-        Optional<Ocr> ocr = ocrRepository.findById(id);
-        return ocr.map(this::convertToOcrDTO).orElse(null);
-    }
-    // Retrieve all OCR records
-    public List<OcrDTO> getAllOcrEntities() {
-        return ocrRepository.findAll().stream()
-                .map(this::convertToOcrDTO)
-                .collect(Collectors.toList());
-    }
-    // Delete an OCR record
-    public boolean deleteOcr(String id) {
-        if (ocrRepository.existsById(id)) {
-            ocrRepository.deleteById(id);
-            return true;
-        }
-        return false;
-    }
     // Update an existing OCR record
-    public OcrDTO updateOcr(String id, String newText, String documentType) {
+    public OcrDTO updateOcr(Long id, String newText, String documentType) {
         Optional<Ocr> optionalOcr = ocrRepository.findById(id);
         if (optionalOcr.isPresent()) {
             Ocr ocr = optionalOcr.get();
@@ -259,7 +256,6 @@ public class OcrService {
     }
     private OcrDTO convertToOcrDTO(Ocr ocr) {
         OcrDTO dto = new OcrDTO();
-        dto.setNumeroCompte(ocr.getNumeroCompte());
         dto.setTypeDocument(ocr.getTypeDocument());
         dto.setResultatsReconnaissance(ocr.getResultatsReconnaissance());
         dto.setImage(ocr.getImage());

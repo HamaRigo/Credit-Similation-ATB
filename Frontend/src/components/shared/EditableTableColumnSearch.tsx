@@ -72,9 +72,9 @@ const EditableTableColumnSearch = (dataIndex: string) => {
         ),
         onFilter: (value, record) =>
             record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase()),
+                ?.toString()
+                ?.toLowerCase()
+                ?.includes((value as string).toLowerCase()),
         filterDropdownProps: {
             onOpenChange(open) {
                 if (open) {
