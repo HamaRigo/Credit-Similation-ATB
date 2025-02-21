@@ -5,10 +5,15 @@ import dev.atb.client.service.SignatureStorageService;
 import dev.atb.dto.ClientDTO;
 import dev.atb.models.Client;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
+import java.io.File;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
@@ -19,7 +24,7 @@ public class ClientController {
     private ClientService clientService;
 
     @Autowired
-    private SignatureStorageService signatureStorageService;  // Inject the signature service
+    private SignatureStorageService signatureStorageService;
 
     @GetMapping
     public ResponseEntity<List<ClientDTO>> getAllClients() {
@@ -75,25 +80,32 @@ public class ClientController {
         }
     }
 
-    // Endpoint to upload a signature for a client (Base64 encoded)
+    @GetMapping("/{id}/signature")
+    public ResponseEntity<FileSystemResource> getSignature(@PathVariable final Long id) {
+        File signatureFile = signatureStorageService.getSignatureFile(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + signatureFile.getName())
+                .contentType(MediaType.IMAGE_PNG)
+                .body(new FileSystemResource(signatureFile));
+    }
+
     @PostMapping("/{id}/signature")
-    public ResponseEntity<String> uploadSignature(@PathVariable Long id, @RequestParam String imagePath) {
+    public ResponseEntity<Boolean> uploadSignature(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
-            String result = signatureStorageService.addOrUpdateSignature(id, imagePath);
+            boolean result = signatureStorageService.addOrUpdateSignature(id, file);
             return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Endpoint to retrieve the signature for a client
-    @GetMapping("/{id}/signature")
-    public ResponseEntity<String> getSignature(@PathVariable Long id) {
-        String signatureBase64 = signatureStorageService.getSignature(id);
-        if (signatureBase64 != null) {
-            return new ResponseEntity<>(signatureBase64, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Signature not found for the client
+    @DeleteMapping("/{id}/signature")
+    public ResponseEntity<Void> deleteSignature(@PathVariable final Long id) {
+        try {
+            signatureStorageService.deleteSignature(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 }

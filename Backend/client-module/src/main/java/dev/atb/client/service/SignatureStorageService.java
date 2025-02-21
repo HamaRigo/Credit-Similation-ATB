@@ -1,78 +1,88 @@
 package dev.atb.client.service;
 
-
 import dev.atb.models.Client;
 
 import dev.atb.repo.ClientRepository;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.Base64;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class SignatureStorageService {
-
-    private final ClientRepository clientRepository;
-
     @Autowired
-    public SignatureStorageService(ClientRepository clientRepository) {
-        this.clientRepository = clientRepository;
+    private ClientRepository clientRepository;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
+    public File getSignatureFile(Long clientId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+
+        String signaturePath = client.getSignature();
+        if (signaturePath == null || signaturePath.isEmpty()) {
+            throw new RuntimeException("Signature not found for client " + clientId);
+        }
+
+        File signatureFile = new File(signaturePath);
+        if (!signatureFile.exists()) {
+            throw new RuntimeException("Signature file does not exist at " + signaturePath);
+        }
+
+        return signatureFile;
     }
 
-    /**
-     * Adds or updates a signature for a client by encoding it to Base64.
-     * @param id The CIN (unique ID) of the client.
-     * @param imagePath The path to the signature image.
-     * @return A message indicating success or failure.
-     */
-    public String addOrUpdateSignature(Long id, String imagePath) {
+    public Boolean addOrUpdateSignature(Long clientId, MultipartFile file) {
         try {
-            // Check if the image file exists
-            File imageFile = new File(imagePath);
-            if (!imageFile.exists()) {
-                return "Image file does not exist at path: " + imagePath;
-            }
-            // Load image from the file system
-            Mat image = Imgcodecs.imread(imagePath);
-            if (image.empty()) {
-                return "Failed to read image from path: " + imagePath;
-            }
+            // checks upload directory exists
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Files.createDirectories(uploadPath);
 
-            // Encode image as Base64
-            String base64Signature = Base64.getEncoder().encodeToString(imageToByteArray(image));
+            // Save file
+            String fileName = "signature_" + clientId + "_" + System.currentTimeMillis() + ".png";
+            Path filePath = uploadPath.resolve(fileName);
+            file.transferTo(filePath.toFile());
 
-            // Retrieve client by CIN and update or save
-            Client client = clientRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Client with CIN: " + id + " not found."));
-                client.setSignature(base64Signature);
-                clientRepository.save(client);
-                return "Signature successfully added/updated for client with CIN: " + id;
+            // update signature in database
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new RuntimeException("Client not found"));
 
+            deleteSignatureFile(client.getSignature());
+            client.setSignature(filePath.toString());
+            clientRepository.save(client);
+            return true;
         } catch (Exception e) {
-            throw new RuntimeException("Error adding/updating signature for client", e);
+            throw new RuntimeException("Could not store signature", e);
         }
     }
 
-    /**
-     * Retrieves the stored Base64-encoded signature for a client.
-     * @param id The CIN (unique ID) of the client.
-     * @return The Base64-encoded signature, or null if not found.
-     */
-    public String getSignature(Long id) {
-        return clientRepository.findById(id)
-                .map(Client::getSignature)
-                .orElseThrow(() -> new RuntimeException("Signature not found for client with CIN: " + id));
+    public void deleteSignature(Long clientId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+
+        boolean isDeleted = deleteSignatureFile(client.getSignature());
+        if (isDeleted) {
+            client.setSignature("");
+            clientRepository.save(client);
+        }
     }
 
-    // Helper Method to Convert Mat Image to Byte Array
-    private byte[] imageToByteArray(Mat image) {
-        MatOfByte buffer = new MatOfByte();
-        Imgcodecs.imencode(".png", image, buffer);
-        return buffer.toArray();
+    public boolean deleteSignatureFile(String signaturePath) {
+        if (signaturePath == null || signaturePath.isEmpty()) {
+            return true;
+        }
+
+        try {
+            Path filePath = Paths.get(signaturePath);
+            return Files.deleteIfExists(filePath);
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting signature file", e);
+        }
     }
 }

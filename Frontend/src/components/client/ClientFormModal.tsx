@@ -5,9 +5,8 @@ import {
     Input,
     Select,
     Button,
-    Alert, Upload,
+    Alert
 } from "antd";
-import {UploadOutlined} from "@ant-design/icons";
 import {TypeDocumentEnum} from "../../types/TypeDocumentEnum";
 
 const ClientFormModal = ({
@@ -34,35 +33,6 @@ const ClientFormModal = ({
             message: "Permis must be 6 to 16 alphanumeric characters",
         } : null
     }
-    const normFile = (e) => {
-        if (Array.isArray(e)) {
-            return e;
-        }
-        return e?.fileList;
-    };
-    const beforeUpload = (file) => {
-        const isImage =
-            file.type == "image/png" ||
-            file.type == "image/jpeg" ||
-            file.type == "image/jpg";
-
-        if (!isImage) {
-            /*Modal.error({
-                title: "Invalid File Type",
-                content: "You can only upload PNG, JPG, or JPEG files!",
-            });*/
-        }
-
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-            /*Modal.error({
-                title: "File Too Large",
-                content: "Image must be smaller than 2MB!",
-            });*/
-        }
-
-        return isImage && isLt2M; // Return false if validation fails
-    };
 
     return (
         <Modal
@@ -150,26 +120,6 @@ const ClientFormModal = ({
                         ]}
                     >
                         <Input showCount maxLength={8}/>
-                    </Form.Item>
-                    <Form.Item
-                        label="Upload Signature"
-                        name="signature"
-                        getValueFromEvent={normFile}
-                        rules={[
-                            {
-                                required: true,
-                                message: "Please upload a signature",
-                            },
-                        ]}
-                    >
-                        <Upload
-                            action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
-                            listType="picture"
-                            maxCount={1}
-                            beforeUpload={beforeUpload}
-                        >
-                            <Button icon={<UploadOutlined/>}>Upload</Button>
-                        </Upload>
                     </Form.Item>
                     <div className="ant-modal-footer">
                         <Button type="default" onClick={onCancel}>

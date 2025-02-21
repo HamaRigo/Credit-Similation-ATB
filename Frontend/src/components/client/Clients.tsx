@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import {Form, Button} from 'antd';
+import {Form, Button, UploadFile} from 'antd';
 
 import ClientService from '../../services/ClientService';
 import { ClientType } from "../../types/ClientType";
@@ -11,6 +11,7 @@ import { TypeDocumentEnum } from "../../types/TypeDocumentEnum";
 import { PageHeader } from "@ant-design/pro-layout";
 import ClientFormModal from "./ClientFormModal";
 import ClientList from "./ClientList";
+import ClientSignatureUploadModal from "./ClientSignatureUploadModal";
 
 const documentTypes = Object.values(TypeDocumentEnum);
 
@@ -18,9 +19,17 @@ const Clients = () => {
     const [data, setData] = useState<ClientType[]>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<any>(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalForm] = Form.useForm();
     const [errorsModal, setErrorsModal] = React.useState<string>('');
+
+    const [previewImage, setPreviewImage] = useState<string>('');
+    const [fileList, setFileList] = useState<UploadFile[]>();
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [uploadForm] = Form.useForm();
+    const [errorsUploadModal, setErrorsUploadModal] = React.useState<string>('');
+
     const [editingRecord, setEditingRecord] = useState<ClientType>(null);
 
     // actions
@@ -85,6 +94,7 @@ const Clients = () => {
     const saveEdit = async (values) => {
         const formValues = updateFormValues(values)
         formValues.id = editingRecord.id
+        formValues.signature = editingRecord.signature
         let result
         if (formValues.numeroDocument != editingRecord.numeroDocument) {
             result = await ClientService.client_exists(formValues.numeroDocument);
@@ -121,6 +131,68 @@ const Clients = () => {
         return formValues;
     }
 
+    const toggleUpload = async (id: number) => {
+        setErrorsUploadModal('');
+        uploadForm.setFieldsValue({clientId: id});
+        await fetchClientSignature(id);
+        setIsUploadModalOpen(true);
+    };
+    const handleUpload = () => {
+        const clientId = uploadForm.getFieldValue('clientId');
+        const uploadedFile = fileList[0];
+        if (clientId) {
+            if (uploadedFile) {
+                const formData = new FormData();
+                formData.append("file", uploadedFile.originFileObj)
+                ClientService.upload_signature(clientId, formData)
+                    .then((response) => {
+                        if (response.data) {
+                            Notifications.openNotificationWithIcon('success', 'Client signature uploaded successfully !');
+                            cancelUpload();
+                        }
+                    })
+                    .catch((error) => {
+                        setErrorsUploadModal(error.message);
+                        console.error("Upload error:", error);
+                    });
+            } else {
+                ClientService.delete_signature(clientId)
+                    .then((response) => {
+                        Notifications.openNotificationWithIcon('success', 'Client signature deleted successfully !');
+                        cancelUpload();
+                    })
+                    .catch((error) => {
+                        setErrorsUploadModal(error.message);
+                    });
+            }
+        }
+    };
+    const cancelUpload = () => {
+        uploadForm.resetFields();
+        setPreviewImage(null);
+        setFileList(null);
+        setIsUploadModalOpen(false);
+    };
+    const fetchClientSignature = (id: number) => {
+        ClientService.get_signature(id)
+            .then((response) => {
+                const imageUrl = URL.createObjectURL(response.data);
+                setPreviewImage(imageUrl);
+                setFileList([{
+                    uid: '-1',
+                    name: 'signature.png',
+                    status: 'done',
+                    url: imageUrl,
+                }]);
+            })
+            .catch((error) => {
+                console.log(error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }
+
     useEffect(() => {
         //Runs only on the first render
         getClients();
@@ -150,6 +222,17 @@ const Clients = () => {
                 errorsModal={errorsModal}
                 setErrorsModal={setErrorsModal}
             />
+            <ClientSignatureUploadModal
+                modalForm={uploadForm}
+                isModalOpen={isUploadModalOpen}
+                previewImage={previewImage}
+                setPreviewImage={setPreviewImage}
+                onSave={handleUpload}
+                onCancel={cancelUpload}
+                errorsModal={errorsUploadModal}
+                fileList={fileList}
+                setFileList={setFileList}
+            />
             <ClientList
                 data={data}
                 setData={setData}
@@ -157,6 +240,7 @@ const Clients = () => {
                 setLoading={setLoading}
                 documentTypes={documentTypes}
                 toggleEdit={toggleEdit}
+                toggleUpload={toggleUpload}
             />
         </>
     );

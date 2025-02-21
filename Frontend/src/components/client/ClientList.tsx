@@ -5,12 +5,12 @@ import {
     Table,
     Typography,
     Space,
-    Tag,
+    Tag, Dropdown,
 } from 'antd';
 
 import ClientService from '../../services/ClientService';
 import { ClientType } from "../../types/ClientType";
-import {QuestionCircleOutlined} from "@ant-design/icons";
+import {MoreOutlined, QuestionCircleOutlined} from "@ant-design/icons";
 import Notifications from "../shared/Notifications";
 import { TypeDocumentEnum } from "../../types/TypeDocumentEnum";
 import EditableTableColumnSearch from "../shared/EditableTableColumnSearch";
@@ -25,6 +25,7 @@ interface CompteListProps extends React.HTMLAttributes<HTMLElement> {
     documentTypes: any,
     displayOnly?: boolean;
     toggleEdit: any,
+    toggleUpload: any,
 }
 
 const ClientList: React.FC<React.PropsWithChildren<CompteListProps>> = ({
@@ -35,6 +36,7 @@ const ClientList: React.FC<React.PropsWithChildren<CompteListProps>> = ({
                                                                             documentTypes,
                                                                             displayOnly,
                                                                             toggleEdit,
+                                                                            toggleUpload,
                                                                         }) => {
     const navigate = useNavigate();
     const columns: any = [
@@ -114,10 +116,49 @@ const ClientList: React.FC<React.PropsWithChildren<CompteListProps>> = ({
         },
         {
             title: 'Actions',
-            width: '12%',
+            width: '16%',
             render: (_, record: ClientType) => {
+                /*const items = [
+                    {
+                        key: '1',
+                        label: <Typography.Link onClick={() => toggleEdit(record)}>
+                            Edit
+                        </Typography.Link>,
+                    },
+                    {
+                        key: '2',
+                        label: <Typography.Link onClick={() => toggleUpload(record.id)}>
+                            Upload Signature
+                        </Typography.Link>,
+                    },
+                    {
+                        key: '3',
+                        label: <Popconfirm
+                            placement={'top'}
+                            title={'Sure to delete ?'}
+                            icon={<QuestionCircleOutlined />}
+                            onConfirm={() => handleDelete(record.id)}
+                        >
+                            <Typography.Link>
+                                Delete
+                            </Typography.Link>
+                        </Popconfirm>,
+                        danger: true,
+                    },
+                ];
+
+                return (
+                    <Space direction="vertical">
+                        <Dropdown menu={{ items }} placement="bottomLeft" arrow={{ pointAtCenter: true }}>
+                            <MoreOutlined />
+                        </Dropdown>
+                    </Space>
+                );*/
                 return (
                     <Space size="middle">
+                        <Typography.Link className="upload-btn" onClick={() => toggleUpload(record.id)}>
+                            Upload
+                        </Typography.Link>
                         <Typography.Link className="edit-btn" onClick={() => toggleEdit(record)}>
                             Edit
                         </Typography.Link>
