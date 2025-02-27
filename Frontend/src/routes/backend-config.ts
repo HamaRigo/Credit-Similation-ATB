@@ -5,6 +5,6 @@ export const apiRoutes = {
     OCR_URL: API_URL + ':3333/ocrs',
     CLIENT_URL: API_URL + ':4444/clients',
     COMPTE_URL: API_URL + ':5555/comptes',
-    USER_URL: API_URL + ':7777/users',
-    ROLE_URL: API_URL + ':7777/roles',
+    USER_URL: API_URL + ':7777/admin/users',
+    ROLE_URL: API_URL + ':7777/admin/roles',
 }

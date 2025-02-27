@@ -23,3 +23,10 @@ WORKDIR /app
 
 # Command to run your app
 CMD ["python", "your_app.py"]
+
+
+FROM fluent/fluentd:v1.15.3-1.0
+USER root
+RUN gem uninstall fluent-plugin-elasticsearch
+RUN gem install fluent-plugin-elasticsearch -v '4.7.1' --no-document
+USER fluent

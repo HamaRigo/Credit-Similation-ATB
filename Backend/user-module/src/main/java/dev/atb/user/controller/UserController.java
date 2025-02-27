@@ -12,7 +12,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/admin/users")
 public class UserController {
     @Autowired
     private UserService userService;
