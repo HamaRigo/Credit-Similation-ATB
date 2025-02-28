@@ -35,3 +35,5 @@ build/
 .DS_Store
 
 api-gateway/volume-data
+
+docker-volumes/

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Navbar,
   Collapse,
@@ -13,13 +13,12 @@ import {
 import Logo from "./Logo";
 import profile from "../assets/images/users/profile.png";
 import atb from "../assets/images/logos/atb.png";
-//import { useKeycloak } from "@react-keycloak/web";
+import { useAuth } from "../AuthProvider";
 
 const Header = () => {
-    //const { keycloak } = useKeycloak();
-
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [dropdownOpen, setDropdownOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { isAuthenticated, login, logout } = useAuth();
 
     const toggle = () => setDropdownOpen((prevState) => !prevState);
     const Handletoggle = () => {
@@ -59,13 +58,7 @@ const Header = () => {
               )}
             </Button>
           </div>
-            {/*!keycloak.authenticated && (
-                <DropdownToggle color="transparent">
-                    <DropdownItem style={{color: "white"}} onClick={() => keycloak.login()}>Login</DropdownItem>
-                </DropdownToggle>
-            )*/}
-            {//keycloak.authenticated &&
-                (<Collapse navbar isOpen={isOpen}>
+            <Collapse navbar isOpen={isOpen}>
                     <Nav className="me-auto" navbar></Nav>
                     <Dropdown isOpen={dropdownOpen} toggle={toggle}>
                       <DropdownToggle color="transparent">
@@ -77,14 +70,19 @@ const Header = () => {
                         ></img>
                       </DropdownToggle>
                       <DropdownMenu>
-                        <DropdownItem header>Info</DropdownItem>
-                        <DropdownItem>My Account</DropdownItem>
-                        <DropdownItem divider />
-                        <DropdownItem /*onClick={() => keycloak.logout()}*/>Logout</DropdownItem>
-                      </DropdownMenu>
+                          <DropdownItem header>Info</DropdownItem>
+                          {isAuthenticated ? (
+                            <>
+                              <DropdownItem>My Account</DropdownItem>
+                              <DropdownItem divider />
+                              <DropdownItem onClick={logout}>Logout</DropdownItem>
+                            </>
+                          ) : (
+                            <DropdownItem onClick={login}>Login</DropdownItem>
+                          )}
+                     </DropdownMenu>
                     </Dropdown>
               </Collapse>
-            )}
         </Navbar>
     );
 };

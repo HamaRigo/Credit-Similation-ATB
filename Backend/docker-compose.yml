@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_HOST: "%"  # Allow remote root access
     command: --default-authentication-plugin=mysql_native_password  # Fix auth plugin
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - ./docker-volumes/db_data:/var/lib/mysql # Centralized persistent storage
     networks:
@@ -27,8 +27,8 @@ services:
     command: ["start-dev", "--import-realm"]
     environment:
       KC_DB: mysql
-      #      KC_DB_URL: jdbc:mysql://db:3306/shared_database
-      KC_DB_URL: jdbc:mysql://localhost:3306/shared_database
+      KC_DB_URL: jdbc:mysql://db:3308/shared_database
+      # KC_DB_URL: jdbc:mysql://db:3306/shared_database?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       KC_DB_USERNAME: root
       KC_DB_PASSWORD: root
       KEYCLOAK_ADMIN: admin
@@ -38,8 +38,8 @@ services:
     volumes:
       - ./docker-volumes/keycloak-realms:/opt/keycloak/data/import
       - ./docker-volumes/keycloak-providers:/opt/keycloak/providers
-    #    depends_on:
-    #      - db
+    depends_on:
+      - db
     networks:
       - shared-network
 

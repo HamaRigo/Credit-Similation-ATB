@@ -3,7 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import profile from "../assets/images/users/profile.png";
 import probg from "../assets/images/bg/bg_banking.avif";
 import React from "react";
+import { useAuth } from "../AuthProvider";
 
+// todo update sider bar content according to user roles
 const navigation = [
   {
     title: "Dashboard",
@@ -43,6 +45,7 @@ const navigation = [
 ];
 
 const Sidebar = () => {
+  const { user } = useAuth(); // Get user from authentication
   const showMobilemenu = () => {
     document.getElementById("sidebarArea")?.classList.toggle("showSidebar");
   };
@@ -65,7 +68,9 @@ const Sidebar = () => {
             <i className="bi bi-x"></i>
           </Button>
         </div>
-        <div className="bg-dark text-white p-2 opacity-75">Administrateur X</div>
+        <div className="bg-dark text-white p-2 opacity-75">
+          {user?.name || "Guest"}
+        </div>
       </div>
       <div className="p-3 mt-2">
         <Nav vertical className="sidebarNav">

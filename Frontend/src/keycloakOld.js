@@ -1,4 +1,4 @@
-import Keycloak from "keycloak-js";
+/*import Keycloak from "keycloak-js";
 
 const keycloak = new Keycloak({
     url: "http://localhost:8282", // Keycloak server URL
@@ -7,3 +7,4 @@ const keycloak = new Keycloak({
 });
 
 export default keycloak;
+*/
