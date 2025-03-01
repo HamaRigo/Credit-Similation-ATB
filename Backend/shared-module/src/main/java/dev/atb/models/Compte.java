@@ -17,15 +17,20 @@ import java.util.List;
 @DiscriminatorColumn(name = "type_compte")
 public abstract class Compte {
     @Id
-    @Column(nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String numeroCompte;
 
     @Formula("type_compte") // Exposes the discriminator column
     private String typeCompte;
 
+    @Column(nullable = false)
     private double solde;
 
-    private boolean activated;
+    @Column(nullable = false)
+    private boolean activated = true;
 
     @JsonIgnoreProperties("comptes")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

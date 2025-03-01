@@ -1,201 +1,257 @@
 package dev.atb.ocr.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.atb.dto.OcrDTO;
-import dev.atb.ocr.config.OcrConfig; // Import the OcrConfig
-import dev.atb.ocr.exceptions.OcrProcessingException;
+import dev.atb.models.Client;
+import dev.atb.models.Compte;
 import dev.atb.models.Ocr;
-import dev.atb.repo.OcrRepository;
+import dev.atb.ocr.exceptions.OcrProcessingException;
+import dev.atb.ocr.notification.LoggerService;
+import dev.atb.ocr.notification.NotificationService;
 import dev.atb.repo.CompteRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.atb.repo.OcrRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.*;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
 public class OcrService {
-
-    private static final Logger logger = LoggerFactory.getLogger(OcrService.class);
 
     private final OcrRepository ocrRepository;
     private final CompteRepository compteRepository;
-    private final OcrConfig ocrConfig; // Inject the OcrConfig
+    private final RestTemplate restTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final LoggerService loggerService;
+    private final NotificationService notificationService;
+    private final ObjectMapper objectMapper;
+    private final SignatureService signatureService;
 
-    @Autowired
-    public OcrService(OcrRepository ocrRepository,
-                      CompteRepository compteRepository,
-                      OcrConfig ocrConfig) { // Remove unused dependencies
-        this.ocrRepository = ocrRepository;
-        this.compteRepository = compteRepository;
-        this.ocrConfig = ocrConfig; // Initialize OcrConfig
+    @Value("${ocr.api.url}")
+    private String ocrApiUrl;
+
+    @Value("${fraud.api.url}")
+    private String fraudApiUrl;
+
+    @Value("${signature.api.url}")
+    private String signatureApiUrl;
+
+    // ========================================================================
+    // 🔹 ASYNC OCR PROCESSING
+    // ========================================================================
+
+    @Async
+    public CompletableFuture<OcrDTO> uploadAndAnalyzeAsync(MultipartFile file, String documentType, Long accountId) {
+        return CompletableFuture.supplyAsync(() -> uploadAndAnalyze(file, documentType, accountId));
     }
 
-    private String generateUniqueFileName(String prefix, String extension) {
-        return prefix + "_" + UUID.randomUUID() + extension;
-    }
+    // ========================================================================
+    // 🔹 OCR PROCESSING
+    // ========================================================================
 
-    public String performOcrWithTesseract(File file) {
+    public OcrDTO performOcrAndPreview(MultipartFile file, String documentType) {
+        validateInput(file, documentType);
+        File tempFile = saveToTemporaryFile(file);
         try {
-            if (file.length() == 0) {
-                logger.error("File is empty.");
-                throw new IOException("File is empty.");
-            }
-
-            // Define the output file name without extension
-            String outputFileName = file.getName().substring(0, file.getName().lastIndexOf('.'));
-            File outputFile = new File(file.getParent(), outputFileName);
-
-            // Command to execute Tesseract
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    "tesseract", file.getAbsolutePath(), outputFile.getAbsolutePath());
-
-            Process process = processBuilder.start();
-
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                throw new OcrProcessingException("Tesseract process failed with exit code: " + exitCode);
-            }
-
-            return new String(Files.readAllBytes(new File(outputFile.getAbsolutePath() + ".txt").toPath()));
-
-        } catch (Exception e) {
-            logger.error("Error during OCR processing for file: {}", file.getName(), e);
-            throw new OcrProcessingException("Error occurred while processing OCR", e);
-        }
-    }
-
-    /**
-     * Analyzes and saves the image provided as a MultipartFile.
-     *
-     * @param imageFile     the image file to process
-     * @param typeDocument  the type of document being processed (can be null)
-     * @param numeroCompteId the account ID associated with the document (can be null)
-     * @return an OcrDTO containing the results of the OCR processing
-     * @throws OcrProcessingException if there is an error during processing
-     */
-    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile, String typeDocument, String numeroCompteId) {
-        File tempFile = null;
-        File tempConvertedFile = null;
-        try {
-            String originalFileName = imageFile.getOriginalFilename();
-            String fileExtension = getFileExtension(originalFileName);
-            tempFile = File.createTempFile("temp", "." + fileExtension);
-            imageFile.transferTo(tempFile);
-
-            // Convert the image
-            tempConvertedFile = convertImage(tempFile, fileExtension);
-            validateConvertedFile(tempConvertedFile);
-
-            String ocrResult = performOcrWithTesseract(tempConvertedFile);
-            Ocr ocr = new Ocr();
-            ocr.setResultatsReconnaissance(ocrResult);
-            ocr.setTypeDocument(typeDocument);
-            if (numeroCompteId != null) {
-                compteRepository.findById(numeroCompteId).ifPresent(ocr::setCompte);
-            }
-
-            ocrRepository.save(ocr);
-            return convertToOcrDTO(ocr);
-        } catch (IOException e) {
-            logger.error("Error processing image file: {}", imageFile.getOriginalFilename(), e);
-            throw new OcrProcessingException("Error occurred while processing image", e);
+            String ocrResult = performOcr(tempFile);
+            String base64Image = convertToBase64(file);
+            return buildOcrDTO(documentType, ocrResult, base64Image, false, 0.0);
         } finally {
-            cleanupTemporaryFiles(tempFile, tempConvertedFile);
+            cleanupFile(tempFile);
         }
     }
 
-    // Overloaded method to allow analyzing images without specifying typeDocument and numeroCompteId
-    public OcrDTO analyzeAndSaveImage(MultipartFile imageFile) {
-        return analyzeAndSaveImage(imageFile, "defaultType", null);
-    }
+    public OcrDTO uploadAndAnalyze(MultipartFile file, String documentType, Long accountId) {
+        validateInput(file, documentType);
+        File tempFile = saveToTemporaryFile(file);
+        try {
+            String ocrResult = performOcr(tempFile);
+            String base64Image = convertToBase64(file);
+            Compte account = getAccount(accountId);
+            double fraudScore = detectFraudScore(tempFile, accountId);
 
-    private File convertImage(File inputFile, String extension) throws IOException {
-        File outputFile = File.createTempFile("converted", ".png");
-        BufferedImage bufferedImage = ImageIO.read(inputFile);
-        ImageIO.write(bufferedImage, "png", outputFile); // Convert to PNG format
-        return outputFile;
-    }
+            OcrDTO result = buildOcrDTO(documentType, ocrResult, base64Image, fraudScore > 0.7, fraudScore);
+            persistResult(result, account);
+            notifyKafka(result);
 
-    private void validateConvertedFile(File file) throws IOException {
-        if (!file.exists() || file.length() == 0) {
-            throw new IOException("Converted file is invalid or empty: " + file.getAbsolutePath());
+            return result;
+        } finally {
+            cleanupFile(tempFile);
         }
     }
 
-    private OcrDTO convertToOcrDTO(Ocr ocr) {
-        OcrDTO ocrDTO = new OcrDTO();
-        ocrDTO.setId(ocr.getId());
-        ocrDTO.setResultatsReconnaissance(ocr.getResultatsReconnaissance());
-        ocrDTO.setTypeDocument(ocr.getTypeDocument());
-        // Set other fields as necessary
-        return ocrDTO;
+    private String performOcr(File file) {
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    ocrApiUrl, createOcrRequest(file), String.class);
+            return processOcrResponse(response);
+        } catch (Exception e) {
+            throw new OcrProcessingException("OCR processing failed", e);
+        }
     }
 
-    private void cleanupTemporaryFiles(File... files) {
-        for (File file : files) {
-            if (file != null && file.exists()) {
-                boolean deleted = file.delete();
-                if (!deleted) {
-                    logger.warn("Failed to delete temporary file: {}", file.getAbsolutePath());
-                }
+    // ========================================================================
+    // 🔹 FRAUD DETECTION
+    // ========================================================================
+
+    public double detectFraudScore(File file, Long accountId) {
+        Compte account = getAccount(accountId);
+
+        if (account.getClient() == null) {
+            loggerService.logError("❌ Fraud detection failed: No client associated with account ID " + accountId);
+            return 0.0;
+        }
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    fraudApiUrl, createOcrRequest(file), String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                return jsonNode.has("fraud_score") ? jsonNode.get("fraud_score").asDouble() : 0.0;
+            } else {
+                loggerService.logError("❌ Fraud API returned unexpected status: " + response.getStatusCode());
+                return 0.0;
             }
+        } catch (Exception e) {
+            loggerService.logError("❌ Fraud detection failed: " + e.getMessage());
+            return 0.0;
         }
     }
 
-
-    public List<OcrDTO> getAllOcrEntities() {
-        return ocrRepository.findAll().stream().map(this::convertToOcrDTO).collect(Collectors.toList());
+    // ========================================================================
+    // 🔹 FILE HANDLING
+    // ========================================================================
+    private void validateInput(MultipartFile file, String documentType) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("❌ File is required and cannot be empty.");
+        }
+        if (!List.of("image/png", "image/jpeg", "application/pdf").contains(file.getContentType())) {
+            throw new IllegalArgumentException("❌ Invalid file type. Only PNG, JPEG, and PDF are allowed.");
+        }
+        if (documentType == null || documentType.trim().isEmpty()) {
+            throw new IllegalArgumentException("❌ Document type is required and cannot be empty.");
+        }
     }
-
-    public OcrDTO getOcrById(String id) {
-        return ocrRepository.findById(id).map(this::convertToOcrDTO).orElse(null);
-    }
-
-    public boolean deleteOcr(String id) {
-        if (ocrRepository.existsById(id)) {
-            ocrRepository.deleteById(id);
-            logger.info("Deleted OCR record with ID: {}", id);
-            return true;
-        } else {
-            logger.warn("OCR record with ID {} not found.", id);
-            return false;
+    private File saveToTemporaryFile(MultipartFile file) {
+        try {
+            Path tempPath = Files.createTempFile("ocr_", "_tmp");
+            Files.write(tempPath, file.getBytes());
+            File tempFile = tempPath.toFile();
+            tempFile.deleteOnExit();
+            return tempFile;
+        } catch (IOException e) {
+            throw new OcrProcessingException("File handling error", e);
         }
     }
 
-    public OcrDTO updateOcr(String id, String newText, String documentType) {
-        Optional<Ocr> optionalOcr = ocrRepository.findById(id);
-        if (optionalOcr.isPresent()) {
-            Ocr ocr = optionalOcr.get();
-            ocr.setResultatsReconnaissance(newText);
-            ocr.setTypeDocument(documentType);
-            ocr = ocrRepository.save(ocr);
-            return convertToOcrDTO(ocr);
-        } else {
-            logger.error("OCR record with ID {} not found.", id);
-            throw new OcrProcessingException("OCR record not found");
+    private String convertToBase64(MultipartFile file) {
+        try {
+            return Base64.getEncoder().encodeToString(file.getBytes());
+        } catch (IOException e) {
+            throw new OcrProcessingException("Base64 conversion error", e);
         }
     }
 
-    private String getFileExtension(String originalFileName) {
-        int lastDotIndex = originalFileName.lastIndexOf('.');
-        return (lastDotIndex > 0) ? originalFileName.substring(lastDotIndex) : ""; // return empty string if no extension
+    private void cleanupFile(File file) {
+        if (file != null && file.exists()) {
+            file.delete();
+        }
     }
 
-    // Example method using ocrConfig properties
-    public void printOcrConfig() {
-        logger.info("Supported image types: {}", ocrConfig.getImageTypes());
-        logger.info("Tesseract config path: {}", ocrConfig.getConfigPath());
-        logger.info("Language: {}", ocrConfig.getLang());
+    // ========================================================================
+    // 🔹 DATA PERSISTENCE
+    // ========================================================================
+
+    private void persistResult(OcrDTO dto, Compte account) {
+        Ocr entity = new Ocr();
+        entity.setTypeDocument(dto.getTypeDocument());
+        entity.setResultatsReconnaissance(dto.getResultatsReconnaissance());
+        entity.setFraud(dto.isFraud());
+        entity.setNumeroCompte(account.getNumeroCompte());
+        ocrRepository.save(entity);
+    }
+
+    private void notifyKafka(OcrDTO dto) {
+        try {
+            kafkaTemplate.send("ocr-results", objectMapper.writeValueAsString(dto));
+        } catch (JsonProcessingException e) {
+            loggerService.logError("Kafka message failed: " + e.getMessage());
+        }
+    }
+
+    // ========================================================================
+    // 🔹 UTILITIES
+    // ========================================================================
+
+    public OcrDTO getResult(String id) {
+        return ocrRepository.findById(id)
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new IllegalArgumentException("❌ OCR record not found for ID: " + id));
+    }
+
+    public List<OcrDTO> getAllResults() {
+        return ocrRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    public void deleteResult(String id) {
+        if (!ocrRepository.existsById(id)) {
+            throw new IllegalArgumentException("❌ OCR record not found for ID: " + id);
+        }
+        ocrRepository.deleteById(id);
+    }
+    private Compte getAccount(Long accountId) {
+        return compteRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("❌ Account not found for ID: " + accountId));
+    }
+
+    private OcrDTO buildOcrDTO(String type, String result, String image, boolean isFraud, double fraudScore) {
+        return new OcrDTO(null, type, result, isFraud, image, "default", null, fraudScore);
+    }
+    private OcrDTO convertToDTO(Ocr entity) {
+        return new OcrDTO(
+                entity.getId(),
+                entity.getTypeDocument(),
+                entity.getResultatsReconnaissance(),
+                entity.isFraud(),
+                entity.getImage(),
+                "default",
+                null,
+                0.0
+        );
+    }
+    private HttpEntity<MultiValueMap<String, Object>> createOcrRequest(File file) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new FileSystemResource(file));
+        return new HttpEntity<>(body, headers);
+    }
+
+    private String processOcrResponse(ResponseEntity<String> response) {
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        }
+        throw new OcrProcessingException("OCR API error: " + response.getStatusCode());
     }
 }

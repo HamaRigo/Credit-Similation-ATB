@@ -16,5 +16,6 @@ public class UserDTO {
     private String nom;
     private String prenom;
     private String telephone;
+    private boolean activated;
     private List<RoleDTO> roles;
 }

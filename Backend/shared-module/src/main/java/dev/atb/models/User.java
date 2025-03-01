@@ -1,7 +1,6 @@
 package dev.atb.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,25 +16,24 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(unique = true, updatable = false)
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @NotNull
+    @Column(nullable = false)
     private String password;
 
-    @NotNull
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @NotNull
     private String nom;
 
-    @NotNull
     private String prenom;
 
-    @NotNull
     private String telephone;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles;
+
+    @Column(nullable = false)
+    private boolean activated = true;
 }

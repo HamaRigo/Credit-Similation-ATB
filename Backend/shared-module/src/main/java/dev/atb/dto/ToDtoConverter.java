@@ -1,6 +1,5 @@
 package dev.atb.dto;
 
-
 import dev.atb.models.*;
 import org.springframework.beans.BeanUtils;
 
@@ -8,21 +7,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ToDtoConverter {
+
+    private ToDtoConverter() {
+        // Prevent instantiation
+    }
+
     public static ClientDTO clientToDto(final Client client) {
-        return new ClientDTO(
-                client.getTypeDocument(),
-                client.getNumeroDocument(),
-                client.getNom(),
-                client.getPrenom(),
-                client.getAdresse(),
-                client.getTelephone()
-        );
+        if (client == null) {
+            return null;
+        }
+
+        ClientDTO clientDTO = new ClientDTO();
+        BeanUtils.copyProperties(client, clientDTO);
+
+        // Compute compteCount
+        clientDTO.setCompteCount(client.getComptes() != null ? client.getComptes().size() : 0);
+
+        return clientDTO;
     }
 
     public static CompteDTO compteToDto(final Compte compte) {
+        if (compte == null) {
+            return null;
+        }
+
         CompteDTO compteDTO = new CompteDTO();
         BeanUtils.copyProperties(compte, compteDTO);
 
+        // Populate OCRs
         List<OcrDTO> ocrDTOList = new ArrayList<>();
         if (compte.getOcrs() != null) {
             for (Ocr ocr : compte.getOcrs()) {
@@ -40,10 +52,14 @@ public final class ToDtoConverter {
     }
 
     public static CreditDTO creditToDto(final Credit credit) {
+        if (credit == null) {
+            return null;
+        }
+
         return new CreditDTO(
                 credit.getId(),
                 credit.getType(),
-                credit.getStatut(),
+                credit.getStatus(),
                 credit.getTauxInteret(),
                 credit.getMontant(),
                 credit.getDateDebut(),
@@ -54,20 +70,32 @@ public final class ToDtoConverter {
     }
 
     public static OcrDTO ocrToDto(final Ocr ocr) {
+        if (ocr == null) {
+            return null;
+        }
+
         return new OcrDTO(
-                ocr.getId(),
+                ocr.getId(),                           // ✅ Corrected: Added missing `id`
+                ocr.getNumeroCompte(),                // ✅ Corrected: Ensure correct order
                 ocr.getTypeDocument(),
                 ocr.getResultatsReconnaissance(),
-                ocr.isFraude(),
+                ocr.isFraud(),
                 ocr.getImage(),
-                ocr.getModelUsed()
+                ocr.getModelUsed(),
+                null, // ✅ Error message (default null)
+                0.0   // ✅ Confidence score (default 0.0)
         );
     }
 
     public static UserDTO userToDto(final User user) {
+        if (user == null) {
+            return null;
+        }
+
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(user, userDTO);
 
+        // Populate roles
         List<RoleDTO> roleDTOList = new ArrayList<>();
         if (user.getRoles() != null) {
             for (Role role : user.getRoles()) {
@@ -81,9 +109,10 @@ public final class ToDtoConverter {
     }
 
     public static RoleDTO roleToDto(final Role role) {
-        return new RoleDTO(
-          role.getId(),
-          role.getName()
-        );
+        RoleDTO roleDTO = new RoleDTO();
+        BeanUtils.copyProperties(role, roleDTO);
+        roleDTO.setUserCount(role.getUsers() != null ? role.getUsers().size() : 0);
+
+        return roleDTO;
     }
 }

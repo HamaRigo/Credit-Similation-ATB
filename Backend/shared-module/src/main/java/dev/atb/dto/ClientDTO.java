@@ -9,10 +9,13 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class ClientDTO {
+    private Long id;
     private DocumentType typeDocument;
     private String numeroDocument;
     private String nom;
     private String prenom;
     private String adresse;
     private String telephone;
+    private String signature;
+    private int compteCount;
 }

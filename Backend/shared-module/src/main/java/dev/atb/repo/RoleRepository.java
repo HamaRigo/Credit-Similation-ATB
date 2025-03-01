@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 @EnableJpaRepositories
 public interface RoleRepository extends JpaRepository<Role, Long> {
+    boolean existsByName(String name);
 }

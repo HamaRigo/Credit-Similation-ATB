@@ -10,4 +10,5 @@ import lombok.*;
 public class RoleDTO {
     private Long id;
     private String name;
+    private int userCount;
 }
