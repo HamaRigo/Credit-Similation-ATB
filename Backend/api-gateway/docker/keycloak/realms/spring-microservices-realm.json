@@ -7,34 +7,23 @@
     {
       "clientId": "api-gateway",
       "enabled": true,
-      "clientAuthenticatorType": "client-secret",
-      "redirectUris": ["http://localhost:8187/login/oauth2/code/*"],
-      "webOrigins": ["http://localhost:8187"],
-      "baseUrl": "http://localhost:8187/",
-      "protocol": "openid-connect",
       "publicClient": false,
-      "bearerOnly": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": true,
-      "attributes": {
-        "access.token.lifespan": "900"
-      },
-      "secret": "rigo"
-    },
-    {
-      "clientId": "front-client",
-      "enabled": true,
-      "publicClient": true,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
-      "baseUrl": "http://localhost:3000/",
-      "protocol": "openid-connect"
+      "secret": "rigo",
+      "redirectUris": ["http://localhost:8187/*"],
+      "protocol": "openid-connect",
+      "bearerOnly": true
     }
   ],
   "roles": {
     "realm": [
-      { "name": "user", "description": "A user role" },
-      { "name": "admin", "description": "An admin role" }
+      {
+        "name": "user",
+        "description": "A user role"
+      },
+      {
+        "name": "admin",
+        "description": "An admin role"
+      }
     ]
   },
   "users": [
@@ -45,9 +34,14 @@
       "firstName": "Admin",
       "lastName": "User",
       "credentials": [
-        { "type": "password", "value": "admin-password" }
+        {
+          "type": "password",
+          "value": "admin"
+        }
       ],
-      "realmRoles": ["admin"]
+      "realmRoles": [
+        "admin"
+      ]
     },
     {
       "username": "user",
@@ -56,9 +50,14 @@
       "firstName": "Regular",
       "lastName": "User",
       "credentials": [
-        { "type": "password", "value": "user-password" }
+        {
+          "type": "password",
+          "value": "user-password"
+        }
       ],
-      "realmRoles": ["user"]
+      "realmRoles": [
+        "user"
+      ]
     }
   ]
 }
