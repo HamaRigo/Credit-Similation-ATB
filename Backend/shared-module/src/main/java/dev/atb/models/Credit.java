@@ -18,27 +18,27 @@ public class Credit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CreditType type;
 
-    @NotNull
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CreditStatus statut;
+    private CreditStatus status;
 
-    @NotNull
+    @Column(nullable = false)
     private double tauxInteret;
 
-    @NotNull
+    @Column(nullable = false)
     private double montant;
 
-    @NotNull
+    @Column(nullable = false)
     private Date dateDebut;
 
-    @NotNull
+    @Column(nullable = false)
     private Date dateFin;
 
-    @NotNull
+    @Column(nullable = false)
     private double paiementMensuel;
 
     @JsonIgnoreProperties("credits")

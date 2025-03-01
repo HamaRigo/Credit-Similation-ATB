@@ -14,7 +14,7 @@ import java.util.Date;
 public class CreditDTO {
     private Long id;
     private CreditType type;
-    private CreditStatus statut;
+    private CreditStatus status;
     private double tauxInteret;
     private double montant;
     private Date dateDebut;
