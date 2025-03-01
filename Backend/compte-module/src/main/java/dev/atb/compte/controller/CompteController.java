@@ -1,6 +1,8 @@
 package dev.atb.compte.controller;
 
 import dev.atb.compte.services.CompteService;
+import dev.atb.dto.CompteCountByStatusDTO;
+import dev.atb.dto.CompteCountByTypeDTO;
 import dev.atb.dto.CompteDTO;
 import dev.atb.models.CompteCourant;
 import dev.atb.models.CompteEpargne;
@@ -23,6 +25,16 @@ public class CompteController {
         return new ResponseEntity<>(compteService.findAll(), HttpStatus.OK);
     }
 
+    @GetMapping("/countByType")
+    public ResponseEntity<List<CompteCountByTypeDTO>> getComptesCountByType() {
+        return new ResponseEntity<>(compteService.findComptesCountByType(), HttpStatus.OK);
+    }
+
+    @GetMapping("/countByStatus")
+    public ResponseEntity<List<CompteCountByStatusDTO>> getComptesCountByStatus() {
+        return new ResponseEntity<>(compteService.findComptesCountByStatus(), HttpStatus.OK);
+    }
+
     @GetMapping("/current")
     public ResponseEntity<List<CompteDTO>> getAllCurrentComptes() {
         return new ResponseEntity<>(compteService.findAllCurrentComptes(), HttpStatus.OK);
@@ -34,12 +46,17 @@ public class CompteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCompteById(@PathVariable final String id) {
+    public ResponseEntity<?> getCompteById(@PathVariable final Long id) {
         try {
             return new ResponseEntity<>(compteService.findById(id), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/exists/{numeroCompte}")
+    public ResponseEntity<Boolean> compteAlreadyExists(@PathVariable final String numeroCompte) {
+        return new ResponseEntity<>(compteService.compteAlreadyExists(numeroCompte), HttpStatus.OK);
     }
 
     @PostMapping("/current")
@@ -83,7 +100,7 @@ public class CompteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCompte(@PathVariable final String id) {
+    public ResponseEntity<Void> deleteCompte(@PathVariable final Long id) {
         try {
             compteService.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
