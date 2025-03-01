@@ -1,103 +1,110 @@
 package dev.atb.apigateway.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.header.CrossOriginOpenerPolicyServerHttpHeadersWriter;
-import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter;
+import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF for APIs
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configure CORS
-                .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/", "/public/**", "/actuator/**", "/favicon.ico").permitAll() // Public endpoints
-                        .pathMatchers("/api/admin/**").hasAuthority("ROLE_admin") // Admin-only endpoints
-                        .pathMatchers("/api/user/**").hasAuthority("ROLE_user") // User-only endpoints
-                        .anyExchange().authenticated() // Secure all other endpoints
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .jwtDecoder(jwtDecoder()) // Custom JWT decoder
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())) // Custom JWT authentication converter
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((exchange, exception) -> {
-                            // Handle unauthorized access
-                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                            return Mono.empty();
-                        })
-                )
-                .headers(headers -> headers
-                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyServerHttpHeadersWriter.ReferrerPolicy.NO_REFERRER)) // Referrer policy
-                        .permissionsPolicy(permissions -> permissions.policy("geolocation=(), microphone=()")) // Permissions policy
-                        .crossOriginOpenerPolicy(opener -> opener.policy(CrossOriginOpenerPolicyServerHttpHeadersWriter.CrossOriginOpenerPolicy.SAME_ORIGIN)) // COOP
-                );
+        return http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeExchange(exchanges -> exchanges
+                // Admin-only management endpoints
+                .pathMatchers(HttpMethod.POST, "/clients/**", "/credits/**").hasAuthority("ROLE_admin")
+                .pathMatchers(HttpMethod.PUT, "/clients/**", "/credits/**").hasAuthority("ROLE_admin")
+                .pathMatchers(HttpMethod.DELETE, "/clients/**", "/credits/**").hasAuthority("ROLE_admin")
+                .pathMatchers("/users/**", "/roles/**").hasAuthority("ROLE_admin")
 
-        return http.build();
+                // Read access for clients/credits
+                .pathMatchers(HttpMethod.GET, "/clients/**", "/credits/**").hasAnyAuthority("ROLE_user", "ROLE_admin")
+
+                // Other services
+                .pathMatchers("/comptes/**", "/ocrs/**").hasAnyAuthority("ROLE_user", "ROLE_admin")
+
+                // Monitoring endpoints
+                .pathMatchers("/eureka/**", "/actuator/health").permitAll()
+
+                // Default security rule
+                .anyExchange().authenticated()
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
+            )
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .frameOptions(frame -> frame.mode(XFrameOptionsServerHttpHeadersWriter.Mode.DENY))
+            )
+            .build();
     }
 
     @Bean
-    public ReactiveJwtDecoder jwtDecoder() {
-        // Replace with your Keycloak JWKS URI
-        String jwkSetUri = "http://localhost:8282/realms/spring-microservices-realm/protocol/openid-connect/certs";
-        return NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
-    }
-
-    @Bean
-    public ReactiveJwtAuthenticationConverterAdapter jwtAuthenticationConverter() {
-        // Define a JWT converter to extract roles from the token
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(this::extractAuthorities);
-        return new ReactiveJwtAuthenticationConverterAdapter(converter::convert);
-    }
-
-    private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
-        // Extract roles from "realm_access.roles" claim
-        List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
-        if (roles == null) {
-            return List.of();
-        }
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toList());
-    }
-
-    @Bean
-    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        // Configure CORS to allow frontend origin
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // Frontend origin
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            // Safely extract realm roles
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            Collection<String> roles = (Collection<String>) realmAccess.getOrDefault("roles", Collections.emptyList());
+
+            return roles.stream()
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+        });
+        return new ReactiveJwtAuthenticationConverterAdapter(converter);
+    }
+
+    @Bean
+    public WebFilter auditFilter() {
+        return (exchange, chain) -> {
+            String path = exchange.getRequest().getPath().value();
+            String method = exchange.getRequest().getMethod().name();
+
+            if (path.startsWith("/users") || path.startsWith("/roles")
+                || path.startsWith("/clients") || path.startsWith("/credits")) {
+                log.info("Admin action detected: {} {}", method, path);
+            }
+            return chain.filter(exchange);
+        };
     }
 }
